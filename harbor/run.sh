@@ -21,12 +21,12 @@ if [ "$USE_DOCKER" -a ! -f /.dockerenv ]; then
     fi
 
     docker run --cap-add=SYS_ADMIN --init --rm -it -v "$PWD:/mnt" \
-        -p 80:80 -p 8080:8080 -p 8000:8000 -p 5900:5900  "$CONTAINER" $@
+        -p 80:80 -p 1234:1234 -p 5900:5900 -p 8000:8000 -p 8001:8001 "$CONTAINER" $@
 else
     dotenv env.vars.default
     if [ -f env.vars ]; then
         dotenv env.vars
     fi
 
-    liquidsoap harbor.liq
+    liquidsoap $@ harbor.liq
 fi

@@ -6,5 +6,5 @@ sudo -E supervisord -c /etc/supervisor/supervisord.conf
 if [ "$#" -gt 0 ]; then
     exec $@
 else
-    exec /mnt/run.sh
+    exec ./run.sh
 fi

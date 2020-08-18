@@ -43,5 +43,6 @@ RUN adduser --gecos '' --disabled-password user \
     && sed -i 's/^\(%sudo.\+\)ALL$/\1NOPASSWD:ALL/' /etc/sudoers
 
 USER user
+WORKDIR /mnt
 ENTRYPOINT ["/entrypoint.sh"]
 ADD image /
