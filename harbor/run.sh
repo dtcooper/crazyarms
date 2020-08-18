@@ -20,6 +20,7 @@ if [ "$USE_DOCKER" -a ! -f /.dockerenv ]; then
         docker build -t "$CONTAINER" .
     fi
 
+    # --cap-add=SYS_ADMIN for Chrome
     docker run --cap-add=SYS_ADMIN --init --rm -it -v "$PWD:/mnt" \
         -p 80:80 -p 1234:1234 -p 5900:5900 -p 8000:8000 -p 8001:8001 "$CONTAINER" $@
 else

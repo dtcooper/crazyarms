@@ -19,6 +19,7 @@ RUN apt-get update \
         sox \
         sudo \
         supervisor \
+        telnet \
         websockify \
         wget \
         x11vnc \
@@ -27,7 +28,7 @@ RUN apt-get update \
     && echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends google-chrome-stable \
-    && wget -P /tmp https://zoom.us/client/latest/zoom_amd64.deb \
+    && wget -qP /tmp https://zoom.us/client/latest/zoom_amd64.deb \
     && apt-get install -y --no-install-recommends /tmp/zoom_amd64.deb \
     && ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
