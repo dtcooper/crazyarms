@@ -30,12 +30,29 @@ def ls_dir(path)
     get_process_lines('find #{string.escape(path)} -type f')
 end
 
+NOTIFICATIONS_ENABLED = conf_bool('NOTIFICATIONS_ENABLED')
+NOTIFICATIONS_TO_EMAIL_ADDRS = of_json(default=[], conf(allow_empty=true, 'NOTIFICATIONS_TO_EMAIL_ADDRS'))
+NOTIFICATIONS_FROM_EMAIL_ADDR = conf('NOTIFICATIONS_FROM_EMAIL_ADDR')
+def notify(subject, body='')
+    if NOTIFICATIONS_ENABLED and list.length(NOTIFICATIONS_TO_EMAIL_ADDRS) > 0 then
+        to_addresses = string.concat(NOTIFICATIONS_TO_EMAIL_ADDRS, separator=', ')
+        email = 'To: #{to_addresses}\r\nFrom: #{NOTIFICATIONS_FROM_EMAIL_ADDR}\r\nSubject: #{subject}\r\n\r\n#{body}'
+        log('Sending notification to [#{to_addresses}]: #{subject}')
+        ignore(run_process('echo #{quote(email)} | sendmail -t'))
+    else
+        log('Notification (email disabled): #{subject} // #{if body == "" then "[no body]" else body end}')
+    end
+end
+
+
 set('server.telnet', conf_bool('TELNET_ENABLE'))
 set('server.telnet.port', conf_int('TELNET_PORT'))
 if file.exists('/.dockerenv') then
     # Docker only! Otherwise always localhost.
     set('server.telnet.bind_addr', '0.0.0.0')
 end
+
+notify('Harbor came online')
 
 DJ_MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
 dj_harbor = input.harbor(
@@ -68,16 +85,13 @@ pulse_in = strip_blank(
 FAILSAFE_PATH = conf('FAILSAFE_PATH')
 failsafe = single(id='failsafe', FAILSAFE_PATH)
 
-#autodj = playlist.safe(conf('AUTO_DJ_SIMPLE_FOLDER'))  # TODO: make more complicated
-#autodj_folder = conf('AUTO_DJ_SIMPLE_FOLDER')
-
 AUTO_DJ_DIR = conf('AUTO_DJ_DIR')
 AUTO_DJ_TRACKS_SUBDIR = conf('AUTO_DJ_TRACKS_SUBDIR')
 AUTO_DJ_NUM_STOPSETS_PER_HOUR = conf_int('AUTO_DJ_NUM_STOPSETS_PER_HOUR')
 AUTO_DJ_STOPSET_ROTATOR_SUBDIRS = of_json(default=[], conf(allow_empty=true, 'AUTO_DJ_STOPSET_ROTATOR_SUBDIRS'))
 stopsets_enabled = list.length(AUTO_DJ_STOPSET_ROTATOR_SUBDIRS) > 0
 if not stopsets_enabled then
-    log('Stopsets disabled by configuration')
+    log('Stop sets disabled by configuration')
 end
 
 last_stopset_played = ref -1

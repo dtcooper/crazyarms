@@ -1,7 +1,6 @@
 FROM ubuntu:20.04
 
 ENV DISPLAY=:0
-ENV CHROMIUM_USER_FLAGS="--no-first-run --no-sandbox"
 
 RUN apt-get update \
     && apt-get -y upgrade \
