@@ -1,4 +1,5 @@
+*.mp3
 .git/
 autodj-default/
 autodj/
-*.mp3
+venv/

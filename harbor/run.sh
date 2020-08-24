@@ -14,6 +14,7 @@ fi
 
 if [ "$USE_DOCKER" -a ! -f /.dockerenv ]; then
     CONTAINER=bmir-harbor
+    PORTS="80 1234 1235 2097 5900 8000 8001"
 
     if echo "$@" | fgrep -q -- '--build' && shift \
             || [ -z "$(docker images -q "$CONTAINER" 2> /dev/null)" ]; then
@@ -21,8 +22,9 @@ if [ "$USE_DOCKER" -a ! -f /.dockerenv ]; then
     fi
 
     # --cap-add=SYS_ADMIN for Chrome
-    docker run --cap-add=SYS_ADMIN --init --rm -it -v "$PWD:/mnt" \
-        -p 80:80 -p 1234:1234 -p 5900:5900 -p 8000:8000 -p 8001:8001 "$CONTAINER" $@
+    PORTS="80 1234 1235 2097 5900 8000 8001"
+    exec docker run --cap-add=SYS_ADMIN --init --rm -it -v "$PWD:/mnt" \
+        $(for p in $PORTS; do echo "-p $p:$p "; done) "$CONTAINER" $@
 else
     dotenv env.vars.default
 
@@ -43,5 +45,5 @@ else
         SCRIPT=harbor.liq
     fi
 
-    liquidsoap "$SCRIPT" -- $@
+    exec liquidsoap "$SCRIPT"
 fi
