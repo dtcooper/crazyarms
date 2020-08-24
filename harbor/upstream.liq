@@ -1,6 +1,6 @@
 %include "common.liq"
 
-MASTER_PASSWORD = conf('MASTER_PASSWORD')
+DJ_MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
 INTERNAL_HARBOR_PORT = conf('INTERNAL_HARBOR_PORT')
 ICECAST_UPSTREAM_NAME =  conf('ICECAST_UPSTREAM_NAME')
 
@@ -8,7 +8,7 @@ input = input.http(
     id='input',
     max=conf_float('INPUT_MAX'),
     poll_delay=0.5,
-    'http://user:#{MASTER_PASSWORD}@localhost:#{INTERNAL_HARBOR_PORT}/broadcast?upstream=#{ICECAST_UPSTREAM_NAME}',
+    'http://user:#{DJ_MASTER_PASSWORD}@localhost:#{INTERNAL_HARBOR_PORT}/broadcast?upstream=#{ICECAST_UPSTREAM_NAME}',
 )
 output.dummy(input, fallible=true)
 

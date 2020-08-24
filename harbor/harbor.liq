@@ -182,7 +182,7 @@ else
     radio
 end
 
-MASTER_PASSWORD = conf('MASTER_PASSWORD')
+MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
 connections = ref []
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
