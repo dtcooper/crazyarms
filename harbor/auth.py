@@ -91,7 +91,7 @@ def main():
     parser.add_argument('--timezone', help='timezone (default: US/Pacific)', default='US/Pacific')
     parser.add_argument('-d', '--date', help='date and time to check (default: now)')
     parser.add_argument('-f', '--force', help="force a download when checking password (don't use cache)")
-    parser.add_argument('-g', '--grace-period', type=int, default=90, help='grace period in seconds (default: 90)', )
+    parser.add_argument('-g', '--grace-period', type=int, default=90, help='grace period in seconds (default: 90)')
 
     args = parser.parse_args()
 
