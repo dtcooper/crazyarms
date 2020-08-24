@@ -182,14 +182,13 @@ else
     radio
 end
 
-MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
 connections = ref []
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',
     mount='broadcast',
     port=conf_int('INTERNAL_HARBOR_PORT'),
-    auth=fun(user, pass) -> pass == MASTER_PASSWORD,
+    auth=fun(user, pass) -> pass == DJ_MASTER_PASSWORD,
     on_connect=fun(~headers, ~uri, ~protocol, ip) -> begin
         args = snd(url.split(uri))
         upstream = args["upstream"]
