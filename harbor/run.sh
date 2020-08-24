@@ -25,9 +25,19 @@ if [ "$USE_DOCKER" -a ! -f /.dockerenv ]; then
         -p 80:80 -p 1234:1234 -p 5900:5900 -p 8000:8000 -p 8001:8001 "$CONTAINER" $@
 else
     dotenv env.vars.default
-    if [ -f env.vars ]; then
+
+    if [ "$ENVFILE" ]; then
+        dotenv "$ENVFILE"
+    elif [ -f env.vars ]; then
         dotenv env.vars
     fi
 
-    liquidsoap $@ harbor.liq
+    SCRIPT="$1"
+    if [ "$SCRIPT" ]; then
+        shift 1
+    else
+        SCRIPT=harbor.liq
+    fi
+
+    liquidsoap "$SCRIPT" -- $@
 fi

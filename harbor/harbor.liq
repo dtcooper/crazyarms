@@ -1,30 +1,4 @@
-def error(s)
-    print(s)
-    log(s)
-    exit(1)
-end
-
-def conf(name, ~allow_empty=false)
-    value = getenv(name)
-    if not allow_empty and value == '' then
-        error('Configuration value "' ^ name ^ ' not set. Consider running with '
-              ^ '"./run.sh" to set environment. Shutting down.')
-    end
-    value
-end
-
-def conf_int(name)
-    int_of_string(conf(name))
-end
-
-def conf_float(name)
-    float_of_string(conf(name))
-end
-
-def conf_bool(name)
-    value = string.case(string.trim(conf(allow_empty=true, name)))
-    not (value == '' or value == 'false' or value == 'f' or value == '0')
-end
+%include "common.liq"
 
 def ls_dir(path)
     get_process_lines('find #{string.escape(path)} -type f')
@@ -208,15 +182,25 @@ else
     radio
 end
 
-output.icecast(
-    %mp3(bitrate=128),
+MASTER_PASSWORD = conf('MASTER_PASSWORD')
+connections = ref []
+output.harbor(
+    %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',
-    host=conf('ICECAST_BROADCAST_HOST'),
-    port=conf_int('ICECAST_BROADCAST_PORT'),
-    password=conf('ICECAST_BROADCAST_PASSWORD'),
-    mount=conf('ICECAST_BROADCAST_MOUNT'),
-    url=conf('ICECAST_BROADCAST_URL'),
-    description=conf('ICECAST_BROADCAST_DESCRIPTION'),
-    genre=conf('ICECAST_BROADCAST_GENRE'),
-    radio,
+    mount='broadcast',
+    port=conf_int('INTERNAL_HARBOR_PORT'),
+    auth=fun(user, pass) -> pass == MASTER_PASSWORD,
+    on_connect=fun(~headers, ~uri, ~protocol, ip) -> begin
+        args = snd(url.split(uri))
+        upstream = args["upstream"]
+        connections := list.add((ip, upstream), !connections)
+        log('Upstream "#{upstream}" connected')
+    end,
+    on_disconnect=fun(ip) -> begin
+        conns = !connections
+        upstream = conns[ip]
+        connections := list.remove_assoc(ip, !connections)
+        log('Upstream "#{upstream}" disconnected')
+    end,
+    radio
 )
