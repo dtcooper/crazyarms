@@ -26,10 +26,14 @@ if [ "$USE_DOCKER" -a ! -f /.dockerenv ]; then
 else
     dotenv env.vars.default
 
-    if [ "$ENVFILE" ]; then
-        dotenv "$ENVFILE"
-    elif [ -f env.vars ]; then
+    # Global variables
+    if [ -f env.vars ]; then
         dotenv env.vars
+    fi
+
+    # Overrides
+    if [ -f "$ENVFILE" ]; then
+        dotenv "$ENVFILE"
     fi
 
     SCRIPT="$1"

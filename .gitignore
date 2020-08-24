@@ -1,5 +1,5 @@
 /harbor/auth-data.json
 /harbor/autodj/
 /harbor/credentials.json
-/harbor/env.vars
+/harbor/*.vars
 /harbor/venv/
