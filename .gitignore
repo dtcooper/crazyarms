@@ -1,4 +1,4 @@
-/harbor/auth-data.json
+/harbor/user-data.pkl
 /harbor/autodj/
 /harbor/credentials.json
 /harbor/*.vars
