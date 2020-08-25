@@ -7,28 +7,31 @@ if file.exists('/.dockerenv') then
     set('server.telnet.bind_addr', '0.0.0.0')
 end
 
-INTERNAL_HARBOR_PASSWORD = conf('INTERNAL_HARBOR_PASSWORD')
-INTERNAL_HARBOR_PORT = conf('INTERNAL_HARBOR_PORT')
-UPSTREAM_NAME =  conf('UPSTREAM_NAME')
-
-
-input = input.http(
-    id='input',
-    max=conf_float('INPUT_MAX'),
-    poll_delay=0.5,
-    'http://user:#{INTERNAL_HARBOR_PASSWORD}@localhost:#{INTERNAL_HARBOR_PORT}/broadcast?upstream=#{UPSTREAM_NAME}',
-)
+password = conf('INTERNAL_HARBOR_PASSWORD')
+port = conf('INTERNAL_HARBOR_PORT')
+url = 'http://user:#{password}@localhost:#{port}/stream?upstream=#{script_name}'
+log('Connecting to harbor URL: #{url}')
+input = input.http(id='input', max=conf_float('INPUT_MAX'), poll_delay=0.5, url)
 output.dummy(input, fallible=true)
 
 failsafe = single(id='failsafe', conf('FAILSAFE_PATH'))
 broadcast = fallback(track_sensitive=false, [input, failsafe])
 
-if conf('UPSTREAM_ICECAST_TYPE') != 'mp3' then
-    error('Only mp3 supported at this time')
-end
+encoding = conf('UPSTREAM_ICECAST_ENCODING')
+format = (
+    if encoding == 'aac-48' then
+        %fdkaac(bitrate=48, afterburner=true, sbr_mode=true)
+    else
+        if encoding != 'mp3-128' then
+            error('Invalid encoding #{encoding}')
+        end
+        %mp3(bitrate=128)
+    end
+)
+log('Upstream "#{script_name}", encoding "#{encoding}"')
 
 output.icecast(
-    %mp3(bitrate=128),
+    format,
     id='broadcast',
     host=conf('UPSTREAM_ICECAST_HOST'),
     port=conf_int('UPSTREAM_ICECAST_PORT'),

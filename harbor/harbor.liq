@@ -21,10 +21,6 @@ end
 
 set('server.telnet', conf_bool('TELNET_ENABLE'))
 set('server.telnet.port', conf_int('TELNET_PORT'))
-if file.exists('/.dockerenv') then
-    # Docker only! Otherwise always localhost.
-    set('server.telnet.bind_addr', '0.0.0.0')
-end
 
 notify('Harbor came online')
 
@@ -187,7 +183,7 @@ INTERNAL_HARBOR_PASSWORD = conf('INTERNAL_HARBOR_PASSWORD')
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',
-    mount='broadcast',
+    mount='stream',
     port=conf_int('INTERNAL_HARBOR_PORT'),
     auth=fun(user, pass) -> pass == INTERNAL_HARBOR_PASSWORD,
     on_connect=fun(~headers, ~uri, ~protocol, ip) -> begin

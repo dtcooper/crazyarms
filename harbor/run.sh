@@ -38,12 +38,12 @@ else
         dotenv "$ENVFILE"
     fi
 
-    SCRIPT="$1"
-    if [ "$SCRIPT" ]; then
+    if [ -f "$1" ]; then
+        SCRIPT="$1"
         shift 1
     else
         SCRIPT=harbor.liq
     fi
 
-    exec liquidsoap "$SCRIPT"
+    exec liquidsoap "$SCRIPT" -- $@
 fi
