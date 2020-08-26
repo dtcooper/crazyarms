@@ -25,6 +25,8 @@ ZOOM_FLOAT_WINDOW_MIN_BTN_POS_X=20
 ZOOM_FLOAT_WINDOW_MIN_BTN_POS_Y=90
 ZOOM_FLOAT_WINDOW_MIN_HEIGHT=85
 
+sleep 30
+
 while true; do
     # Close a previous timeout
     LEAVE_WINDOW="$(xdotool search --onlyvisible --name "$ZOOM_LEAVE_NAME")"
