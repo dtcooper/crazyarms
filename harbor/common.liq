@@ -29,9 +29,6 @@ end
 daemonize = argv(1) != ""
 script_name = if daemonize then argv(1) else 'default' end
 if daemonize then
-    set('init.daemon', true)
-    set('init.daemon.pidfile', true)
-    set('init.daemon.pidfile.path', '/var/run/liquidsoap/#{script_name}.pid')
     set('log.file', true)
     set('log.file.path', '/var/log/liquidsoap/#{script_name}.log')
     set('log.file.perms', 432)
