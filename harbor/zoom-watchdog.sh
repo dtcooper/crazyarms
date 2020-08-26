@@ -25,9 +25,16 @@ ZOOM_FLOAT_WINDOW_MIN_BTN_POS_X=20
 ZOOM_FLOAT_WINDOW_MIN_BTN_POS_Y=90
 ZOOM_FLOAT_WINDOW_MIN_HEIGHT=85
 
-sleep 30
-
 while true; do
+    if ! pgrep -fu $(whoami) /opt/zoom/zoom > /dev/null; then
+        echo "$(date) - Zoom not running."
+        if [ -f /.dockerenv ]; then
+            break
+        else
+            continue
+        fi
+    fi
+
     # Close a previous timeout
     LEAVE_WINDOW="$(xdotool search --onlyvisible --name "$ZOOM_LEAVE_NAME")"
     if [ "$LEAVE_WINDOW" ]; then
@@ -44,13 +51,17 @@ while true; do
     MAIN_WINDOW="$(xdotool search --name "$ZOOM_WINDOW_NAME")"
     if [ -z "$MAIN_WINDOW" ]; then
         echo "$(date) - Meeting not running. Opening meeting ID $MEETING_ID."
-        setsid -f xdg-open "zoommtg://zoom.us/join?action=join&confno=$MEETING_ID&uname=$MEETING_USER&pwd=$MEETING_PWD"
+        xdg-open "zoommtg://zoom.us/join?action=join&confno=$MEETING_ID&uname=$MEETING_USER&pwd=$MEETING_PWD"
         sleep 5
         MAIN_WINDOW="$(xdotool search --name "$ZOOM_WINDOW_NAME")"
     fi
     if [ -z "$MAIN_WINDOW" ]; then
         echo "$(date) - Error finding window named '$ZOOM_WINDOW_NAME'."
-        break
+        if [ -f /.dockerenv ]; then
+            break
+        else
+            continue
+        fi
     fi
 
     # If it's maximized, minimize it
@@ -63,7 +74,11 @@ while true; do
     FLOAT_WINDOW="$(xdotool search --name "$ZOOM_FLOAT_NAME")"
     if [ -z "$FLOAT_WINDOW" ]; then
         echo "$(date) - Error finding window named '$ZOOM_FLOAT_NAME'."
-        break
+        if [ -f /.dockerenv ]; then
+            break
+        else
+            continue
+        fi
     fi
 
     if [ "$(xwininfo -id "$FLOAT_WINDOW" | grep 'Height:' | awk '{print $2}')" \
@@ -75,6 +90,10 @@ while true; do
 
         sleep 1
         xdotool click --window "$FLOAT_WINDOW" 1
+    fi
+
+    if [ -f /.dockerenv ]; then
+        break
     fi
 
     sleep 10
