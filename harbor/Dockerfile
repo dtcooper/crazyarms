@@ -14,13 +14,16 @@ RUN apt-get update \
         nginx \
         novnc \
         pulseaudio \
+        python3-pip \
         sox \
         sudo \
         supervisor \
         telnet \
         websockify \
         wget \
+        x11-utils \
         x11vnc \
+        xdotool \
         xvfb \
     && wget -qP /tmp https://zoom.us/client/latest/zoom_amd64.deb \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
@@ -34,7 +37,10 @@ RUN apt-get update \
         liquidsoap-1.4.2 \
     && ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
-    && rm -rf /var/lib/apt/lists/*/tmp/zoom_amd64.deb
+    && rm -rf /var/lib/apt/lists/* /tmp/zoom_amd64.deb
+
+ADD requirements.txt /tmp
+RUN pip3 install -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
 # Prevasives fix for liquidsoap 1.4.1 on Debian/Ubuntu
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=956564#5

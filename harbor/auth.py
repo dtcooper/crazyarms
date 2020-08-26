@@ -18,7 +18,7 @@ import pprint
 import os
 import sys
 
-from dateutil.parser import parse as dateutil_parse, ParserError
+from dateutil.parser import parse as dateutil_parse
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pytz
@@ -60,12 +60,12 @@ def get_and_cache_user_data(sheet_key):
         try:
             start = SHEET_TIMEZONE.localize(dateutil_parse(start))
             end = SHEET_TIMEZONE.localize(dateutil_parse(end))
-        except ParserError:
-            continue
-
-        password = sanitize_password(password)
-        if password:
-            data[password] = OrderedDict((('name', name or 'unknown'), ('start', start), ('end', end)))
+        except ValueError:
+            pass
+        else:
+            password = sanitize_password(password)
+            if password:
+                data[password] = OrderedDict((('name', name or 'unknown'), ('start', start), ('end', end)))
 
     with open(USER_DATA_CACHE_FILE, 'wb') as cache_file:
         pickle.dump(data, cache_file)

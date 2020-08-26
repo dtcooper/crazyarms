@@ -25,11 +25,75 @@ set('server.telnet.port', conf_int('TELNET_PORT'))
 notify('Harbor came online')
 
 DJ_MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
+DJ_AUTH_ENABLED = conf_bool('DJ_AUTH_ENABLED')
+DJ_AUTH_SHEET_KEY = if DJ_AUTH_ENABLED then conf('DJ_AUTH_SHEET_KEY') else '' end
+DJ_AUTH_GRACE_PERIOD = if DJ_AUTH_ENABLED then conf_int('DJ_AUTH_GRACE_PERIOD') else 0 end
+DJ_AUTH_ENFORCE_SCHEDULE = conf_bool('DJ_AUTH_ENFORCE_SCHEDULE')
+auth_cmd = './auth.py -k #{string.escape(DJ_AUTH_SHEET_KEY)} -g #{string_of(DJ_AUTH_GRACE_PERIOD)}'
+
+if DJ_AUTH_ENABLED then
+    log('Authentication enabled.')
+    add_timeout(1., fun() -> begin
+        if test_process(auth_cmd) then
+            log("User data sync'd")
+        else
+            log("Error sync'ing user data")
+        end
+        20.
+    end)
+end
+
+connected = ref false
 dj_harbor = input.harbor(
     conf('DJ_MOUNT_NAME'),
     id='dj_harbor',
     port=conf_int('DJ_PORT'),
-    auth=fun(user, pass) -> pass == DJ_MASTER_PASSWORD,
+    auth=fun(user, pass) -> begin
+        should_log = not !connected
+        connected := true
+
+        if pass == DJ_MASTER_PASSWORD then
+            if should_log then
+                log_msg = 'Accepted master DJ password'
+                log(log_msg)
+                notify('Master DJ connected', log_msg)
+            end
+            true
+        elsif DJ_AUTH_ENABLED then
+            cmd_output = get_process_output('#{auth_cmd} #{pass}')
+            data = of_json(default=[], cmd_output)
+            bool_data = of_json(default=[], cmd_output)
+
+            if DJ_AUTH_ENFORCE_SCHEDULE then
+                if list.assoc(default=false, 'authorized', bool_data) then
+                    if should_log then
+                        log_msg = 'Accepted DJ #{data["name"]} during authorization window #{data["start"]} - #{data["end"]}'
+                        log(log_msg)
+                        notify('#{data["name"]} connected', log_msg)
+                    end
+                    true
+                else
+                    log('Rejected DJ #{data["name"]} outside of authorization window #{data["start"]} - #{data["end"]}')
+                    false
+                end
+            else
+                if list.assoc(default=false, 'valid_user', bool_data) then
+                    if should_log then
+                        log_msg = 'Accepted DJ #{data["name"]} since schedule is unenforced'
+                        log(log_msg)
+                        notify('#{data["name"]} connected', log_msg)
+                    end
+                    true
+                else
+                    log('Rejected password "#{pass}"')
+                    false
+                end
+            end
+        else
+            false
+        end
+    end,
+    on_disconnect=fun() -> connected := false,
     max=conf_float('INPUT_MAX'),
     buffer=conf_float('INPUT_BUFFER'),
 )

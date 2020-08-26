@@ -18,8 +18,12 @@ failsafe = single(id='failsafe', conf('FAILSAFE_PATH'))
 broadcast = fallback(track_sensitive=false, [input, failsafe])
 
 encoding = conf('UPSTREAM_ICECAST_ENCODING')
+log('Upstream "#{script_name}", encoding "#{encoding}"')
+
+content_type = ref ""  # empty string to guess
 format = (
     if encoding == 'aac-48' then
+        content_type := 'audio/aacp'
         %fdkaac(bitrate=48, afterburner=true, sbr_mode=true)
     else
         if encoding != 'mp3-128' then
@@ -28,11 +32,13 @@ format = (
         %mp3(bitrate=128)
     end
 )
-log('Upstream "#{script_name}", encoding "#{encoding}"')
+
 
 output.icecast(
     format,
     id='broadcast',
+    format=!content_type,
+    icy_metadata='true',
     host=conf('UPSTREAM_ICECAST_HOST'),
     port=conf_int('UPSTREAM_ICECAST_PORT'),
     password=conf('UPSTREAM_ICECAST_PASSWORD'),
