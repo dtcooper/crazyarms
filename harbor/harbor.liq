@@ -12,7 +12,7 @@ def notify(subject, body='')
         to_addresses = string.concat(NOTIFICATIONS_TO_EMAIL_ADDRS, separator=', ')
         email = 'To: #{to_addresses}\r\nFrom: #{NOTIFICATIONS_FROM_EMAIL_ADDR}\r\nSubject: #{subject}\r\n\r\n#{body}'
         log('Sending notification to [#{to_addresses}]: #{subject}')
-        ignore(run_process('echo #{quote(email)} | sendmail -t'))
+        ignore(run_process('echo #{string.escape(email)} | sendmail -t'))
     else
         log('Notification (email disabled): #{subject} // #{if body == "" then "[no body]" else body end}')
     end
