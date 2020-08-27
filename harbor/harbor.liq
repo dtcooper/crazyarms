@@ -109,8 +109,9 @@ dj_harbor = strip_blank(
 pulse_in = input.pulseaudio()
 output.dummy(id='pulse_in', pulse_in)
 
+PULSE_MAX_SILENCE = conf_float('PULSE_MAX_SILENCE')
 pulse_in = strip_blank(
-    max_blank=conf_float('PULSE_MAX_SILENCE'),
+    max_blank=PULSE_MAX_SILENCE,
     id='pulse_in_strip',
     start_blank=true,
     pulse_in,
@@ -217,7 +218,18 @@ CROSSFADE_TIMER = conf_float('CROSSFADE_TIMER')
 current_stream = ref source.id(failsafe)  # assume lowest precedence in fallback
 def crossfade(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
-    current_stream := source.id(source)
+
+    new_stream = source.id(source)
+    if new_stream == source.id(pulse_in) then
+        notify('Pulseaudio (Zoom) started streaming', 'Noise heard on pulseaudio input device')
+    elsif !current_stream == source.id(pulse_in) and new_stream != source.id(pulse_in) then
+        notify(
+            'Pulseaudio (Zoom) stopped streaming',
+            'Remote DJ logged in or #{string_of(PULSE_MAX_SILENCE)}s silence on pulseaudio input device',
+        )
+    end
+    current_stream := new_stream
+
     add(normalize=false, [
         sequence([
             blank(duration=CROSSFADE_TIMER),
