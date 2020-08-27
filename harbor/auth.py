@@ -1,13 +1,4 @@
-#!/bin/sh
-"true" '''\'
-VENV_PYTHON=$(dirname "$0")/venv/bin/python
-
-if [ -x $VENV_PYTHON ]; then
-    exec $VENV_PYTHON "$0" "$@"
-else
-    exec python3 "$0" "$@"
-fi
-'''
+#!/usr/bin/env python3
 
 import argparse
 from collections import OrderedDict
