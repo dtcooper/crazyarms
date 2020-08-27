@@ -232,10 +232,10 @@ def crossfade(~source, one, two)
 
     add(normalize=false, [
         sequence([
-            blank(duration=CROSSFADE_TIMER),
-            fade.initial(duration=CROSSFADE_TIMER, two)
+            blank(duration=CROSSFADE_TIMER / 2.),
+            fade.initial(duration=CROSSFADE_TIMER / 2., two)
         ]),
-        fade.final(duration=CROSSFADE_TIMER * 2., one)
+        fade.final(duration=CROSSFADE_TIMER, one)
     ])
 end
 
