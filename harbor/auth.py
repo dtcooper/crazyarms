@@ -20,6 +20,7 @@ import sys
 
 from dateutil.parser import parse as dateutil_parse
 import gspread
+from gspread_formatting import cellFormat, color, format_cell_range, format_cell_ranges
 from oauth2client.service_account import ServiceAccountCredentials
 import pytz
 
@@ -56,7 +57,11 @@ def get_and_cache_user_data(sheet_key):
         print("Couldn't find header row.")
         sys.exit(1)
 
-    for name, start, end, password, *_ in rows[header_row + 1:]:
+    fmt = cellFormat(backgroundColor=color(0.9, 1, 0.9))
+    format_cell_range(sheet, '10', fmt)
+    bad_sheet_rows = []
+
+    for sheet_row, (name, start, end, password, *_) in enumerate(rows[header_row + 1:], header_row + 2):
         if all(map(lambda s: s.strip(), (name, start, end, password))):
             try:
                 start = SHEET_TIMEZONE.localize(dateutil_parse(start))
@@ -67,6 +72,15 @@ def get_and_cache_user_data(sheet_key):
                 password = sanitize_password(password)
                 if password:
                     data[password] = OrderedDict((('name', name), ('start', start), ('end', end)))
+                    continue
+        bad_sheet_rows.append(sheet_row)
+
+    green = cellFormat(backgroundColor=color(0.9, 1, 0.9))
+    red = cellFormat(backgroundColor=color(1, 0.9, 0.9))
+    # First make all rows green after header (+1 after header, +1 because gsheets are 1-offset, not 0-offset)
+    format_cell_range(sheet, f'{header_row + 2}:{sheet_row}', green)
+    # Then make bad rows red
+    format_cell_ranges(sheet, [(str(r), red) for r in bad_sheet_rows])
 
     with open(USER_DATA_CACHE_FILE, 'wb') as cache_file:
         pickle.dump(data, cache_file)
