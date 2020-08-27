@@ -85,7 +85,7 @@ def auth_data(user_data, password, date, grace=0):
         end = user_data['end'] + datetime.timedelta(seconds=grace)
         data['start_with_grace_period'], data['end_with_grace_period'] = str(start), str(end)
         data['authorized'] = start <= date <= end
-        data['seconds_to_kickoff'] = round((end - date).total_seconds()) if data['authorized'] else -1
+        data['end_with_grace_period_unix'] = str(end.timestamp())
 
     return data
 
@@ -96,7 +96,7 @@ def main():
     parser.add_argument('-k', '--sheet-key', help='google sheet key', required=True)
     parser.add_argument('--timezone', help='timezone (default: US/Pacific)', default='US/Pacific')
     parser.add_argument('-d', '--date', help='date and time to check (default: now)')
-    parser.add_argument('-f', '--force', help="force a download when checking password (don't use cache)")
+    parser.add_argument('-f', '--force', action='store_true', help="force a download when checking password (don't use cache)")
     parser.add_argument('-g', '--grace-period', type=int, default=90, help='grace period in seconds (default: 90)')
     parser.add_argument('--dump', action='store_true', help='dump all user data')
 

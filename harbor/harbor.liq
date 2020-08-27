@@ -4,13 +4,19 @@ def ls_dir(path)
     get_process_lines('find #{string.escape(path)} -type f')
 end
 
+def pretty_seconds(seconds)
+    string.trim(get_process_output(
+        'python3 -c "import datetime as d; print(d.timedelta(seconds=#{string_of(int_of_float(seconds))}))"'))
+end
+
 NOTIFICATIONS_ENABLED = conf_bool('NOTIFICATIONS_ENABLED')
 NOTIFICATIONS_TO_EMAIL_ADDRS = of_json(default=[], conf(allow_empty=true, 'NOTIFICATIONS_TO_EMAIL_ADDRS'))
 NOTIFICATIONS_FROM_EMAIL_ADDR = conf('NOTIFICATIONS_FROM_EMAIL_ADDR')
 def notify(subject, body='')
     if NOTIFICATIONS_ENABLED and list.length(NOTIFICATIONS_TO_EMAIL_ADDRS) > 0 then
         to_addresses = string.concat(NOTIFICATIONS_TO_EMAIL_ADDRS, separator=', ')
-        email = 'To: #{to_addresses}\r\nFrom: #{NOTIFICATIONS_FROM_EMAIL_ADDR}\r\nSubject: #{subject}\r\n\r\n#{body}'
+        date = string.trim(get_process_output('date'))
+        email = 'To: #{to_addresses}\r\nFrom: #{NOTIFICATIONS_FROM_EMAIL_ADDR}\r\nSubject: #{date} #{subject}\r\n\r\n#{body}'
         log('Sending notification to [#{to_addresses}]: #{subject}')
         ignore(run_process('echo #{string.escape(email)} | sendmail -t'))
     else
@@ -39,65 +45,91 @@ if DJ_AUTH_ENABLED then
         else
             log("Error sync'ing user data")
         end
-        20.
+        30.
     end)
 end
 
-connected = ref false
+dj_raw_data = ref "disconnected"
+dj_login_time = ref -1.
+dj_kickoff_time = ref -1.
+dj_just_booted = ref false
 dj_harbor = input.harbor(
     conf('DJ_MOUNT_NAME'),
     id='dj_harbor',
     port=conf_int('DJ_PORT'),
+    max=conf_float('INPUT_MAX'),
+    buffer=conf_float('INPUT_BUFFER'),
     auth=fun(user, pass) -> begin
-        should_log = not !connected
-        connected := true
-
         if pass == DJ_MASTER_PASSWORD then
-            if should_log then
-                log_msg = 'Accepted master DJ password'
-                log(log_msg)
-                notify('Master DJ connected', log_msg)
-            end
+            log('Accepted master DJ password')
+            dj_raw_data := 'master'
             true
         elsif DJ_AUTH_ENABLED then
             cmd_output = get_process_output('#{auth_cmd} #{pass}')
+            dj_raw_data := cmd_output
             data = of_json(default=[], cmd_output)
             bool_data = of_json(default=[], cmd_output)
 
-            if DJ_AUTH_ENFORCE_SCHEDULE then
-                if list.assoc(default=false, 'authorized', bool_data) then
-                    if should_log then
-                        log_msg = 'Accepted DJ #{data["name"]} during authorization window #{data["start"]} - #{data["end"]}'
-                        log(log_msg)
-                        notify('#{data["name"]} connected', log_msg)
-                    end
-                    true
+            if list.assoc(default=false, 'valid_user', bool_data) then
+                if DJ_AUTH_ENFORCE_SCHEDULE then
+                    allow = list.assoc(default=false, 'authorized', bool_data)
+                    log('#{if allow then "Accepted" else "Rejected" end} password for DJ "#{data["name"]}", '
+                        ^ 'authorized for window #{data["start"]} to #{data["end"]}')
+                    allow
                 else
-                    log('Rejected DJ #{data["name"]} outside of authorization window #{data["start"]} - #{data["end"]}')
-                    false
+                    log('Accepted password for DJ "#{data["name"]}" (schedule unenforced by config)')
+                    true
                 end
             else
-                if list.assoc(default=false, 'valid_user', bool_data) then
-                    if should_log then
-                        log_msg = 'Accepted DJ #{data["name"]} since schedule is unenforced'
-                        log(log_msg)
-                        notify('#{data["name"]} connected', log_msg)
-                    end
-                    true
-                else
-                    log('Rejected password "#{pass}"')
-                    false
-                end
+                log('Rejected password "#{pass}"')
+                false
             end
         else
+            log('Rejected password "#{pass}" (DJ auth disabled)')
             false
         end
     end,
-    on_disconnect=fun() -> connected := false,
-    max=conf_float('INPUT_MAX'),
-    buffer=conf_float('INPUT_BUFFER'),
+    on_connect=fun(headers) -> begin
+        ip_address = list.hd(default='source client ip unknown', server.execute('dj_harbor.status'))
+        data = of_json(default=[], !dj_raw_data)
+        if DJ_AUTH_ENFORCE_SCHEDULE then
+            dj_kickoff_time := float_of_string(list.assoc(default='-1', 'end_with_grace_period_unix', data))
+        end
+
+        dj_login_time := time()
+        log_line = '#{list.assoc(default="Master DJ", "name", data)} connected'
+        log(log_line)
+        notify(log_line, '#{!dj_raw_data}\n#{ip_address}\n\n#{json_of(headers)}')
+    end,
+    on_disconnect=fun() -> begin
+        dj_kickoff_time := -1.
+        if !dj_raw_data != 'disconnected' then
+            data = of_json(default=[], !dj_raw_data)
+            total_time = pretty_seconds(time() - !dj_login_time)
+            log_line = '#{list.assoc(default="Master DJ", "name", data)} disconnected after #{total_time}'
+                       ^ if !dj_just_booted then ' (kicked off)' else '' end
+            dj_just_booted := false
+            dj_raw_data := 'disconnected'
+            log(log_line)
+            notify(log_line)
+        end
+    end
 )
 output.dummy(dj_harbor, id='dj_harbor_dummy', fallible=true)
+
+if DJ_AUTH_ENFORCE_SCHEDULE then
+    log('Installing DJ kickoff timer')
+    add_timeout(1., fun() -> begin
+        # 1 second to make sure harbor doesn't reauthenticate
+        if !dj_kickoff_time >= 0.0 and (time() - 1.0) > !dj_kickoff_time then
+            dj_kickoff_time := -1.
+            dj_just_booted := true
+            log('Booting DJ due to running after kickoff time')
+            ignore(server.execute('dj_harbor.stop'))
+        end
+        5.
+    end)
+end
 
 dj_harbor = strip_blank(
     max_blank=conf_float('DJ_MAX_SILENCE'),
