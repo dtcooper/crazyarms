@@ -57,15 +57,16 @@ def get_and_cache_user_data(sheet_key):
         sys.exit(1)
 
     for name, start, end, password, *_ in rows[header_row + 1:]:
-        try:
-            start = SHEET_TIMEZONE.localize(dateutil_parse(start))
-            end = SHEET_TIMEZONE.localize(dateutil_parse(end))
-        except ValueError:
-            pass
-        else:
-            password = sanitize_password(password)
-            if password:
-                data[password] = OrderedDict((('name', name or 'unknown'), ('start', start), ('end', end)))
+        if all(map(lambda s: s.strip(), (name, start, end, password))):
+            try:
+                start = SHEET_TIMEZONE.localize(dateutil_parse(start))
+                end = SHEET_TIMEZONE.localize(dateutil_parse(end))
+            except ValueError:
+                pass
+            else:
+                password = sanitize_password(password)
+                if password:
+                    data[password] = OrderedDict((('name', name), ('start', start), ('end', end)))
 
     with open(USER_DATA_CACHE_FILE, 'wb') as cache_file:
         pickle.dump(data, cache_file)
