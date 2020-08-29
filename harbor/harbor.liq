@@ -1,7 +1,7 @@
 %include "common.liq"
 
 def ls_dir(path)
-    get_process_lines('find #{string.escape(path)} -type f')
+    get_process_lines('find -L #{string.escape(path)} -type f')
 end
 
 def pretty_seconds(seconds)
