@@ -9,11 +9,14 @@ def pretty_seconds(seconds)
         'python3 -c "import datetime as d; print(d.timedelta(seconds=#{string_of(int_of_float(seconds))}))"'))
 end
 
+shutting_down = ref false  # Avoid wacky shutdown notifications
+on_shutdown(fun() -> shutting_down := true)
+
 NOTIFICATIONS_ENABLED = conf_bool('NOTIFICATIONS_ENABLED')
 NOTIFICATIONS_TO_EMAIL_ADDRS = of_json(default=[], conf(allow_empty=true, 'NOTIFICATIONS_TO_EMAIL_ADDRS'))
 NOTIFICATIONS_FROM_EMAIL_ADDR = conf('NOTIFICATIONS_FROM_EMAIL_ADDR')
 def notify(subject, body='')
-    if NOTIFICATIONS_ENABLED and list.length(NOTIFICATIONS_TO_EMAIL_ADDRS) > 0 then
+    if not !shutting_down and NOTIFICATIONS_ENABLED and list.length(NOTIFICATIONS_TO_EMAIL_ADDRS) > 0 then
         to_addresses = string.concat(NOTIFICATIONS_TO_EMAIL_ADDRS, separator=', ')
         date = string.trim(get_process_output('date'))
         email = 'To: #{to_addresses}\r\nFrom: #{NOTIFICATIONS_FROM_EMAIL_ADDR}\r\nSubject: #{date} #{subject}\r\n\r\n#{body}'
@@ -27,8 +30,6 @@ end
 
 set('server.telnet', conf_bool('TELNET_ENABLE'))
 set('server.telnet.port', conf_int('TELNET_PORT'))
-
-notify('Harbor came online')
 
 DJ_MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
 DJ_AUTH_ENABLED = conf_bool('DJ_AUTH_ENABLED')
@@ -49,7 +50,7 @@ if DJ_AUTH_ENABLED then
     end)
 end
 
-dj_raw_data = ref "disconnected"
+dj_raw_data = ref 'disconnected'
 dj_login_time = ref -1.
 dj_kickoff_time = ref -1.
 dj_just_booted = ref false
@@ -164,7 +165,7 @@ end
 last_stopset_played = ref -1
 current_stopset = ref []
 tracks_list = ref []
-autodj = request.dynamic(id='autodj', length=conf_float('REQUEST_QUEUE_LENGTH'), fun() -> begin
+autodj = request.dynamic.list(id='autodj', length=conf_float('REQUEST_QUEUE_LENGTH'), fun() -> begin
     current_datetime = int_of_string(string.trim(get_process_output("date '+%Y%m%d%H%M'")))
     current_minute = current_datetime mod 60
     interval_minute = current_minute mod (60 / AUTO_DJ_NUM_STOPSETS_PER_HOUR)
@@ -205,7 +206,7 @@ autodj = request.dynamic(id='autodj', length=conf_float('REQUEST_QUEUE_LENGTH'),
         current_stopset := stopset
     end
 
-    request.create(
+    [request.create(
         if list.length(!current_stopset) > 0 then
             # Play through current stopset
             path = list.hd(default=FAILSAFE_PATH, !current_stopset)
@@ -241,7 +242,7 @@ autodj = request.dynamic(id='autodj', length=conf_float('REQUEST_QUEUE_LENGTH'),
             log('autodj: playing track "#{path}"')
             path
         end
-    )
+    )]
 end)
 autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
 
@@ -308,3 +309,5 @@ output.harbor(
     end,
     radio
 )
+
+notify('Harbor came online', 'This does not necessarily mean listeners were disconnected')

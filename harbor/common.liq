@@ -38,3 +38,5 @@ if file.exists('/.dockerenv') then
     # Docker only! Otherwise always localhost.
     set('server.telnet.bind_addr', '0.0.0.0')
 end
+
+server.register('ping', usage='ping', description='Get a pong back from the server', fun(_) -> 'pong')
