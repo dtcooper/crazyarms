@@ -32,6 +32,51 @@ set('server.telnet', conf_bool('TELNET_ENABLE'))
 set('server.telnet.port', conf_int('TELNET_PORT'))
 
 DJ_MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
+
+### Priority DJ mount (only accepts master password) ###
+dj_priority_login_time = ref -1.
+dj_priority_harbor = input.harbor(
+    conf('DJ_PRIORITY_MOUNT_NAME'),
+    id='dj_priority_harbor',
+    port=conf_int('DJ_PORT'),
+    max=conf_float('INPUT_MAX'),
+    buffer=conf_float('INPUT_BUFFER'),
+    auth=fun(user, pass) -> begin
+        if pass == DJ_MASTER_PASSWORD then
+            log('Accepted master DJ password (priority mount)')
+            true
+        else
+            log('Rejected password "#{pass}" (priority mount)')
+            false
+        end
+    end,
+    on_connect=fun(headers) -> begin
+        ip_address = list.hd(default='source client ip unknown', server.execute('dj_priority_harbor.status'))
+        dj_priority_login_time := time()
+        log_line = 'Master DJ connected (priority mount)'
+        log(log_line)
+        notify(log_line, 'master (priority mount)\n#{ip_address}\n\n#{json_of(headers)}')
+    end,
+    on_disconnect=fun() -> begin
+        if !dj_priority_login_time >= 0. then
+            total_time = pretty_seconds(time() - !dj_priority_login_time)
+            log_line = 'Master DJ (priority mount) disconnected after #{total_time}'
+            dj_priority_login_time := -1.
+            log(log_line)
+            notify(log_line)
+        end
+    end
+)
+output.dummy(dj_priority_harbor, id='dj_priority_harbor_dummy', fallible=true)
+
+dj_priority_harbor = strip_blank(
+    max_blank=conf_float('DJ_MAX_SILENCE'),
+    id='dj_priority_harbor_strip',
+    start_blank=true,
+    audio_to_stereo(id='dj_priority_harbor_audio_to_stereo', dj_priority_harbor),
+)
+
+### DJ mount ###
 DJ_AUTH_ENABLED = conf_bool('DJ_AUTH_ENABLED')
 DJ_AUTH_SHEET_KEY = if DJ_AUTH_ENABLED then conf('DJ_AUTH_SHEET_KEY') else '' end
 DJ_AUTH_GRACE_PERIOD = if DJ_AUTH_ENABLED then conf_int('DJ_AUTH_GRACE_PERIOD') else 0 end
@@ -136,9 +181,11 @@ dj_harbor = strip_blank(
     max_blank=conf_float('DJ_MAX_SILENCE'),
     id='dj_harbor_strip',
     start_blank=true,
-    audio_to_stereo(id='dj_audio_to_stereo', dj_harbor),
+    audio_to_stereo(id='dj_harbor_audio_to_stereo', dj_harbor),
 )
 
+
+### Pulseaudio (Zoom) mount ###
 pulse_in = input.pulseaudio()
 output.dummy(id='pulse_in', pulse_in)
 
@@ -150,9 +197,13 @@ pulse_in = strip_blank(
     pulse_in,
 )
 
+
+### Failsafe mp3 (last resort) ###
 FAILSAFE_PATH = conf('FAILSAFE_PATH')
 failsafe = single(id='failsafe', FAILSAFE_PATH)
 
+
+## AutoDJ ###
 AUTO_DJ_DIR = conf('AUTO_DJ_DIR')
 AUTO_DJ_TRACKS_SUBDIR = conf('AUTO_DJ_TRACKS_SUBDIR')
 AUTO_DJ_NUM_STOPSETS_PER_HOUR = conf_int('AUTO_DJ_NUM_STOPSETS_PER_HOUR')
@@ -247,6 +298,7 @@ end)
 autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
 
 
+### Fallback radio ###
 CROSSFADE_TIMER = conf_float('CROSSFADE_TIMER')
 current_stream = ref source.id(failsafe)  # assume lowest precedence in fallback
 def crossfade(~source, one, two)
@@ -272,7 +324,7 @@ def crossfade(~source, one, two)
     ])
 end
 
-radio_fallback_precedence = [dj_harbor, pulse_in, autodj, failsafe]
+radio_fallback_precedence = [dj_priority_harbor, dj_harbor, pulse_in, autodj, failsafe]
 radio = fallback(
     id='radio',
     track_sensitive=false,
@@ -287,6 +339,8 @@ else
     radio
 end
 
+
+### Icecast output (wave format) ###
 connections = ref []
 INTERNAL_HARBOR_PASSWORD = conf('INTERNAL_HARBOR_PASSWORD')
 output.harbor(
