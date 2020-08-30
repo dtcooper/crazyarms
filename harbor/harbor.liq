@@ -13,17 +13,40 @@ shutting_down = ref false  # Avoid wacky shutdown notifications
 on_shutdown(fun() -> shutting_down := true)
 
 NOTIFICATIONS_ENABLED = conf_bool('NOTIFICATIONS_ENABLED')
-NOTIFICATIONS_TO_EMAIL_ADDRS = of_json(default=[], conf(allow_empty=true, 'NOTIFICATIONS_TO_EMAIL_ADDRS'))
-NOTIFICATIONS_FROM_EMAIL_ADDR = conf('NOTIFICATIONS_FROM_EMAIL_ADDR')
+NOTIFICATIONS_TO_EMAIL_ADDRS = of_json(default=[], conf(allow_empty=not NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_TO_EMAIL_ADDRS'))
+NOTIFICATIONS_FROM_EMAIL_ADDR = conf(allow_empty=NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_FROM_EMAIL_ADDR')
+SMS_NOTIFICATIONS_ENABLED = conf_bool('SMS_NOTIFICATIONS_ENABLED')
+SMS_FROM_NUMBER = conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_FROM_NUMBER')
+SMS_TO_NUMBERS = of_json(default=[], conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_TO_NUMBERS'))
+SMS_TWILIO_ACCOUNT_SID = conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_TWILIO_ACCOUNT_SID')
+SMS_TWILIO_AUTH_TOKEN = conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_TWILIO_AUTH_TOKEN')
 def notify(subject, body='')
     if not !shutting_down and NOTIFICATIONS_ENABLED and list.length(NOTIFICATIONS_TO_EMAIL_ADDRS) > 0 then
         to_addresses = string.concat(NOTIFICATIONS_TO_EMAIL_ADDRS, separator=', ')
         date = string.trim(get_process_output('date'))
         email = 'To: #{to_addresses}\r\nFrom: #{NOTIFICATIONS_FROM_EMAIL_ADDR}\r\nSubject: #{date} #{subject}\r\n\r\n#{body}'
         log('Sending notification to [#{to_addresses}]: #{subject}')
-        ignore(run_process('echo #{string.escape(email)} | sendmail -t'))
+        add_timeout(0., fun() -> begin
+            ignore(run_process(timeout=2., 'echo #{string.escape(email)} | sendmail -t'))
+            -1.
+        end)
     else
         log('Notification (email disabled): #{subject} // #{if body == "" then "[no body]" else body end}')
+    end
+
+    if not !shutting_down and SMS_NOTIFICATIONS_ENABLED and list.length(SMS_TO_NUMBERS) > 0 then
+        add_timeout(0., fun() -> begin
+            ignore(list.map(fun(number) -> begin
+                log('Sending SMS notification to #{number}: #{subject}')
+                run_process(timeout=10.,
+                    'curl -s -X POST -d "Body="#{string.escape(subject)} '
+                    ^ '-d "From="#{string.escape(SMS_FROM_NUMBER)} '
+                    ^ '-d "To="#{string.escape(number)} '
+                    ^ '-u #{string.escape(SMS_TWILIO_ACCOUNT_SID)}":"#{string.escape(SMS_TWILIO_AUTH_TOKEN)} '
+                    ^ '"https://api.twilio.com/2010-04-01/Accounts/"#{string.escape(SMS_TWILIO_ACCOUNT_SID)}"/Messages"')
+            end, SMS_TO_NUMBERS))
+            -1.
+        end)
     end
 end
 
@@ -86,7 +109,7 @@ auth_cmd = './auth.py -k #{string.escape(DJ_AUTH_SHEET_KEY)} -g #{string_of(DJ_A
 if DJ_AUTH_ENABLED then
     log('Authentication enabled.')
     add_timeout(1., fun() -> begin
-        if test_process(auth_cmd) then
+        if test_process(timeout=15., auth_cmd) then
             log("User data sync'd")
         else
             log("Error sync'ing user data")
