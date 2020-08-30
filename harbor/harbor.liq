@@ -12,16 +12,16 @@ end
 shutting_down = ref false  # Avoid wacky shutdown notifications
 on_shutdown(fun() -> shutting_down := true)
 
-NOTIFICATIONS_ENABLED = conf_bool('NOTIFICATIONS_ENABLED')
-NOTIFICATIONS_TO_EMAIL_ADDRS = of_json(default=[], conf(allow_empty=not NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_TO_EMAIL_ADDRS'))
-NOTIFICATIONS_FROM_EMAIL_ADDR = conf(allow_empty=NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_FROM_EMAIL_ADDR')
-SMS_NOTIFICATIONS_ENABLED = conf_bool('SMS_NOTIFICATIONS_ENABLED')
+NOTIFICATIONS_ENABLED = conf.bool('NOTIFICATIONS_ENABLED')
+NOTIFICATIONS_TO_EMAIL_ADDRS = conf.list(allow_empty=not NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_TO_EMAIL_ADDRS')
+NOTIFICATIONS_FROM_EMAIL_ADDR = conf(allow_empty=not NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_FROM_EMAIL_ADDR')
+SMS_NOTIFICATIONS_ENABLED = conf.bool('SMS_NOTIFICATIONS_ENABLED')
 SMS_FROM_NUMBER = conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_FROM_NUMBER')
-SMS_TO_NUMBERS = of_json(default=[], conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_TO_NUMBERS'))
+SMS_TO_NUMBERS = conf.list(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_TO_NUMBERS')
 SMS_TWILIO_ACCOUNT_SID = conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_TWILIO_ACCOUNT_SID')
 SMS_TWILIO_AUTH_TOKEN = conf(allow_empty=not SMS_NOTIFICATIONS_ENABLED, 'SMS_TWILIO_AUTH_TOKEN')
 def notify(subject, body='')
-    if not !shutting_down and NOTIFICATIONS_ENABLED and list.length(NOTIFICATIONS_TO_EMAIL_ADDRS) > 0 then
+    if not !shutting_down and NOTIFICATIONS_ENABLED then
         to_addresses = string.concat(NOTIFICATIONS_TO_EMAIL_ADDRS, separator=', ')
         date = string.trim(get_process_output('date'))
         email = 'To: #{to_addresses}\r\nFrom: #{NOTIFICATIONS_FROM_EMAIL_ADDR}\r\nSubject: #{date} #{subject}\r\n\r\n#{body}'
@@ -34,7 +34,7 @@ def notify(subject, body='')
         log('Notification (email disabled): #{subject} // #{if body == "" then "[no body]" else body end}')
     end
 
-    if not !shutting_down and SMS_NOTIFICATIONS_ENABLED and list.length(SMS_TO_NUMBERS) > 0 then
+    if not !shutting_down and SMS_NOTIFICATIONS_ENABLED then
         add_timeout(0., fun() -> begin
             ignore(list.map(fun(number) -> begin
                 log('Sending SMS notification to #{number}: #{subject}')
@@ -51,21 +51,21 @@ def notify(subject, body='')
 end
 
 
-set('server.telnet', conf_bool('TELNET_ENABLE'))
-set('server.telnet.port', conf_int('TELNET_PORT'))
+set('server.telnet', conf.bool('TELNET_ENABLE'))
+set('server.telnet.port', conf.int('TELNET_PORT'))
 
-DJ_MASTER_PASSWORD = conf('DJ_MASTER_PASSWORD')
+DJ_MASTER_PASSWORDS = conf.list('DJ_MASTER_PASSWORDS')
 
 ### Priority DJ mount (only accepts master password) ###
 dj_priority_login_time = ref -1.
 dj_priority_harbor = input.harbor(
     conf('DJ_PRIORITY_MOUNT_NAME'),
     id='dj_priority_harbor',
-    port=conf_int('DJ_PORT'),
-    max=conf_float('INPUT_MAX'),
-    buffer=conf_float('INPUT_BUFFER'),
+    port=conf.int('DJ_PORT'),
+    max=conf.float('INPUT_MAX'),
+    buffer=conf.float('INPUT_BUFFER'),
     auth=fun(user, pass) -> begin
-        if pass == DJ_MASTER_PASSWORD then
+        if list.mem(pass, DJ_MASTER_PASSWORDS) then
             log('Accepted master DJ password (priority mount)')
             true
         else
@@ -93,17 +93,17 @@ dj_priority_harbor = input.harbor(
 output.dummy(dj_priority_harbor, id='dj_priority_harbor_dummy', fallible=true)
 
 dj_priority_harbor = strip_blank(
-    max_blank=conf_float('DJ_MAX_SILENCE'),
+    max_blank=conf.float('DJ_MAX_SILENCE'),
     id='dj_priority_harbor_strip',
     start_blank=true,
     audio_to_stereo(id='dj_priority_harbor_audio_to_stereo', dj_priority_harbor),
 )
 
 ### DJ mount ###
-DJ_AUTH_ENABLED = conf_bool('DJ_AUTH_ENABLED')
+DJ_AUTH_ENABLED = conf.bool('DJ_AUTH_ENABLED')
 DJ_AUTH_SHEET_KEY = if DJ_AUTH_ENABLED then conf('DJ_AUTH_SHEET_KEY') else '' end
-DJ_AUTH_GRACE_PERIOD = if DJ_AUTH_ENABLED then conf_int('DJ_AUTH_GRACE_PERIOD') else 0 end
-DJ_AUTH_ENFORCE_SCHEDULE = conf_bool('DJ_AUTH_ENFORCE_SCHEDULE')
+DJ_AUTH_GRACE_PERIOD = if DJ_AUTH_ENABLED then conf.int('DJ_AUTH_GRACE_PERIOD') else 0 end
+DJ_AUTH_ENFORCE_SCHEDULE = conf.bool('DJ_AUTH_ENFORCE_SCHEDULE')
 auth_cmd = './auth.py -k #{string.escape(DJ_AUTH_SHEET_KEY)} -g #{string_of(DJ_AUTH_GRACE_PERIOD)}'
 
 if DJ_AUTH_ENABLED then
@@ -125,11 +125,11 @@ dj_just_booted = ref false
 dj_harbor = input.harbor(
     conf('DJ_MOUNT_NAME'),
     id='dj_harbor',
-    port=conf_int('DJ_PORT'),
-    max=conf_float('INPUT_MAX'),
-    buffer=conf_float('INPUT_BUFFER'),
+    port=conf.int('DJ_PORT'),
+    max=conf.float('INPUT_MAX'),
+    buffer=conf.float('INPUT_BUFFER'),
     auth=fun(user, pass) -> begin
-        if pass == DJ_MASTER_PASSWORD then
+        if list.mem(pass, DJ_MASTER_PASSWORDS) then
             log('Accepted master DJ password')
             dj_raw_data := 'master'
             true
@@ -201,7 +201,7 @@ if DJ_AUTH_ENFORCE_SCHEDULE then
 end
 
 dj_harbor = strip_blank(
-    max_blank=conf_float('DJ_MAX_SILENCE'),
+    max_blank=conf.float('DJ_MAX_SILENCE'),
     id='dj_harbor_strip',
     start_blank=true,
     audio_to_stereo(id='dj_harbor_audio_to_stereo', dj_harbor),
@@ -209,10 +209,12 @@ dj_harbor = strip_blank(
 
 
 ### Pulseaudio (Zoom) mount ###
-pulse_in = input.pulseaudio()
+PULSE_DEVICE = conf(allow_empty=true, 'PULSE_DEVICE')
+log('Listen to pulse device: #{if PULSE_DEVICE == "" then "[default]" else PULSE_DEVICE end}')
+pulse_in = input.pulseaudio(device=PULSE_DEVICE)
 output.dummy(id='pulse_in', pulse_in)
 
-PULSE_MAX_SILENCE = conf_float('PULSE_MAX_SILENCE')
+PULSE_MAX_SILENCE = conf.float('PULSE_MAX_SILENCE')
 pulse_in = strip_blank(
     max_blank=PULSE_MAX_SILENCE,
     id='pulse_in_strip',
@@ -229,8 +231,8 @@ failsafe = single(id='failsafe', FAILSAFE_PATH)
 ## AutoDJ ###
 AUTO_DJ_DIR = conf('AUTO_DJ_DIR')
 AUTO_DJ_TRACKS_SUBDIR = conf('AUTO_DJ_TRACKS_SUBDIR')
-AUTO_DJ_NUM_STOPSETS_PER_HOUR = conf_int('AUTO_DJ_NUM_STOPSETS_PER_HOUR')
-AUTO_DJ_STOPSET_ROTATOR_SUBDIRS = of_json(default=[], conf(allow_empty=true, 'AUTO_DJ_STOPSET_ROTATOR_SUBDIRS'))
+AUTO_DJ_NUM_STOPSETS_PER_HOUR = conf.int('AUTO_DJ_NUM_STOPSETS_PER_HOUR')
+AUTO_DJ_STOPSET_ROTATOR_SUBDIRS = conf.list(allow_empty=true, 'AUTO_DJ_STOPSET_ROTATOR_SUBDIRS')
 stopsets_enabled = list.length(AUTO_DJ_STOPSET_ROTATOR_SUBDIRS) > 0
 if not stopsets_enabled then
     log('Stop sets disabled by configuration')
@@ -239,7 +241,7 @@ end
 last_stopset_played = ref -1
 current_stopset = ref []
 tracks_list = ref []
-autodj = request.dynamic.list(id='autodj', length=conf_float('REQUEST_QUEUE_LENGTH'), fun() -> begin
+autodj = request.dynamic.list(id='autodj', length=conf.float('REQUEST_QUEUE_LENGTH'), fun() -> begin
     current_datetime = int_of_string(string.trim(get_process_output("date '+%Y%m%d%H%M'")))
     current_minute = current_datetime mod 60
     interval_minute = current_minute mod (60 / AUTO_DJ_NUM_STOPSETS_PER_HOUR)
@@ -322,7 +324,7 @@ autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
 
 
 ### Fallback radio ###
-CROSSFADE_TIMER = conf_float('CROSSFADE_TIMER')
+CROSSFADE_TIMER = conf.float('CROSSFADE_TIMER')
 current_stream = ref source.id(failsafe)  # assume lowest precedence in fallback
 def crossfade(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
@@ -355,7 +357,7 @@ radio = fallback(
     radio_fallback_precedence,
 )
 
-radio = if conf_bool('OUTPUT_COMPRESSOR_ENABLE') then
+radio = if conf.bool('OUTPUT_COMPRESSOR_ENABLE') then
     log('Enabling output compressor')
     nrj(radio)
 else
@@ -370,7 +372,7 @@ output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',
     mount='stream',
-    port=conf_int('INTERNAL_HARBOR_PORT'),
+    port=conf.int('INTERNAL_HARBOR_PORT'),
     auth=fun(user, pass) -> pass == INTERNAL_HARBOR_PASSWORD,
     on_connect=fun(~headers, ~uri, ~protocol, ip) -> begin
         args = snd(url.split(uri))

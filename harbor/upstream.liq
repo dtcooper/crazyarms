@@ -1,7 +1,7 @@
 %include "common.liq"
 
-set('server.telnet', conf_bool('UPSTREAM_TELNET_ENABLE'))
-set('server.telnet.port', conf_int('UPSTREAM_TELNET_PORT'))
+set('server.telnet', conf.bool('UPSTREAM_TELNET_ENABLE'))
+set('server.telnet.port', conf.int('UPSTREAM_TELNET_PORT'))
 if file.exists('/.dockerenv') then
     # Docker only! Otherwise always localhost.
     set('server.telnet.bind_addr', '0.0.0.0')
@@ -11,7 +11,7 @@ password = conf('INTERNAL_HARBOR_PASSWORD')
 port = conf('INTERNAL_HARBOR_PORT')
 url = 'http://user:#{password}@localhost:#{port}/stream?upstream=#{script_name}'
 log('Connecting to harbor URL: #{url}')
-input = input.http(id='input', max=conf_float('INPUT_MAX'), poll_delay=0.5, url)
+input = input.http(id='input', max=conf.float('INPUT_MAX'), poll_delay=0.5, url)
 output.dummy(input, fallible=true)
 
 failsafe = single(id='failsafe', conf('FAILSAFE_PATH'))
@@ -40,7 +40,7 @@ output.icecast(
     format=!content_type,
     icy_metadata='true',
     host=conf('UPSTREAM_ICECAST_HOST'),
-    port=conf_int('UPSTREAM_ICECAST_PORT'),
+    port=conf.int('UPSTREAM_ICECAST_PORT'),
     password=conf('UPSTREAM_ICECAST_PASSWORD'),
     mount=conf('UPSTREAM_ICECAST_MOUNT'),
     url=conf('UPSTREAM_ICECAST_URL'),
