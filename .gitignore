@@ -3,3 +3,5 @@
 /harbor/credentials.json
 /harbor/*.vars
 /harbor/venv/
+
+__pycache__/

@@ -28,7 +28,7 @@ def sanitize_password(password):
     return password.lower().strip()
 
 
-def get_and_cache_user_data(sheet_key):
+def get_and_cache_user_data(sheet_key, cache=True):
     creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, [
         'https://spreadsheets.google.com/feeds',
         'https://www.googleapis.com/auth/calendar.readonly',
@@ -40,7 +40,7 @@ def get_and_cache_user_data(sheet_key):
     sheet = client.open_by_key(sheet_key).sheet1
     rows = sheet.get_all_values()
 
-    headers = ('name', 'start', 'end', 'password')
+    headers = ('name', 'start', 'end', 'password', 'email')
     for header_row, row in enumerate(rows):
         if all(header in row[column].lower() for column, header in enumerate(headers)):
             break
@@ -49,7 +49,7 @@ def get_and_cache_user_data(sheet_key):
         sys.exit(1)
 
     bad_sheet_rows = set()
-    for sheet_row, (name, start, end, password, *_) in enumerate(rows[header_row + 1:], header_row + 2):
+    for sheet_row, (name, start, end, password, email, *_) in enumerate(rows[header_row + 1:], header_row + 2):
         if all(map(lambda s: s.strip(), (name, start, end, password))):
             try:
                 start = SHEET_TIMEZONE.localize(dateutil_parse(start))
@@ -59,7 +59,8 @@ def get_and_cache_user_data(sheet_key):
             else:
                 password = sanitize_password(password)
                 if password:
-                    data[password] = OrderedDict((('name', name), ('start', start), ('end', end)))
+                    data[password] = OrderedDict((('name', name.strip()), ('email', email.strip()),
+                                                  ('start', start), ('end', end)))
                     continue
         bad_sheet_rows.add(sheet_row)
 
@@ -72,8 +73,9 @@ def get_and_cache_user_data(sheet_key):
         for r in range(header_row + 2, sheet_row + 1)
     ])
 
-    with open(USER_DATA_CACHE_FILE, 'wb') as cache_file:
-        pickle.dump(data, cache_file)
+    if cache:
+        with open(USER_DATA_CACHE_FILE, 'wb') as cache_file:
+            pickle.dump(data, cache_file)
 
     return data
 
