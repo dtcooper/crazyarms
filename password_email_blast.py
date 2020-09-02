@@ -17,7 +17,9 @@ STRFTME_FMT = '%A %B %-d, %Y %-I:%M %p (%-H:%M) Pacific Time (PDT) (GMT%z)'
 
 def email(user):
     start, end = map(lambda d: d.strftime(STRFTME_FMT), (user['start'], user['end']))
-    return f'''Subject: [IMPORTANT] BMIR Broadcast Stream Info 2020
+    return f'''To: {user["email"]}\r
+From: {SENDER}\r
+Subject: [IMPORTANT] BMIR Broadcast Stream Info 2020\r\n\r
 Hi {user["name"]},
 
 Here's the information you'll need to broadcast to BMIR this year. (You can
