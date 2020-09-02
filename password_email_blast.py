@@ -73,10 +73,10 @@ def main():
     if args.print_emails:
         for user in users:
             print('=' * 40)
-            print(f'From: {SENDER}\nTo: {user["email"]}\n{email(user)}')
+            print(email(user))
         print('=' * 40)
     else:
-        password = getpass.getpass(f'GMail Password: ')
+        password = getpass.getpass('GMail Password: ')
 
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.ehlo()

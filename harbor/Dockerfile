@@ -15,6 +15,7 @@ RUN apt-get update \
         novnc \
         pulseaudio \
         python3-pip \
+        rlwrap \
         sox \
         sudo \
         supervisor \

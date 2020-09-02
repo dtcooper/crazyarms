@@ -81,7 +81,7 @@ def get_and_cache_user_data(sheet_key, cache=True):
 
 
 def auth_data(user_data, password, date, grace=0):
-    data = OrderedDict((('authorized', False), ('valid_user', False)))
+    data = OrderedDict((('currently_authorized', False), ('valid_user', False), ('password_sanitized', password)))
 
     user_data = user_data.get(sanitize_password(password))
     if user_data is not None:
@@ -91,7 +91,7 @@ def auth_data(user_data, password, date, grace=0):
         start = user_data['start'] - datetime.timedelta(seconds=grace)
         end = user_data['end'] + datetime.timedelta(seconds=grace)
         data['start_with_grace_period'], data['end_with_grace_period'] = str(start), str(end)
-        data['authorized'] = start <= date <= end
+        data['currently_authorized'] = start <= date <= end
         data['end_with_grace_period_unix'] = str(end.timestamp())
 
     return data
