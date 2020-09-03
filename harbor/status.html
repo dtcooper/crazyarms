@@ -43,7 +43,7 @@
     }
 
     function reloadData() {
-      $.get('/status/data.json', function(data) {
+      $.get('data.json', function(data) {
         $('#connection-status').css('color', 'green').text('syncing')
         render(data)
         setTimeout(reloadData, pollInterval)
@@ -57,15 +57,15 @@
       $('#password-check').submit(function(e) {
         e.preventDefault()
         $('#password-check-output').text('Checking...')
-        $.post('/status/password.text', $('#password').val(), function(text) {
+        $.post('password.text', $('#password').val(), function(text) {
           $('#password-check-output').text(text)
         })
       })
 
       $('.kick').click(function() {
-        if (confirm('Are you sure?')) {
+        if (confirm('Are you sure you want to boot the current DJ?')) {
           $('.kick').prop('disabled', true)
-          $.post('/status/kick.text', "" + $(this).data('amount'), function(text) {
+          $.post('kick.text', "" + $(this).data('amount'), function(text) {
             alert(text)
             $('.kick').prop('disabled', false)
           })

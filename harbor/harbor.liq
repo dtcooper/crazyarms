@@ -505,7 +505,7 @@ end
 
 HTML = file.contents('status.html')
 harbor.http.register(
-    port=conf.int('DJ_PORT'), method='GET', '^/status/?$',
+    port=conf.int('DJ_PORT'), method='GET', '^/status$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         # If we're daemonizing cache HTML file
         html = if daemonize then HTML else file.contents('status.html') end
@@ -514,13 +514,13 @@ harbor.http.register(
     end))
 
 harbor.http.register(
-    port=conf.int('DJ_PORT'), method='GET', '^/status/data\\.json$',
+    port=conf.int('DJ_PORT'), method='GET', '^/data\\.json$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) ->
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'application/json')],
                       data=status_json())))
 
 harbor.http.register(
-    port=conf.int('DJ_PORT'), method='POST', '^/status/password\\.text$',
+    port=conf.int('DJ_PORT'), method='POST', '^/password\\.text$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         auth = if list.mem(data, DJ_MASTER_PASSWORDS) then
             'Master DJ Password. Always authorized.'
@@ -533,7 +533,7 @@ harbor.http.register(
     end))
 
 harbor.http.register(
-    port=conf.int('DJ_PORT'), method='POST', '^/status/kick\\.text$',
+    port=conf.int('DJ_PORT'), method='POST', '^/kick\\.text$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         kicked_dj = if !dj_kickable and !dj_password != '' then
             kicked_dj = !dj_name
