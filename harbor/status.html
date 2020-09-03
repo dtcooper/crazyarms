@@ -22,6 +22,7 @@
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script>
     const data = __JSON_DATA__
+    let timeout = null;
     const pollInterval = 4000
     const failPollInterval = 10000
 
@@ -46,11 +47,12 @@
     function reloadData() {
       $.get('data.json', function(data) {
         $('#connection-status').css('color', 'green').text('syncing')
+        $('#shutdown').prop('disabled', false)
         render(data)
-        setTimeout(reloadData, pollInterval)
+        timeout = setTimeout(reloadData, pollInterval)
       }).fail(function() {
         $('#connection-status').css('color', 'red').text('problem syncing, retrying')
-        setTimeout(reloadData, failPollInterval)
+        timeout = setTimeout(reloadData, failPollInterval)
       })
     }
 
@@ -72,8 +74,17 @@
           })
         }
       })
+
+      $('#shutdown').click(function() {
+        if (confirm('Are you sure you want to restart the harbor?')) {
+          $(this).prop('disabled', true)
+          clearTimeout(timeout)
+          $.post('shutdown')
+          timeout = setTimeout(reloadData, failPollInterval)
+        }
+      });
       render(data)
-      setTimeout(reloadData, pollInterval)
+      timeout = setTimeout(reloadData, pollInterval)
     })
   </script>
 </head>
@@ -102,35 +113,50 @@
     </tbody>
   </table>
 
+  <hr>
+
   <div id="kickoff-buttons">
     <p>
       <button style="background-color: green" class="kick" data-amount="0" disabled>
-        <strong>Kick and <u>DO NOT</u> ban</strong>
+        <b>Kick and <u>DO NOT</u> ban</b>
       </button>
       <i>(client can immediately reconnect)</i>
     </p>
     <p>
       <button style="background-color: orange" class="kick" data-amount="60" disabled>
-        <strong>Kick and <u>BAN</u> for 1 minute</strong>
+        <b>Kick and <u>BAN</u> for 1 minute</b>
       </button>
     </p>
     <p>
       <button style="background-color: orangered" class="kick" data-amount="300" disabled>
-        <strong>Kick and <u>BAN</u> for 5 minutes</strong>
+        <b>Kick and <u>BAN</u> for 5 minutes</b>
       </button>
     </p>
     <p>
       <button style="background-color: orangered" class="kick" data-amount="900" disabled>
-        <strong>Kick and <u>BAN</u> for 15 minutes</strong>
+        <b>Kick and <u>BAN</u> for 15 minutes</b>
       </button>
     </p>
     <p>
       <button style="background-color: red" class="kick" data-amount="forever" disabled>
-        <strong>Kick and <u>BAN PERMANENTLY</u></strong>
+        <b>Kick and <u>BAN PERMANENTLY</u></b>
       </button>
       <i>(only until next server restart)</i>
     </p>
   </div>
+
+  <details>
+    <summary>Restart Harbor</summary>
+      Notes:
+      <ul>
+        <li>Current DJ will be disconnected</li>
+        <li>AutoDJ will be restarted</li>
+        <li>However, listeners <b><u>WILL NOT</u></b> be disconnected</li>
+      </ul>
+      <button style="background-color: red; font-size: 2rem" id="shutdown">
+        <b><u>RESTART</u> server</b>
+      </button>
+  </details>
 
   <details>
     <summary>Password Check Tool</summary>

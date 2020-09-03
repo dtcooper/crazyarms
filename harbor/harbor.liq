@@ -570,6 +570,16 @@ harbor.http.register(
     end))
 
 harbor.http.register(
+    port=conf.int('DJ_PORT'), method='POST', '^/shutdown$',
+    wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
+        add_timeout(2.5, fun() -> begin
+            shutdown()
+            -1.
+        end)
+        http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='')
+    end))
+
+harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/kick\\.text$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         kicked_dj = if !dj_kickable and !dj_password != '' then
