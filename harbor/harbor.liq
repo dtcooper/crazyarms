@@ -539,3 +539,8 @@ harbor.http.register(
 
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='DJ #{kicked_dj} booted')
     end))
+
+# Redirect
+harbor.http.register(
+    port=conf.int('DJ_PORT'), method='GET', '^/$', fun(~protocol, ~data, ~headers, uri) ->
+        http_response(protocol=protocol, code=302, headers=[('Location', '/status')], data=''))

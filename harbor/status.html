@@ -18,11 +18,7 @@
           date.setUTCSeconds(value)
           value = date
         } else if (id == 'kickable') {
-          if (value == 'true') {
-            $('#kickoff-buttons').show()
-          } else {
-            $('#kickoff-buttons').hide()
-          }
+          $('.kick').prop('disabled', value == 'false')
         }
 
         if (id.endsWith('_link') && value != 'N/A') {
@@ -58,7 +54,7 @@
           $('.kick').prop('disabled', true)
           $.post('/status/kick.text', "" + $(this).data('amount'), function(text) {
             alert(text)
-            setTimeout(function() { $('.kick').prop('disabled', false) }, 5000)
+            $('.kick').prop('disabled', false)
           })
         }
       })
@@ -89,30 +85,30 @@
     </tbody>
   </table>
 
-  <div id="kickoff-buttons" style="display: none">
+  <div id="kickoff-buttons">
     <p>
-      <button style="background-color: green" class="kick" data-amount="0">
+      <button style="background-color: green" class="kick" data-amount="0" disabled>
         <strong>Kick and <u>DO NOT</u> ban</strong>
       </button>
       <i>(client can immediately reconnect)</i>
     </p>
     <p>
-      <button style="background-color: orange" class="kick" data-amount="60">
+      <button style="background-color: orange" class="kick" data-amount="60" disabled>
         <strong>Kick and <u>BAN</u> for 1 minute</strong>
       </button>
     </p>
     <p>
-      <button style="background-color: orangered" class="kick" data-amount="300">
+      <button style="background-color: orangered" class="kick" data-amount="300" disabled>
         <strong>Kick and <u>BAN</u> for 5 minutes</strong>
       </button>
     </p>
     <p>
-      <button style="background-color: orangered" class="kick" data-amount="900">
+      <button style="background-color: orangered" class="kick" data-amount="900" disabled>
         <strong>Kick and <u>BAN</u> for 15 minutes</strong>
       </button>
     </p>
     <p>
-      <button style="background-color: red" class="kick" data-amount="forever">
+      <button style="background-color: red" class="kick" data-amount="forever" disabled>
         <strong>Kick and <u>BAN PERMANENTLY</u></strong>
       </button>
       <i>(only until next server restart)</i>
