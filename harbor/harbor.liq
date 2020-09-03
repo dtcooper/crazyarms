@@ -114,10 +114,12 @@ DJ_AUTH_GRACE_PERIOD = if DJ_AUTH_ENABLED then conf.int('DJ_AUTH_GRACE_PERIOD') 
 DJ_AUTH_ENFORCE_SCHEDULE = conf.bool('DJ_AUTH_ENFORCE_SCHEDULE')
 auth_cmd = './auth.py -k #{string.escape(DJ_AUTH_SHEET_KEY)} -g #{string_of(DJ_AUTH_GRACE_PERIOD)}'
 
+user_data_last_sync = ref -1.
 if DJ_AUTH_ENABLED then
     log('Authentication enabled.')
     add_timeout(1., fun() -> begin
         if test_process(timeout=15., auth_cmd) then
+            user_data_last_sync := time()
             log("User data sync'd")
         else
             log("Error sync'ing user data")
@@ -408,6 +410,9 @@ else
     radio
 end
 
+# TODO: Metadata
+
+
 
 ### Icecast output (wave format) ###
 INTERNAL_HARBOR_PASSWORD = conf('INTERNAL_HARBOR_PASSWORD')
@@ -437,15 +442,17 @@ notify('Harbor came online', 'This does not necessarily mean listeners were disc
 
 
 ### Status page
-def protected(func)
+def wrap_admin_http(func)
     fun(~protocol, ~data, ~headers, uri) -> begin
         auth = headers['Authorization']
+        pass = ref "[none]"
         allowed = if auth == '' then false else
             auth = string.extract(pattern='^Basic (.+)$', auth)
             if list.length(auth) > 0 then
                 auth = string.extract(pattern='^[^:]*:(.*)', base64.decode(auth['1']))
+                pass := auth["1"]
                 if list.length(auth) > 0 then
-                    list.mem(auth["1"], DJ_MASTER_PASSWORDS)
+                    list.mem(!pass, DJ_MASTER_PASSWORDS)
                 else
                     false
                 end
@@ -455,8 +462,10 @@ def protected(func)
         end
 
         if allowed then
+            log('Served #{uri}')
             func(protocol=protocol, data=data, headers=headers, uri)
         else
+            log('Rejected password "#{!pass}" on #{uri}')
             auth_headers = [('WWW-Authenticate', 'Basic realm="Password Required", charset="UTF-8"')]
             http_response(protocol=protocol, code=401, headers=auth_headers, data='')
         end
@@ -473,8 +482,9 @@ def status_json()
     end
     data = [('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY)), ('kickable', string_of(!dj_kickable)),
             ('upstream', upstream), ('uptime', pretty_seconds(time() - start_time)), ('script', script_name),
-            ('schedule_enforced', string_of(DJ_AUTH_ENFORCE_SCHEDULE)), ('schedule_link', if DJ_AUTH_ENFORCE_SCHEDULE then
-                'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
+            ('auth_enabled', string_of(DJ_AUTH_ENABLED)), ('schedule_enforced', string_of(DJ_AUTH_ENFORCE_SCHEDULE)),
+            ('spreadsheet_link', if DJ_AUTH_ENABLED then 'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
+            ('user_data_last_sync', if DJ_AUTH_ENABLED then pretty_seconds(time() - !user_data_last_sync) else 'N/A' end),
         ]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
@@ -492,7 +502,7 @@ end
 HTML = file.contents('status.html')
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='GET', '^/status/?$',
-    protected(fun(~protocol, ~data, ~headers, uri) -> begin
+    wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         # If we're daemonizing cache HTML file
         html = if daemonize then HTML else file.contents('status.html') end
         html = string.replace(pattern='__JSON_DATA__', fun(_) -> status_json(), html)
@@ -501,25 +511,26 @@ harbor.http.register(
 
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='GET', '^/status/data\\.json$',
-    protected(fun(~protocol, ~data, ~headers, uri) ->
+    wrap_admin_http(fun(~protocol, ~data, ~headers, uri) ->
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'application/json')],
                       data=status_json())))
 
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/status/password\\.text$',
-    protected(fun(~protocol, ~data, ~headers, uri) -> begin
+    wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         text = if list.mem(data, DJ_MASTER_PASSWORDS) then
             'Master DJ Password. Always authorized.'
         else
             get_process_output('#{auth_cmd} -f #{string.escape(data)}')
         end
 
+        log('Ran password check for #{data}: ${text}')
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data=text)
     end))
 
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/status/kick\\.text$',
-    protected(fun(~protocol, ~data, ~headers, uri) -> begin
+    wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         kicked_dj = if !dj_kickable and !dj_password != '' then
             kicked_dj = !dj_name
             if data == 'forever' then

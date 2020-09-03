@@ -1,5 +1,6 @@
 *.mp3
 .git/
+__pycache__/
 autodj-default/
 autodj/
 venv/

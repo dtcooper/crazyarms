@@ -5,10 +5,23 @@
   <title>BMIR Streaming Status Page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1/new.min.css">
+  <style>
+    td {
+      width: 60%;
+      max-width: 60%;
+      word-break: break-word;
+      text-align: left;
+    }
+    td:first-child {
+      width: 40%;
+      max-width: 40%;
+      text-align: right;
+    }
+  </style>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script>
     const data = __JSON_DATA__
-    const pollInterval = 2500
+    const pollInterval = 4000
     const failPollInterval = 10000
 
     function render(data) {
@@ -78,10 +91,12 @@
       <tr><td>Current DJ Connection Time:</td><td id="conn_timedelta"></td></tr>
       <tr><td>Current DJ Kickoff Time:</td><td id="kickoff_time"></td></tr>
       <tr><td>Harbor Name:</td><td id="script"></td></tr>
-      <tr><td>Schedule Enforced</td><td id="schedule_enforced"></td></tr>
-      <tr><td>Schedule:</td><td id="schedule_link"></td></tr>
-      <tr><td>Upstream Broadcasts:</td><td id="upstream"></td></tr>
-      <tr><td>Server Uptime:</td><td id="uptime"></td></tr>
+      <tr><td>Harbor Uptime:</td><td id="uptime"></td></tr>
+      <tr><td>Upstream Broadcast(s):</td><td id="upstream"></td></tr>
+      <tr><td>Spreadsheet-based Authentication:</td><td id="auth_enabled"></td></tr>
+      <tr><td>Time Since Last Spreadsheet Sync:</td><td id="user_data_last_sync"></td></tr>
+      <tr><td>Spreadsheet Link:</td><td id="spreadsheet_link"></td></tr>
+      <tr><td>Schedule Times Enforced</td><td id="schedule_enforced"></td></tr>
     </tbody>
   </table>
 
