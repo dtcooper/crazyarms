@@ -17,6 +17,7 @@ end
 
 shutting_down = ref false  # Avoid wacky shutdown notifications
 on_shutdown(fun() -> shutting_down := true)
+start_time = time()
 
 NOTIFICATIONS_ENABLED = conf.bool('NOTIFICATIONS_ENABLED')
 NOTIFICATIONS_TO_EMAIL_ADDRS = conf.list(allow_empty=not NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_TO_EMAIL_ADDRS')
@@ -199,16 +200,16 @@ dj_harbor = input.harbor(
         dj_name := list.assoc(default='Master DJ', 'name', data)
         dj_password := data['password_sanitized']
         log('#{!dj_name} connected')
-        notify('#{!dj_name} connected', '#{!dj_name} connected\n#{ip_address}\n\n#{json_of(headers)}')
+        notify('#{!dj_name} connected', '#{!dj_name} connected\n#{ip_address}\n#{!dj_raw_data}\n#{json_of(headers)}')
     end,
     on_disconnect=fun() -> begin
         dj_kickoff_time := -1.
         if !dj_raw_data != 'disconnected' then
+            dj_raw_data := 'disconnected'
             total_time = pretty_seconds(time() - !dj_login_time)
             log_line = '#{!dj_name} disconnected after #{total_time}'
                        ^ if !dj_just_booted then ' (kicked off)' else '' end
             dj_just_booted := false
-            dj_raw_data := 'disconnected'
             dj_name := 'N/A'
             dj_password := ''
             log(log_line)
@@ -221,8 +222,8 @@ output.dummy(dj_harbor, id='dj_harbor_dummy', fallible=true)
 if DJ_AUTH_ENFORCE_SCHEDULE then
     log('Installing DJ kickoff timer')
     add_timeout(1., fun() -> begin
-        # 1 second to make sure harbor doesn't reauthenticate
-        if !dj_kickoff_time >= 0.0 and (time() - 1.0) > !dj_kickoff_time then
+        # 1.5 second to make sure harbor doesn't reauthenticate
+        if !dj_kickoff_time >= 0.0 and (time() - 1.5) > !dj_kickoff_time then
             dj_kickoff_time := -1.
             dj_just_booted := true
             log('Booting DJ due to running after kickoff time')
@@ -459,7 +460,9 @@ end
 STREAMS_PRETTY = [(dj_priority_id, 'Remote DJ (priority)'), (dj_id, 'Remote DJ'),
                   (pulse_in_id, 'Pulseaudio (Zoom)'), (autodj_id, 'AutoDJ'), (failsafe_id, 'Failsafe')]
 def status_json()
-    data = [('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY))]
+    data = [('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY)),
+            ('upstream', string.concat(separator=', ', list.map(fun(c) -> snd(c), !connections))),
+            ('uptime', pretty_seconds(time() - start_time))]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
             [('conn_timedelta', pretty_seconds(time() - !dj_priority_login_time)), ('dj_name', 'Master DJ'),
