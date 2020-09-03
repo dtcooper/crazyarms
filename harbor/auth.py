@@ -24,7 +24,7 @@ if not os.path.exists(CREDENTIALS_FILE):
     sys.exit(1)
 
 
-def sanitize_password(password):
+def sanitize_password(password):  # Must match sanitize_password() code in harbor.liq
     return password.lower().strip()
 
 
@@ -81,9 +81,10 @@ def get_and_cache_user_data(sheet_key, cache=True):
 
 
 def auth_data(user_data, password, date, grace=0):
+    password = sanitize_password(password)
     data = OrderedDict((('currently_authorized', False), ('valid_user', False), ('password_sanitized', password)))
 
-    user_data = user_data.get(sanitize_password(password))
+    user_data = user_data.get(password)
     if user_data is not None:
         data['valid_user'] = True
         for key, value in user_data.items():
@@ -109,7 +110,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.force or not args.password or not os.path.exists(USER_DATA_CACHE_FILE):
+    if args.force or args.password is not None or not os.path.exists(USER_DATA_CACHE_FILE):
         user_data = get_and_cache_user_data(sheet_key=args.sheet_key)
     else:
         with open(USER_DATA_CACHE_FILE, 'rb') as cache_file:
@@ -117,7 +118,7 @@ def main():
 
     if args.dump:
         pprint.pprint(user_data)
-    elif args.password:
+    elif args.password is not None:
         timezone = pytz.timezone(args.timezone)
         if args.date:
             date = timezone.localize(dateutil_parse(args.date, fuzzy=True).replace(tzinfo=None))

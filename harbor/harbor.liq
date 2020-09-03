@@ -1,5 +1,8 @@
 %include "common.liq"
 
+set('server.telnet', conf.bool('TELNET_ENABLE'))
+set('server.telnet.port', conf.int('TELNET_PORT'))
+
 def ls_dir(path)
     get_process_lines('find -L #{string.escape(path)} -type f')
 end
@@ -10,7 +13,7 @@ def pretty_seconds(seconds)
         'python3 -c "import datetime as d; print(d.timedelta(seconds=#{string_of(int_of_float(seconds))}))"'))
 end
 
-def sanitize_password(password)
+def sanitize_password(password)  # Must match sanitize_password() code in auth.py
     string.trim(string.case(lower=true, password))
 end
 
@@ -18,6 +21,7 @@ end
 shutting_down = ref false  # Avoid wacky shutdown notifications
 on_shutdown(fun() -> shutting_down := true)
 start_time = time()
+set_metadata = ref fun(~new_track=false, metadata) -> ()
 
 NOTIFICATIONS_ENABLED = conf.bool('NOTIFICATIONS_ENABLED')
 NOTIFICATIONS_TO_EMAIL_ADDRS = conf.list(allow_empty=not NOTIFICATIONS_ENABLED, 'NOTIFICATIONS_TO_EMAIL_ADDRS')
@@ -58,19 +62,28 @@ def notify(subject, body='')
 end
 
 
-set('server.telnet', conf.bool('TELNET_ENABLE'))
-set('server.telnet.port', conf.int('TELNET_PORT'))
-
 DJ_MASTER_PASSWORDS = conf.list('DJ_MASTER_PASSWORDS')
 
 ### Priority DJ mount (only accepts master password) ###
+CROSSFADE_TIMER = conf.float('CROSSFADE_TIMER')
+INPUT_BUFFER = conf.float('INPUT_BUFFER')
+
+def set_metadata_for_connecting_dj(title)
+    set_metadata = !set_metadata
+    # Apparently needs to be slightly after buffer is full + crossfade it may get chomped
+    add_timeout(INPUT_BUFFER + CROSSFADE_TIMER * 2., fun() -> begin
+        set_metadata([('title', title)])
+        -1.
+    end)
+end
+
 dj_priority_login_time = ref -1.
 dj_priority_harbor = input.harbor(
     conf('DJ_PRIORITY_MOUNT_NAME'),
     id='dj_priority_harbor',
     port=conf.int('DJ_PORT'),
     max=conf.float('INPUT_MAX'),
-    buffer=conf.float('INPUT_BUFFER'),
+    buffer=INPUT_BUFFER,
     auth=fun(user, pass) -> begin
         if list.mem(pass, DJ_MASTER_PASSWORDS) then
             log('Accepted master DJ password (priority mount)')
@@ -85,6 +98,7 @@ dj_priority_harbor = input.harbor(
         dj_priority_login_time := time()
         log_line = 'Master DJ connected (priority mount)'
         log(log_line)
+        set_metadata_for_connecting_dj('BMIR Live')
         notify(log_line, 'master (priority mount)\n#{ip_address}\n\n#{json_of(headers)}')
     end,
     on_disconnect=fun() -> begin
@@ -129,11 +143,7 @@ if DJ_AUTH_ENABLED then
 end
 
 def authorize(pass)
-    if pass == "" then
-        '{"currently_authorized": false, "valid_user": false, "password_sanitized": ""}'
-    else
-        get_process_output('#{auth_cmd} #{string.escape(pass)}')
-    end
+    get_process_output('#{auth_cmd} #{string.escape(pass)}')
 end
 
 last_auth = ref ''
@@ -149,7 +159,7 @@ dj_harbor = input.harbor(
     id='dj_harbor',
     port=conf.int('DJ_PORT'),
     max=conf.float('INPUT_MAX'),
-    buffer=conf.float('INPUT_BUFFER'),
+    buffer=INPUT_BUFFER,
     auth=fun(user, pass) -> begin
         if list.mem(pass, DJ_MASTER_PASSWORDS) then
             log('Accepted master DJ password')
@@ -210,8 +220,16 @@ dj_harbor = input.harbor(
 
         dj_login_time := time()
 
-        dj_kickable := !last_auth != 'master'
-        dj_name := if !dj_kickable then list.assoc(default='Unknown', 'name', data) else 'Master DJ' end
+        if !last_auth == 'master' then
+            dj_name := 'Master DJ'
+            dj_kickable := false
+            set_metadata_for_connecting_dj('BMIR Live')
+        else
+            dj_name := list.assoc(default='Unknown', 'name', data)
+            dj_kickable := true
+            set_metadata_for_connecting_dj('#{!dj_name} LIVE on BMIR')
+        end
+
         dj_password := data['password_sanitized']
         log('#{!dj_name} connected')
         notify('#{!dj_name} connected', '#{!dj_name} connected\n#{ip_address}\n#{!last_auth}\n#{json_of(headers)}')
@@ -378,7 +396,6 @@ autodj = audio_to_stereo(id=autodj_id, autodj)
 
 
 ### Fallback radio ###
-CROSSFADE_TIMER = conf.float('CROSSFADE_TIMER')
 current_stream = ref source.id(failsafe)  # assume lowest precedence in fallback
 def crossfade(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
@@ -418,8 +435,23 @@ else
     radio
 end
 
-# TODO: Metadata
 
+### Metadata ###
+metadata_radio = insert_metadata(radio)
+set_metadata := fst(metadata_radio)
+current_metadata = ref ''
+radio = snd(metadata_radio)
+radio = map_metadata(
+    id='radio_metadata', insert_missing=true, strip=true, update=false, fun(m) -> begin
+        title = string.concat(separator=' - ', list.filter(fun(s) -> not list.mem(
+            string.case(lower=true, s), ['', 'unknown']), [m['artist'], m['title']]))
+        title = if title == '' then 'BMIR 94.5 FM The Voice of the Man' else title end
+        current_metadata := title
+        log('Setting metadata to: #{title}')
+        [('title', title)]
+    end,
+    radio,
+)
 
 
 ### Icecast output (wave format) ###
@@ -493,6 +525,7 @@ def status_json()
             ('auth_enabled', string_of(DJ_AUTH_ENABLED)), ('schedule_enforced', string_of(DJ_AUTH_ENFORCE_SCHEDULE)),
             ('spreadsheet_link', if DJ_AUTH_ENABLED then 'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
             ('user_data_last_sync', if DJ_AUTH_ENABLED then pretty_seconds(time() - !user_data_last_sync) else 'N/A' end),
+            ('metadata', !current_metadata),
         ]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
