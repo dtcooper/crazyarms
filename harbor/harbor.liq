@@ -129,7 +129,11 @@ if DJ_AUTH_ENABLED then
 end
 
 def authorize(pass)
-    get_process_output('#{auth_cmd} #{string.escape(pass)}')
+    if pass == "" then
+        '{"currently_authorized": false, "valid_user": false, "password_sanitized": ""}'
+    else
+        get_process_output('#{auth_cmd} #{string.escape(pass)}')
+    end
 end
 
 last_auth = ref ''
@@ -505,7 +509,7 @@ end
 
 HTML = file.contents('status.html')
 harbor.http.register(
-    port=conf.int('DJ_PORT'), method='GET', '^/status$',
+    port=conf.int('DJ_PORT'), method='GET', '^/(status)?$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
         # If we're daemonizing cache HTML file
         html = if daemonize then HTML else file.contents('status.html') end
@@ -528,7 +532,7 @@ harbor.http.register(
             authorize(data)
         end
 
-        log('Ran password check for #{data}: #{auth}')
+        log('Ran password check for "#{data}": #{auth}')
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data=auth)
     end))
 
@@ -554,8 +558,3 @@ harbor.http.register(
 
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='DJ #{kicked_dj} booted')
     end))
-
-# Redirect
-harbor.http.register(
-    port=conf.int('DJ_PORT'), method='GET', '^/$', fun(~protocol, ~data, ~headers, uri) ->
-        http_response(protocol=protocol, code=302, headers=[('Location', '/status')], data=''))
