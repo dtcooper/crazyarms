@@ -47,15 +47,15 @@ def notify(subject, body='')
 
     if not !shutting_down and SMS_NOTIFICATIONS_ENABLED then
         add_timeout(0., fun() -> begin
-            ignore(list.map(fun(number) -> begin
+            list.iter(fun(number) -> begin
                 log('Sending SMS notification to #{number}: #{subject}')
-                run_process(timeout=10.,
+                ignore(run_process(timeout=10.,
                     'curl -s -X POST -d "Body="#{string.escape(subject)} '
                     ^ '-d "From="#{string.escape(SMS_FROM_NUMBER)} '
                     ^ '-d "To="#{string.escape(number)} '
                     ^ '-u #{string.escape(SMS_TWILIO_ACCOUNT_SID)}":"#{string.escape(SMS_TWILIO_AUTH_TOKEN)} '
-                    ^ '"https://api.twilio.com/2010-04-01/Accounts/"#{string.escape(SMS_TWILIO_ACCOUNT_SID)}"/Messages"')
-            end, SMS_TO_NUMBERS))
+                    ^ '"https://api.twilio.com/2010-04-01/Accounts/"#{string.escape(SMS_TWILIO_ACCOUNT_SID)}"/Messages"'))
+            end, SMS_TO_NUMBERS)
             -1.
         end)
     end
@@ -576,6 +576,13 @@ harbor.http.register(
             shutdown()
             -1.
         end)
+        http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='')
+    end))
+
+harbor.http.register(
+    port=conf.int('DJ_PORT'), method='POST', '^/reboot$',
+    wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
+        ignore(run_process('sudo reboot'))
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='')
     end))
 

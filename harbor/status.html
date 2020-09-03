@@ -47,7 +47,7 @@
     function reloadData() {
       $.get('data.json', function(data) {
         $('#connection-status').css('color', 'green').text('syncing')
-        $('#shutdown').prop('disabled', false)
+        $('.restart').prop('disabled', false)
         render(data)
         timeout = setTimeout(reloadData, pollInterval)
       }).fail(function() {
@@ -75,11 +75,11 @@
         }
       })
 
-      $('#shutdown').click(function() {
-        if (confirm('Are you sure you want to restart the harbor?')) {
-          $(this).prop('disabled', true)
+      $('.restart').click(function() {
+        if (confirm('Are you sure you want to ' + $.trim($(this).text()) + '?')) {
+          $('.restart').prop('disabled', true)
           clearTimeout(timeout)
-          $.post('shutdown')
+          $.post($(this).data('action'))
           timeout = setTimeout(reloadData, failPollInterval)
         }
       });
@@ -146,16 +146,31 @@
   </div>
 
   <details>
-    <summary>Restart Harbor</summary>
-      Notes:
-      <ul>
-        <li>Current DJ will be disconnected</li>
-        <li>AutoDJ will be restarted</li>
-        <li>However, listeners <b><u>WILL NOT</u></b> be disconnected</li>
-      </ul>
-      <button style="background-color: red; font-size: 2rem" id="shutdown">
-        <b><u>RESTART</u> server</b>
-      </button>
+    <summary>Restart</summary>
+    <h3>Restart Harbor</h3>
+    Notes:
+    <ul>
+      <li>Current DJ will be disconnected</li>
+      <li>AutoDJ will be restarted</li>
+      <li>However, listeners <b><u>WILL NOT</u></b> be disconnected</li>
+    </ul>
+    <button style="background-color: orange; font-size: 2rem" class="restart" data-action="shutdown">
+      <b><u>RESTART</u> harbor</b>
+    </button>
+
+    <hr>
+
+    <h3>Reboot Server</h3>
+    Notes:
+    <ul>
+      <li>Server will be completely restarted</li>
+      <li>Current DJ will be disconnected (if any)</li>
+      <li>All listeners will be disconnected</li>
+      <li><b>You probably <u>DON'T</u> want to do this unless things are badly broken</b></li>
+    </ul>
+    <button style="background-color: red; font-size: 2rem" class="restart" data-action="reboot">
+      <b><u>REBOOT</u> server</b>
+    </button>
   </details>
 
   <details>
