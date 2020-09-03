@@ -460,9 +460,13 @@ end
 STREAMS_PRETTY = [(dj_priority_id, 'Remote DJ (priority)'), (dj_id, 'Remote DJ'),
                   (pulse_in_id, 'Pulseaudio (Zoom)'), (autodj_id, 'AutoDJ'), (failsafe_id, 'Failsafe')]
 def status_json()
+    upstream = if list.length(!connections) > 0 then
+        string.concat(separator=', ', list.map(fun(c) -> snd(c), !connections))
+    else
+        'WARNING: None!!'
+    end
     data = [('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY)),
-            ('upstream', string.concat(separator=', ', list.map(fun(c) -> snd(c), !connections))),
-            ('uptime', pretty_seconds(time() - start_time))]
+            ('upstream', upstream), ('uptime', pretty_seconds(time() - start_time)), ('script', script_name)]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
             [('conn_timedelta', pretty_seconds(time() - !dj_priority_login_time)), ('dj_name', 'Master DJ'),
