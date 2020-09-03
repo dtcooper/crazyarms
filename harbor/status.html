@@ -13,17 +13,23 @@
 
     function render(data) {
       for (let [id, value] of Object.entries(data)) {
-        if (id == 'kickoff_time') {
-          if (value == 'N/A') {
-            $('#kickoff-buttons').hide()
-          } else {
+        if (id == 'kickoff_time' && value != 'N/A') {
+          let date = new Date(0)
+          date.setUTCSeconds(value)
+          value = date
+        } else if (id == 'kickable') {
+          if (value == 'true') {
             $('#kickoff-buttons').show()
-            let date = new Date(0)
-            date.setUTCSeconds(value)
-            value = date
+          } else {
+            $('#kickoff-buttons').hide()
           }
         }
-        $('#' + id).text(value)
+
+        if (id.endsWith('_link') && value != 'N/A') {
+          $('#' + id).html('<a href="' + encodeURI(value) +'" target="_blank">link</a>')
+        } else {
+          $('#' + id).text(value)
+        }
       }
     }
 
@@ -76,6 +82,8 @@
       <tr><td>Current DJ Connection Time:</td><td id="conn_timedelta"></td></tr>
       <tr><td>Current DJ Kickoff Time:</td><td id="kickoff_time"></td></tr>
       <tr><td>Harbor Name:</td><td id="script"></td></tr>
+      <tr><td>Schedule Enforced</td><td id="schedule_enforced"></td></tr>
+      <tr><td>Schedule:</td><td id="schedule_link"></td></tr>
       <tr><td>Upstream Broadcasts:</td><td id="upstream"></td></tr>
       <tr><td>Server Uptime:</td><td id="uptime"></td></tr>
     </tbody>

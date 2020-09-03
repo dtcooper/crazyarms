@@ -126,11 +126,12 @@ if DJ_AUTH_ENABLED then
     end)
 end
 
-dj_raw_data = ref 'disconnected'
+auth_output = ref ''
 dj_name = ref 'N/A'
 dj_password = ref ''
 dj_login_time = ref -1.
 dj_kickoff_time = ref -1.
+dj_kickable = ref false
 dj_just_booted = ref false
 dj_ban_list = ref []
 dj_harbor = input.harbor(
@@ -142,7 +143,7 @@ dj_harbor = input.harbor(
     auth=fun(user, pass) -> begin
         if list.mem(pass, DJ_MASTER_PASSWORDS) then
             log('Accepted master DJ password')
-            dj_raw_data := 'master'
+            auth_output := 'master'
             true
         elsif DJ_AUTH_ENABLED then
             is_banned = ref false
@@ -164,10 +165,9 @@ dj_harbor = input.harbor(
             if !is_banned then
                 false
             else
-                cmd_output = get_process_output('#{auth_cmd} #{pass}')
-                dj_raw_data := cmd_output
-                data = of_json(default=[], cmd_output)
-                bool_data = of_json(default=[], cmd_output)
+                auth_output := get_process_output('#{auth_cmd} #{pass}')
+                data = of_json(default=[], !auth_output)
+                bool_data = of_json(default=[], !auth_output)
 
                 if list.assoc(default=false, 'valid_user', bool_data) then
                     if DJ_AUTH_ENFORCE_SCHEDULE then
@@ -191,25 +191,30 @@ dj_harbor = input.harbor(
     end,
     on_connect=fun(headers) -> begin
         ip_address = list.hd(default='source client ip unknown', server.execute('dj_harbor.status'))
-        data = of_json(default=[], !dj_raw_data)
+
+        data = of_json(default=[], !auth_output)
         if DJ_AUTH_ENFORCE_SCHEDULE then
+            # Should be -1 for master
             dj_kickoff_time := float_of_string(list.assoc(default='-1', 'end_with_grace_period_unix', data))
         end
 
         dj_login_time := time()
-        dj_name := list.assoc(default='Master DJ', 'name', data)
+
+        dj_kickable := !auth_output != 'master'
+        dj_name := if !dj_kickable then list.assoc(default='Unknown', 'name', data) else 'Master DJ' end
         dj_password := data['password_sanitized']
         log('#{!dj_name} connected')
-        notify('#{!dj_name} connected', '#{!dj_name} connected\n#{ip_address}\n#{!dj_raw_data}\n#{json_of(headers)}')
+        notify('#{!dj_name} connected', '#{!dj_name} connected\n#{ip_address}\n#{!auth_output}\n#{json_of(headers)}')
     end,
     on_disconnect=fun() -> begin
         dj_kickoff_time := -1.
-        if !dj_raw_data != 'disconnected' then
-            dj_raw_data := 'disconnected'
+        if !auth_output != '' then
+            auth_output := ''
             total_time = pretty_seconds(time() - !dj_login_time)
             log_line = '#{!dj_name} disconnected after #{total_time}'
                        ^ if !dj_just_booted then ' (kicked off)' else '' end
             dj_just_booted := false
+            dj_kickable := false
             dj_name := 'N/A'
             dj_password := ''
             log(log_line)
@@ -223,8 +228,9 @@ if DJ_AUTH_ENFORCE_SCHEDULE then
     log('Installing DJ kickoff timer')
     add_timeout(1., fun() -> begin
         # 1.5 second to make sure harbor doesn't reauthenticate
-        if !dj_kickoff_time >= 0.0 and (time() - 1.5) > !dj_kickoff_time then
+        if !dj_kickable and (time() - 1.5) > !dj_kickoff_time then
             dj_kickoff_time := -1.
+            dj_kickable := false
             dj_just_booted := true
             log('Booting DJ due to running after kickoff time')
             ignore(server.execute('dj_harbor.stop'))
@@ -465,8 +471,11 @@ def status_json()
     else
         'WARNING: None!!'
     end
-    data = [('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY)),
-            ('upstream', upstream), ('uptime', pretty_seconds(time() - start_time)), ('script', script_name)]
+    data = [('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY)), ('kickable', string_of(!dj_kickable)),
+            ('upstream', upstream), ('uptime', pretty_seconds(time() - start_time)), ('script', script_name),
+            ('schedule_enforced', string_of(DJ_AUTH_ENFORCE_SCHEDULE)), ('schedule_link', if DJ_AUTH_ENFORCE_SCHEDULE then
+                'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
+        ]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
             [('conn_timedelta', pretty_seconds(time() - !dj_priority_login_time)), ('dj_name', 'Master DJ'),
@@ -511,7 +520,7 @@ harbor.http.register(
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/status/kick\\.text$',
     protected(fun(~protocol, ~data, ~headers, uri) -> begin
-        kicked_dj = if !dj_kickoff_time >= 0.0 and !dj_password != '' then
+        kicked_dj = if !dj_kickable and !dj_password != '' then
             kicked_dj = !dj_name
             if data == 'forever' then
                 dj_ban_list := list.add((!dj_password, -1.), !dj_ban_list)
@@ -519,6 +528,7 @@ harbor.http.register(
                 dj_ban_list := list.add((!dj_password, time() + float_of_string(data)), !dj_ban_list)
             end
             dj_kickoff_time := -1.
+            dj_kickable := false
             dj_just_booted := true
             log('Booting DJ from UI (#{data} seconds)')
             ignore(server.execute('dj_harbor.stop'))
