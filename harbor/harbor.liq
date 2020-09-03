@@ -128,7 +128,11 @@ if DJ_AUTH_ENABLED then
     end)
 end
 
-auth_output = ref ''
+def authorize(pass)
+    get_process_output('#{auth_cmd} #{string.escape(pass)}')
+end
+
+last_auth = ref ''
 dj_name = ref 'N/A'
 dj_password = ref ''
 dj_login_time = ref -1.
@@ -145,7 +149,7 @@ dj_harbor = input.harbor(
     auth=fun(user, pass) -> begin
         if list.mem(pass, DJ_MASTER_PASSWORDS) then
             log('Accepted master DJ password')
-            auth_output := 'master'
+            last_auth := 'master'
             true
         elsif DJ_AUTH_ENABLED then
             is_banned = ref false
@@ -167,9 +171,9 @@ dj_harbor = input.harbor(
             if !is_banned then
                 false
             else
-                auth_output := get_process_output('#{auth_cmd} #{pass}')
-                data = of_json(default=[], !auth_output)
-                bool_data = of_json(default=[], !auth_output)
+                last_auth := authorize(pass)
+                data = of_json(default=[], !last_auth)
+                bool_data = of_json(default=[], !last_auth)
 
                 if list.assoc(default=false, 'valid_user', bool_data) then
                     if DJ_AUTH_ENFORCE_SCHEDULE then
@@ -194,7 +198,7 @@ dj_harbor = input.harbor(
     on_connect=fun(headers) -> begin
         ip_address = list.hd(default='source client ip unknown', server.execute('dj_harbor.status'))
 
-        data = of_json(default=[], !auth_output)
+        data = of_json(default=[], !last_auth)
         if DJ_AUTH_ENFORCE_SCHEDULE then
             # Should be -1 for master
             dj_kickoff_time := float_of_string(list.assoc(default='-1', 'end_with_grace_period_unix', data))
@@ -202,16 +206,16 @@ dj_harbor = input.harbor(
 
         dj_login_time := time()
 
-        dj_kickable := !auth_output != 'master'
+        dj_kickable := !last_auth != 'master'
         dj_name := if !dj_kickable then list.assoc(default='Unknown', 'name', data) else 'Master DJ' end
         dj_password := data['password_sanitized']
         log('#{!dj_name} connected')
-        notify('#{!dj_name} connected', '#{!dj_name} connected\n#{ip_address}\n#{!auth_output}\n#{json_of(headers)}')
+        notify('#{!dj_name} connected', '#{!dj_name} connected\n#{ip_address}\n#{!last_auth}\n#{json_of(headers)}')
     end,
     on_disconnect=fun() -> begin
         dj_kickoff_time := -1.
-        if !auth_output != '' then
-            auth_output := ''
+        if !last_auth != '' then
+            last_auth := ''
             total_time = pretty_seconds(time() - !dj_login_time)
             log_line = '#{!dj_name} disconnected after #{total_time}'
                        ^ if !dj_just_booted then ' (kicked off)' else '' end
@@ -518,14 +522,14 @@ harbor.http.register(
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/status/password\\.text$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
-        text = if list.mem(data, DJ_MASTER_PASSWORDS) then
+        auth = if list.mem(data, DJ_MASTER_PASSWORDS) then
             'Master DJ Password. Always authorized.'
         else
-            get_process_output('#{auth_cmd} -f #{string.escape(data)}')
+            authorize(data)
         end
 
-        log('Ran password check for #{data}: ${text}')
-        http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data=text)
+        log('Ran password check for #{data}: #{auth}')
+        http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data=auth)
     end))
 
 harbor.http.register(
