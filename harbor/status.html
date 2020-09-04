@@ -25,6 +25,7 @@
     let timeout = null
     const pollInterval = Number.parseInt(data.poll_interval)
     const failPollInterval = Math.round(pollInterval * 2.5)
+    const initialGitRev = data.git_rev
 
     function render(data) {
       for (let [id, value] of Object.entries(data)) {
@@ -46,10 +47,14 @@
 
     function reloadData() {
       $.get('data.json', function(data) {
-        $('#connection-status').css('color', 'green').text('syncing')
-        $('.restart').prop('disabled', false)
-        render(data)
-        timeout = setTimeout(reloadData, pollInterval)
+        if (data.git_rev == initialGitRev) {
+          $('#connection-status').css('color', 'green').text('syncing')
+          $('.restart').prop('disabled', false)
+          render(data)
+          timeout = setTimeout(reloadData, pollInterval)
+        } else {
+          $('#connection-status').css('color', 'red').text('you must refresh for new version of this page')
+        }
       }).fail(function() {
         $('#connection-status').css('color', 'red').text('problem syncing, retrying')
         timeout = setTimeout(reloadData, failPollInterval)
