@@ -7,6 +7,7 @@ RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates \
         ffmpeg \
+        git \
         gnupg \
         icecast2 \
         icewm \
@@ -55,6 +56,6 @@ RUN adduser --gecos '' --disabled-password user \
     && echo '%reboot ALL=NOPASSWD:/sbin/reboot' > /etc/sudoers.d/reboot
 
 USER user
-WORKDIR /mnt
+WORKDIR /mnt/harbor
 ENTRYPOINT ["/entrypoint.sh"]
 ADD image /

@@ -465,9 +465,13 @@ output.harbor(
     auth=fun(user, pass) -> pass == INTERNAL_HARBOR_PASSWORD,
     on_connect=fun(~headers, ~uri, ~protocol, ip) -> begin
         args = snd(url.split(uri))
-        upstream = args["upstream"]
+        upstream = args['upstream']
+        upstream_git_rev = args['git_rev']
         connections := list.add((ip, upstream), !connections)
-        log('Upstream "#{upstream}" connected')
+        log('Upstream "#{upstream}" connected (git rev: #{upstream_git_rev})')
+        if git_rev != upstream_git_rev then
+            log('WARNING: upstream git rev (#{upstream_git_rev}) does not match harbor git rev (#{git_rev})')
+        end
     end,
     on_disconnect=fun(ip) -> begin
         conns = !connections
@@ -478,6 +482,7 @@ output.harbor(
     radio,
 )
 
+log('Harbor coming online (git rev: #{git_rev})')
 notify('Harbor came online', 'This does not necessarily mean listeners were disconnected')
 
 
@@ -485,12 +490,12 @@ notify('Harbor came online', 'This does not necessarily mean listeners were disc
 def wrap_admin_http(func)
     fun(~protocol, ~data, ~headers, uri) -> begin
         auth = headers['Authorization']
-        pass = ref "[none]"
+        pass = ref '[none]'
         allowed = if auth == '' then false else
             auth = string.extract(pattern='^Basic (.+)$', auth)
             if list.length(auth) > 0 then
                 auth = string.extract(pattern='^[^:]*:(.*)', base64.decode(auth['1']))
-                pass := auth["1"]
+                pass := auth['1']
                 if list.length(auth) > 0 then
                     list.mem(!pass, DJ_MASTER_PASSWORDS)
                 else
@@ -520,13 +525,14 @@ def status_json()
     else
         'WARNING: None!!'
     end
-    data = [('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY)), ('kickable', string_of(!dj_kickable)),
-            ('upstream', upstream), ('uptime', pretty_seconds(time() - start_time)), ('script', script_name),
-            ('auth_enabled', string_of(DJ_AUTH_ENABLED)), ('schedule_enforced', string_of(DJ_AUTH_ENFORCE_SCHEDULE)),
-            ('spreadsheet_link', if DJ_AUTH_ENABLED then 'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
-            ('user_data_last_sync', if DJ_AUTH_ENABLED then pretty_seconds(time() - !user_data_last_sync) else 'N/A' end),
-            ('metadata', !current_metadata),
-        ]
+    data = [
+        ('stream', list.assoc(default='Unknown', !current_stream, STREAMS_PRETTY)), ('kickable', string_of(!dj_kickable)),
+        ('upstream', upstream), ('uptime', pretty_seconds(time() - start_time)), ('script', script_name),
+        ('auth_enabled', string_of(DJ_AUTH_ENABLED)), ('schedule_enforced', string_of(DJ_AUTH_ENFORCE_SCHEDULE)),
+        ('spreadsheet_link', if DJ_AUTH_ENABLED then 'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
+        ('user_data_last_sync', if DJ_AUTH_ENABLED then pretty_seconds(time() - !user_data_last_sync) else 'N/A' end),
+        ('metadata', !current_metadata), ('git_rev', git_rev),
+    ]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
             [('conn_timedelta', pretty_seconds(time() - !dj_priority_login_time)), ('dj_name', 'Master DJ'),

@@ -47,4 +47,11 @@ if file.exists('/.dockerenv') then
     set('server.telnet.bind_addr', '0.0.0.0')
 end
 
+git_rev = string.trim(get_process_output('git rev-parse HEAD'))
+git_rev = if git_rev == '' then
+    'unknown'
+else
+    string.sub(git_rev, start=string.length(git_rev) - 8, length=8)
+end
+
 server.register('ping', usage='ping', description='Get a pong back from the server', fun(_) -> 'pong')

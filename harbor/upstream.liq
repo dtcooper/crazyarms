@@ -7,9 +7,12 @@ if file.exists('/.dockerenv') then
     set('server.telnet.bind_addr', '0.0.0.0')
 end
 
+encoding = conf('UPSTREAM_ICECAST_ENCODING')
+log('Upstream coming online "#{script_name}", encoding "#{encoding}", git rev: #{git_rev}')
+
 password = conf('INTERNAL_HARBOR_PASSWORD')
 port = conf('INTERNAL_HARBOR_PORT')
-url = 'http://user:#{password}@localhost:#{port}/stream?upstream=#{script_name}'
+url = 'http://user:#{password}@localhost:#{port}/stream?upstream=#{url.encode(script_name)}&git_rev=#{url.encode(git_rev)}'
 log('Connecting to harbor URL: #{url}')
 input = input.http(id='input', max=conf.float('INPUT_MAX'), poll_delay=0.5, url)
 output.dummy(input, fallible=true)
@@ -17,10 +20,7 @@ output.dummy(input, fallible=true)
 failsafe = single(id='failsafe', conf('FAILSAFE_PATH'))
 broadcast = fallback(track_sensitive=false, [input, failsafe])
 
-encoding = conf('UPSTREAM_ICECAST_ENCODING')
-log('Upstream "#{script_name}", encoding "#{encoding}"')
-
-content_type = ref ""  # empty string to guess
+content_type = ref ''  # empty string to guess
 format = (
     if encoding == 'aac-48' then
         content_type := 'audio/aacp'

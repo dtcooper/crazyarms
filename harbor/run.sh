@@ -23,7 +23,7 @@ if [ "$USE_DOCKER" -a ! -f /.dockerenv ]; then
 
     # --cap-add=SYS_ADMIN for Chrome
     PORTS="80 1234 1235 2097 5900 8000 8001"
-    exec docker run --cap-add=SYS_ADMIN --init --rm -it -v "$PWD:/mnt" \
+    exec docker run --cap-add=SYS_ADMIN --init --rm -it -v "$PWD/..:/mnt" \
         $(for p in $PORTS; do echo "-p $p:$p "; done) "$CONTAINER" $@
 else
     dotenv env.vars.default
