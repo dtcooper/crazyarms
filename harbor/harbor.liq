@@ -303,6 +303,7 @@ AUTO_DJ_DIR = conf('AUTO_DJ_DIR')
 AUTO_DJ_TRACKS_SUBDIR = conf('AUTO_DJ_TRACKS_SUBDIR')
 AUTO_DJ_NUM_STOPSETS_PER_HOUR = conf.int('AUTO_DJ_NUM_STOPSETS_PER_HOUR')
 AUTO_DJ_STOPSET_ROTATOR_SUBDIRS = conf.list(allow_empty=true, 'AUTO_DJ_STOPSET_ROTATOR_SUBDIRS')
+REQUEST_QUEUE_LENGTH = conf.float('REQUEST_QUEUE_LENGTH')
 stopsets_enabled = list.length(AUTO_DJ_STOPSET_ROTATOR_SUBDIRS) > 0
 if not stopsets_enabled then
     log('Stop sets disabled by configuration')
@@ -311,88 +312,94 @@ end
 last_stopset_played = ref -1
 current_stopset = ref []
 tracks_list = ref []
-autodj = request.dynamic.list(id='autodj', length=conf.float('REQUEST_QUEUE_LENGTH'), fun() -> begin
-    current_datetime = int_of_string(string.trim(get_process_output("date '+%Y%m%d%H%M'")))
-    current_minute = current_datetime mod 100
-    interval_minute = current_minute mod (60 / AUTO_DJ_NUM_STOPSETS_PER_HOUR)
-    current_interval = current_datetime - interval_minute
+autodj_local = audio_to_stereo(
+    id='autodj_local_to_stereo',
+    request.dynamic.list(id='autodj_local', length=REQUEST_QUEUE_LENGTH,
+    fun() -> begin
+        current_datetime = int_of_string(string.trim(get_process_output("date '+%Y%m%d%H%M'")))
+        current_minute = current_datetime mod 100
+        interval_minute = current_minute mod (60 / AUTO_DJ_NUM_STOPSETS_PER_HOUR)
+        current_interval = current_datetime - interval_minute
 
-    # Generate a stopset if one isn't currently playing and the interval passes
-    if stopsets_enabled and (list.length(!current_stopset) == 0)
-            and (!last_stopset_played < current_interval) then
-        log('autodj: last stopset played @ #{!last_stopset_played}. '
-            ^ 'Interval #{current_interval} past due. Generating stopset')
-        rotator_files = ref []
-        # Get a mapping of [(path, files)] with files randomized
-        list.iter(fun(path) -> begin
-                if not list.mem_assoc(path, !rotator_files) then
-                    rotator_files := list.add(
-                        (path, list.randomize(ls_dir('#{AUTO_DJ_DIR}/#{path}'))),
-                        !rotator_files,
-                    )
+        # Generate a stopset if one isn't currently playing and the interval passes
+        if stopsets_enabled and (list.length(!current_stopset) == 0)
+                and (!last_stopset_played < current_interval) then
+            log('autodj: last stopset played @ #{!last_stopset_played}. '
+                ^ 'Interval #{current_interval} past due. Generating stopset')
+            rotator_files = ref []
+            # Get a mapping of [(path, files)] with files randomized
+            list.iter(fun(path) -> begin
+                    if not list.mem_assoc(path, !rotator_files) then
+                        rotator_files := list.add(
+                            (path, list.randomize(ls_dir('#{AUTO_DJ_DIR}/#{path}'))),
+                            !rotator_files,
+                        )
+                    end
+                end,
+                AUTO_DJ_STOPSET_ROTATOR_SUBDIRS,
+            )
+
+            stopset = list.map(fun(path) -> begin
+                    # Get random list of files for this path
+                    files = list.assoc(default=[], path, !rotator_files)
+                    # Pick first one and remove from list
+                    file = list.hd(default=FAILSAFE_PATH, files)
+                    files = list.tl(files)
+                    # Add list with file removed back to rotator_files
+                    rotator_files := list.remove_assoc(path, !rotator_files)
+                    rotator_files := list.add((path, files), !rotator_files)
+                    file
+                end,
+                AUTO_DJ_STOPSET_ROTATOR_SUBDIRS,
+            )
+            log('autodj: stopset generated: #{string_of(stopset)}')
+            current_stopset := stopset
+        end
+
+        [request.create(
+            if list.length(!current_stopset) > 0 then
+                # Play through current stopset
+                path = list.hd(default=FAILSAFE_PATH, !current_stopset)
+                current_stopset := list.tl(!current_stopset)
+                num_left = list.length(!current_stopset)
+                if num_left == 0 then
+                    # When its on its last track, log played time.
+                    # (Probably should log it after this track, but who cares)
+                    last_stopset_played := current_datetime
                 end
-            end,
-            AUTO_DJ_STOPSET_ROTATOR_SUBDIRS,
-        )
-
-        stopset = list.map(fun(path) -> begin
-                # Get random list of files for this path
-                files = list.assoc(default=[], path, !rotator_files)
-                # Pick first one and remove from list
-                file = list.hd(default=FAILSAFE_PATH, files)
-                files = list.tl(files)
-                # Add list with file removed back to rotator_files
-                rotator_files := list.remove_assoc(path, !rotator_files)
-                rotator_files := list.add((path, files), !rotator_files)
-                file
-            end,
-            AUTO_DJ_STOPSET_ROTATOR_SUBDIRS,
-        )
-        log('autodj: stopset generated: #{string_of(stopset)}')
-        current_stopset := stopset
-    end
-
-    [request.create(
-        if list.length(!current_stopset) > 0 then
-            # Play through current stopset
-            path = list.hd(default=FAILSAFE_PATH, !current_stopset)
-            current_stopset := list.tl(!current_stopset)
-            num_left = list.length(!current_stopset)
-            if num_left == 0 then
-                # When its on its last track, log played time.
-                # (Probably should log it after this track, but who cares)
-                last_stopset_played := current_datetime
-            end
-            log('autodj: playing "#{path}" from stopset. #{num_left} assets left in current stopset.')
-            path
-        else
-            # Otherwise play tracks
-            tracks = ls_dir('#{AUTO_DJ_DIR}/#{AUTO_DJ_TRACKS_SUBDIR}')
-            path = if list.length(tracks) == 0 then
-                FAILSAFE_PATH
+                log('autodj: playing "#{path}" from stopset. #{num_left} assets left in current stopset.')
+                path
             else
-                if list.length(!tracks_list) == 0 then
-                    tracks_list := list.randomize(tracks)
+                # Otherwise play tracks
+                tracks = ls_dir('#{AUTO_DJ_DIR}/#{AUTO_DJ_TRACKS_SUBDIR}')
+                path = if list.length(tracks) == 0 then
+                    FAILSAFE_PATH
+                else
+                    if list.length(!tracks_list) == 0 then
+                        tracks_list := list.randomize(tracks)
+                    end
+
+                    path = list.hd(default=FAILSAFE_PATH, !tracks_list)
+                    tracks_list := list.tl(!tracks_list)
+
+                    # If we've played through half the tracks, shuffle new list (don't include picked track)
+                    if list.length(!tracks_list) <  (list.length(tracks) / 2) then
+                        tracks_list := list.remove(path, list.randomize(tracks))
+                    end
+
+                    path
                 end
-
-                path = list.hd(default=FAILSAFE_PATH, !tracks_list)
-                tracks_list := list.tl(!tracks_list)
-
-                # If we've played through half the tracks, shuffle new list (don't include picked track)
-                if list.length(!tracks_list) <  (list.length(tracks) / 2) then
-                    tracks_list := list.remove(path, list.randomize(tracks))
-                end
-
+                log('autodj: playing track "#{path}"')
                 path
             end
-            log('autodj: playing track "#{path}"')
-            path
-        end
-    )]
-end)
+        )]
+    end,
+    ),
+)
 
-autodj_id = 'autodj_to_stereo'
-autodj = audio_to_stereo(id=autodj_id, autodj)
+autodj_requests = audio_to_stereo(id='autodj_requests_to_stereo', request.queue(id='autodj_requests'))
+autodj_id = 'autodj'
+autodj = fallback(id=autodj_id, [autodj_requests, autodj_local])
 
 
 ### Fallback radio ###
@@ -531,7 +538,7 @@ def status_json()
         ('auth_enabled', string_of(DJ_AUTH_ENABLED)), ('schedule_enforced', string_of(DJ_AUTH_ENFORCE_SCHEDULE)),
         ('spreadsheet_link', if DJ_AUTH_ENABLED then 'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
         ('user_data_last_sync', if DJ_AUTH_ENABLED then pretty_seconds(time() - !user_data_last_sync) else 'N/A' end),
-        ('metadata', !current_metadata), ('git_rev', git_rev),
+        ('metadata', !current_metadata), ('git_rev', git_rev), ('liquidsoap_version', liquidsoap.version),
     ]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
@@ -563,8 +570,19 @@ harbor.http.register(
                       data=status_json())))
 
 harbor.http.register(
+    port=conf.int('DJ_PORT'), method='POST', '^/request\\.text$',
+    wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
+        data = url.decode(data)
+        ignore(server.execute('autodj_requests.push #{data}'))
+        http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')],
+                      data='Request queued: #{data}')
+    end))
+
+harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/password\\.text$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
+        data = url.decode(data)
+
         auth = if list.mem(data, DJ_MASTER_PASSWORDS) then
             'Master DJ Password. Always authorized.'
         else
@@ -600,6 +618,7 @@ harbor.http.register(
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/kick\\.text$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
+        data = url.decode(data)
         kicked_dj = if !dj_kickable and !dj_password != '' then
             kicked_dj = !dj_name
             if data == 'forever' then

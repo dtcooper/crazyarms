@@ -65,6 +65,17 @@
         })
       })
 
+      $('#send-request').submit(function(e) {
+        e.preventDefault()
+        var request_uri = $.trim($('#request_uri').val())
+        $('#request_uri').val('')
+        if (request_uri) {
+          $.post('request.text', request_uri, function(text) {
+            alert(text)
+          });
+        }
+      });
+
       $('.kick').click(function() {
         if (confirm('Are you sure you want to boot the current DJ?')) {
           $('.kick').prop('disabled', true)
@@ -106,6 +117,10 @@
       <tr><td>Harbor Name:</td><td id="script"></td></tr>
       <tr><td>Harbor Uptime:</td><td id="uptime"></td></tr>
       <tr><td>Harbor Version (git):</td><td><code id="git_rev"></code></td></tr>
+      <tr>
+        <td><a href="https://www.liquidsoap.info/" target="_blank">Liquidsoap</a> Version:</td>
+        <td id="liquidsoap_version"></td>
+      </tr>
       <tr><td>Upstream Broadcast(s):</td><td id="upstream"></td></tr>
       <tr><td>Spreadsheet-based Authentication:</td><td id="auth_enabled"></td></tr>
       <tr><td>Time Since Last Spreadsheet Sync:</td><td id="user_data_last_sync"></td></tr>
@@ -146,6 +161,35 @@
     </p>
   </div>
 
+  <details open>
+    <summary>AutoDJ Requests</summary>
+    <h3>AutoDJ Requests</h3>
+    Make a request to play next. This will be the next track the AutoDJ selects, preempting whatever
+    is queued.<br>
+    Types of requests:
+    <ul>
+      <li>A full URL to an audio file to request, eg.<br><code>https://www.example.com/file.mp3</code></li>
+      <li>
+        A video from youtube (or similar) prefixed with<code>youtube-dl:</code>, eg.<br>
+        <code>youtube-dl:https://www.youtube.com/watch?v=dQw4w9WgXcQ</code>
+      <li>Computerized speech, prefixed with <code>say:</code>, eg.<br><code>say:Hi mom!</code></li>
+      <li>
+        Read more about liquidsoap request formatting
+        <script>
+          document.write('<a href="https://www.liquidsoap.info/doc-' + encodeURI(data.liquidsoap_version)
+            + '/reference.html" target="_blank">here</a>')
+        </script>.
+      </li>
+    </ul>
+    <form id="send-request">
+      <p>
+        <label>Request URI (see above):</label><br>
+        <input type="text" id="request_uri" style="width: 100%"><br>
+        <button>Queue Request</button>
+      </p>
+    </form>
+  </details>
+
   <details>
     <summary>Restart</summary>
     <h3>Restart Harbor</h3>
@@ -176,6 +220,7 @@
 
   <details>
     <summary>Password Check Tool</summary>
+    <h3>Password Check Tool</h3>
     <form id="password-check">
       <p>
         <label>Password to Check:</label>
