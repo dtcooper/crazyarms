@@ -526,6 +526,7 @@ end
 
 STREAMS_PRETTY = [(dj_priority_id, 'Remote DJ (priority)'), (dj_id, 'Remote DJ'),
                   (pulse_in_id, 'Pulseaudio (Zoom)'), (autodj_id, 'AutoDJ'), (failsafe_id, 'Failsafe')]
+STATUS_PAGE_POLL_INTERVAL_MS = conf('STATUS_PAGE_POLL_INTERVAL_MS')
 def status_json()
     upstream = if list.length(!connections) > 0 then
         string.concat(separator=', ', list.map(fun(c) -> snd(c), !connections))
@@ -539,6 +540,7 @@ def status_json()
         ('spreadsheet_link', if DJ_AUTH_ENABLED then 'https://docs.google.com/spreadsheets/d/#{DJ_AUTH_SHEET_KEY}/edit?usp=sharing' else 'N/A' end),
         ('user_data_last_sync', if DJ_AUTH_ENABLED then pretty_seconds(time() - !user_data_last_sync) else 'N/A' end),
         ('metadata', !current_metadata), ('git_rev', git_rev), ('liquidsoap_version', liquidsoap.version),
+        ('poll_interval', STATUS_PAGE_POLL_INTERVAL_MS)
     ]
     json_of(compact=true, list.append(data,
         if !current_stream == dj_priority_id then
@@ -572,10 +574,11 @@ harbor.http.register(
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/request\\.text$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
-        data = url.decode(data)
-        ignore(server.execute('autodj_requests.push #{data}'))
+        request_uri = url.decode(data)
+        log('URI requested by UI: #{request_uri}')
+        ignore(server.execute('autodj_requests.push #{request_uri}'))
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')],
-                      data='Request queued: #{data}')
+                      data='Request queued: #{request_uri}')
     end))
 
 harbor.http.register(

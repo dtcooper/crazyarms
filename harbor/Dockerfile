@@ -6,6 +6,8 @@ RUN apt-get update \
     && apt-get -y upgrade \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates \
+        festival \
+        festvox-kallpc16k \
         ffmpeg \
         git \
         gnupg \
@@ -42,12 +44,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /tmp/zoom_amd64.deb
 
 ADD requirements.txt /tmp
-RUN pip3 install -r /tmp/requirements.txt && rm /tmp/requirements.txt
-
-# Prevasives fix for liquidsoap 1.4.1 on Debian/Ubuntu
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=956564#5
-RUN mkdir /usr/share/liquidsoap/1.4.1 \
-    && ln -s /usr/share/liquidsoap/libs /usr/share/liquidsoap/1.4.1/
+RUN pip3 install youtube-dl -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
 RUN adduser --gecos '' --disabled-password user \
     && adduser user sudo \

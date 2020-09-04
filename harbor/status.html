@@ -22,9 +22,9 @@
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script>
     const data = __JSON_DATA__
-    let timeout = null;
-    const pollInterval = 4000
-    const failPollInterval = 10000
+    let timeout = null
+    const pollInterval = Number.parseInt(data.poll_interval)
+    const failPollInterval = Math.round(pollInterval * 2.5)
 
     function render(data) {
       for (let [id, value] of Object.entries(data)) {
