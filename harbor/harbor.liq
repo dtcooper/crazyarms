@@ -313,7 +313,7 @@ current_stopset = ref []
 tracks_list = ref []
 autodj = request.dynamic.list(id='autodj', length=conf.float('REQUEST_QUEUE_LENGTH'), fun() -> begin
     current_datetime = int_of_string(string.trim(get_process_output("date '+%Y%m%d%H%M'")))
-    current_minute = current_datetime mod 60
+    current_minute = current_datetime mod 100
     interval_minute = current_minute mod (60 / AUTO_DJ_NUM_STOPSETS_PER_HOUR)
     current_interval = current_datetime - interval_minute
 
@@ -569,6 +569,7 @@ harbor.http.register(
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data=auth)
     end))
 
+# systemd (or whatever) needs to always restart on exit
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/shutdown$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
@@ -579,6 +580,10 @@ harbor.http.register(
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='')
     end))
 
+# Need to have sudo rights for reboot, for example
+#  $ sudo addgroup --system reboot
+#  $ sudo adduser <liquidsoap-user> reboot
+#  $ echo '%reboot ALL=NOPASSWD:/sbin/reboot' | sudo tee /etc/sudoers.d/reboot
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/reboot$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin

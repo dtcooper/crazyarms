@@ -50,7 +50,8 @@ RUN mkdir /usr/share/liquidsoap/1.4.1 \
 
 RUN adduser --gecos '' --disabled-password user \
     && adduser user sudo \
-    && sed -i 's/^\(%sudo.\+\)ALL$/\1NOPASSWD:ALL/' /etc/sudoers
+    && sed -i 's/^\(%sudo.\+\)ALL$/\1NOPASSWD:ALL/' /etc/sudoers \
+    && addgroup --system reboot \
     && echo '%reboot ALL=NOPASSWD:/sbin/reboot' > /etc/sudoers.d/reboot
 
 USER user
