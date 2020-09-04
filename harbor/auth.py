@@ -80,7 +80,7 @@ def get_and_cache_user_data(sheet_key, cache=True):
     return data
 
 
-def auth_data(user_data, password, date, grace=0):
+def auth_data(user_data, password, date, entry_grace=0, exit_grace=0):
     password = sanitize_password(password)
     data = OrderedDict((('currently_authorized', False), ('valid_user', False), ('password_sanitized', password)))
 
@@ -89,8 +89,8 @@ def auth_data(user_data, password, date, grace=0):
         data['valid_user'] = True
         for key, value in user_data.items():
             data[key] = str(value)
-        start = user_data['start'] - datetime.timedelta(seconds=grace)
-        end = user_data['end'] + datetime.timedelta(seconds=grace)
+        start = user_data['start'] - datetime.timedelta(seconds=entry_grace)
+        end = user_data['end'] + datetime.timedelta(seconds=exit_grace)
         data['start_with_grace_period'], data['end_with_grace_period'] = str(start), str(end)
         data['currently_authorized'] = start <= date <= end
         data['end_with_grace_period_unix'] = str(end.timestamp())
@@ -105,7 +105,8 @@ def main():
     parser.add_argument('--timezone', help='timezone (default: US/Pacific)', default='US/Pacific')
     parser.add_argument('-d', '--date', help='date and time to check (default: now)')
     parser.add_argument('-f', '--force', action='store_true', help="force a download when checking password (don't use cache)")
-    parser.add_argument('-g', '--grace-period', type=int, default=90, help='grace period in seconds (default: 90)')
+    parser.add_argument('-B', '--grace-period-entry', type=int, default=90, help='entry grace period in seconds (default: 90)')
+    parser.add_argument('-A', '--grace-period-exit', type=int, default=5, help='exit grace period in seconds (default: 5)')
     parser.add_argument('--dump', action='store_true', help='dump all user data')
 
     args = parser.parse_args()
@@ -125,7 +126,8 @@ def main():
         else:
             date = datetime.datetime.now(timezone)
 
-        data = auth_data(user_data=user_data, password=args.password, date=date, grace=args.grace_period)
+        data = auth_data(user_data=user_data, password=args.password, date=date,
+                         entry_grace=args.grace_period_entry, exit_grace=args.grace_period_exit)
         print(json.dumps(data, indent=2))
 
 

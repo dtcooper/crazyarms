@@ -124,9 +124,12 @@ dj_priority_harbor = strip_blank(
 ### DJ mount ###
 DJ_AUTH_ENABLED = conf.bool('DJ_AUTH_ENABLED')
 DJ_AUTH_SHEET_KEY = if DJ_AUTH_ENABLED then conf('DJ_AUTH_SHEET_KEY') else '' end
-DJ_AUTH_GRACE_PERIOD = if DJ_AUTH_ENABLED then conf.int('DJ_AUTH_GRACE_PERIOD') else 0 end
+DJ_AUTH_GRACE_PERIOD_ENTRY = if DJ_AUTH_ENABLED then conf.int('DJ_AUTH_GRACE_PERIOD_ENTRY') else 0 end
+DJ_AUTH_GRACE_PERIOD_EXIT = if DJ_AUTH_ENABLED then conf.int('DJ_AUTH_GRACE_PERIOD_EXIT') else 0 end
 DJ_AUTH_ENFORCE_SCHEDULE = conf.bool('DJ_AUTH_ENFORCE_SCHEDULE')
-auth_cmd = './auth.py -k #{string.escape(DJ_AUTH_SHEET_KEY)} -g #{string_of(DJ_AUTH_GRACE_PERIOD)}'
+auth_cmd = './auth.py -k #{string.escape(DJ_AUTH_SHEET_KEY)} '
+    ^ '--grace-period-entry #{string_of(DJ_AUTH_GRACE_PERIOD_ENTRY)} '
+    ^ '--grace-period-exit #{string_of(DJ_AUTH_GRACE_PERIOD_EXIT)}'
 
 user_data_last_sync = ref -1.
 if DJ_AUTH_ENABLED then
