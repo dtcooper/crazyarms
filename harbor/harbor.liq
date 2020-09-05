@@ -400,7 +400,8 @@ autodj_local = audio_to_stereo(
     ),
 )
 
-autodj_requests = audio_to_stereo(id='autodj_requests_to_stereo', request.queue(id='autodj_requests'))
+autodj_requests = audio_to_stereo(id='autodj_requests_to_stereo',
+    request.queue(id='autodj_requests', timeout=conf.float('REQUEST_TIMEOUT')))
 autodj_id = 'autodj'
 autodj = fallback(id=autodj_id, [autodj_requests, autodj_local])
 
