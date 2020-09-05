@@ -494,7 +494,8 @@ output.harbor(
 )
 
 log('Harbor coming online (git rev: #{git_rev})')
-notify('Harbor came online', 'This does not necessarily mean listeners were disconnected')
+notify('Harbor came online (listeners not necessarily disconnected)',
+       'This does not necessarily mean listeners were disconnected if upstream encoders were left running.')
 
 
 ### Status page
@@ -604,6 +605,8 @@ harbor.http.register(
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/shutdown$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
+        log('restarting harbor from UI')
+        notify('harbor restart initiated by status page')
         add_timeout(2.5, fun() -> begin
             shutdown()
             -1.
@@ -618,7 +621,12 @@ harbor.http.register(
 harbor.http.register(
     port=conf.int('DJ_PORT'), method='POST', '^/reboot$',
     wrap_admin_http(fun(~protocol, ~data, ~headers, uri) -> begin
-        ignore(run_process('sudo reboot'))
+        log('rebooting from UI')
+        notify('reboot initiated by status page')
+        add_timeout(2.5, fun() -> begin
+            ignore(run_process('sudo reboot'))
+            -1.
+        end)
         http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='')
     end))
 
