@@ -72,10 +72,10 @@
 
       $('#send-request').submit(function(e) {
         e.preventDefault()
-        var request_uri = $.trim($('#request_uri').val())
-        $('#request_uri').val('')
-        if (request_uri) {
-          $.post('request.text', request_uri, function(text) {
+        const request_url = $.trim($('#request_url').val())
+        $('#request_url').val('')
+        if (request_url) {
+          $.post('request.text', $('#request_type').val() + request_url, function(text) {
             alert(text)
           })
         }
@@ -170,31 +170,26 @@
     <summary>AutoDJ Requests</summary>
     <h3>AutoDJ Requests</h3>
     Make a request to play next. This will be the next track the AutoDJ selects,
-    inserting into the top of the queue. <i>(Unfortunately, the only way to see if
-    it worked is to listen.)</i><br>
+    inserting into the top of the queue. <i>(Unfortunately, the best way to see
+    if it worked is to listen.)</i><br>
     Types of requests:
     <ul>
-      <li>
-        A full URL to an audio file to request, for example,
-        <br><code>https://www.example.com/file.mp3</code>
-      </li>
-      <li>
-        A track from a website, like YouTube, SoundCloud, etc prefixed with<code>youtube-dl:</code>
-        (it's always <code>youtube-dl:</code>, no matter the site), for example,<br>
-        <code>youtube-dl:https://www.youtube.com/watch?v=dQw4w9WgXcQ</code>
-      <li>Computerized speech, prefixed with <code>say:</code>, for example,<br><code>say:Hi mom!</code></li>
-      <li>
-        Read more about liquidsoap request formatting
-        <script>
-          document.write('<a href="https://www.liquidsoap.info/doc-' + encodeURI(data.liquidsoap_version)
-            + '/reference.html" target="_blank">here</a>')
-        </script>.
-      </li>
+      <li>A URL of sharing platform like YouTube, SoundCloud, Mixcloud, etc like
+        <code>https://www.youtube.com/watch?v=dQw4w9WgXcQ</code></li>
+      <li>A direct URL to an audio file like an MP3 like
+        <code>https://example.com/track.mp3</code></li>
+      <li>Computerized speech</li>
     </ul>
     <form id="send-request">
       <p>
-        <label>Request URI (see above):</label><br>
-        <input type="text" id="request_uri" style="width: 100%"><br>
+        Request type:
+        <select id="request_type">
+          <option value="youtube-dl:" selected>Sharing platform (YouTube, SoundClouce, etc)</option>
+          <option value="">Direct URL of audio file (like an MP3)</option>
+          <option value="say:">Computerized speech (enter text for a URL)</option>
+        </select><br>
+        URL:<br>
+        <input type="text" id="request_url" style="width: 100%"><br>
         <button>Queue Request</button>
       </p>
     </form>
