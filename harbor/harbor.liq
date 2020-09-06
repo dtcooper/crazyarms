@@ -291,7 +291,6 @@ pulse_in = strip_blank(
     max_blank=PULSE_MAX_SILENCE,
     id=pulse_in_id,
     start_blank=true,
-    threshold=-30.,
     min_noise=0.5,
     pulse_in,
 )
