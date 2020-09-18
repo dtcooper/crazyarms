@@ -49,7 +49,7 @@ If you have liquidsoap installed on a Linux machine OR if you have
 
 The most important open ports are:
 * `8000`: The [Icecast 2](https://icecast.org/) server to listen to the stream.
-   See the status page at http://localhost:8001/
+   See the status page at http://localhost:8000/ with mount `/test`.
 * `8001`: The [liquidsoap](https://www.liquidsoap.info/) harbor script.
    * Stream to mounts `/stream` or `/priority` (as above) with default password `hackme`
    * View the harbor status page by going to http://localhost:8001/, default password is `hackme`.
