@@ -1,4 +1,6 @@
-# BMIR 2020 Stream Code
+# Crazy Arms Radio Backend
+
+***Readme Deprecated as I tweak the BMIR code***
 
 Here's the code that powers [Burning Man Informatio Radio's](https://bmir.org)
 2020 stream.
@@ -10,7 +12,7 @@ Found in the `harbor/` folder.
 Here is the script that runs the stream preference automation. The output of this
 stream comes from one of the following from a basic hierarchy.
 
-1. **[Most preferred]** A "priority" [Icecast 2](https://icecast.org/) mount for 
+1. **[Most preferred]** A "priority" [Icecast 2](https://icecast.org/) mount for
    pre-recorded shows to  stream to, as well as for administrators to take over
    the stream, if needed.
 2. An [Icecast 2](https://icecast.org/) mount for DJs remote stream to. Silence
