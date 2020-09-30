@@ -77,10 +77,10 @@ else
     NGINX_COMPOSE_FILE=docker-compose.nginx.yml
 fi
 
-if [ "$@" ]; then
-    CMD=$@
-else
+if [ "$#" = 0 ]; then
     CMD="up --remove-orphans"
+else
+    CMD="$@"
 fi
 
 set -x

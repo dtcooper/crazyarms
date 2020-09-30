@@ -1,5 +1,27 @@
 version: '3'
 
 services:
-  whoami:
-    image: jwilder/whoami
+  admin:
+    build:
+      context: ./admin
+    volumes:
+      - ./admin:/app
+    depends_on:
+      - db
+    environment:
+      DEBUG:
+      DOMAIN_NAME:
+      GUNICORN_WORKERS:
+      POSTGRES_PASSWORD:
+      POSTGRES_USER:
+      SECRET_KEY:
+  db:
+    image: postgres:11
+    environment:
+      POSTGRES_PASSWORD:
+      POSTGRES_USER:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  postgres_data:

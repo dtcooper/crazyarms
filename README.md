@@ -2,8 +2,16 @@
 
 ***Readme Deprecated as I tweak the BMIR code***
 
-Here's the code that powers [Burning Man Informatio Radio's](https://bmir.org)
-2020 stream.
+## Doc Todos
+
+1. Initial setup
+   - env file
+   - docker build
+2. Account creation + secret key
+3. Static deploy
+4. Updating section
+   - docker re-build
+   - migrations
 
 ## Harbor
 
