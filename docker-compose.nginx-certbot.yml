@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  nginx:
+  nginx-certbot:
     image: staticfloat/nginx-certbot
     restart: always
     ports:
@@ -9,6 +9,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/user.conf.d/default.conf:ro
+      - letsencrypt:/etc/letsencrypt
     environment:
       IS_STAGING: "${HTTPS_STAGING_CERT}"
       CERTBOT_EMAIL:  # Pass through
@@ -19,3 +20,6 @@ services:
         ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
       ENVSUBST_VARS: "NGINX_LISTEN DOMAIN_NAME"
+
+volumes:
+  letsencrypt:

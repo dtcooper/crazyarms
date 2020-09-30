@@ -71,11 +71,17 @@ if [ -f env.vars ]; then
     export_env_file env.vars
 fi
 
-if [ "$USE_HTTPS" ]; then
+if [ "$USE_HTTPS" = 1 ]; then
     NGINX_COMPOSE_FILE=docker-compose.nginx-certbot.yml
 else
     NGINX_COMPOSE_FILE=docker-compose.nginx.yml
 fi
 
+if [ "$@" ]; then
+    CMD=$@
+else
+    CMD="up --remove-orphans"
+fi
+
 set -x
-docker-compose -f docker-compose.yml -f "$NGINX_COMPOSE_FILE" $@
+docker-compose -f docker-compose.yml -f "$NGINX_COMPOSE_FILE" $CMD
