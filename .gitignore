@@ -1,3 +1,4 @@
+# Old
 /harbor/user-data.pkl
 /harbor/autodj/
 /harbor/credentials.json
@@ -5,3 +6,6 @@
 /harbor/venv/
 
 __pycache__/
+
+# New
+env.vars
