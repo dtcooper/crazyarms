@@ -1,0 +1,23 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV LIQUIDSOAP_VERSION "1.4.3"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        supervisor \
+        wget \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases/download/v${LIQUIDSOAP_VERSION}/liquidsoap-v${LIQUIDSOAP_VERSION}_${LIQUIDSOAP_VERSION}-ubuntu-focal-amd64-1_amd64.deb" \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        /tmp/liquidsoap.deb \
+    && rm -rf /var/lib/apt/lists/* /tmp/*.deb
+
+RUN rmdir /etc/supervisor/conf.d && ln -s /config/upstream/supervisor /etc/supervisor/conf.d
+
+COPY image/ /
+
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

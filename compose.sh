@@ -2,76 +2,122 @@
 
 cd "$(dirname "$0")"
 
-export_env_file () {
+
+### BEGIN https://github.com/bashup/dotenv/ ###
+__dotenv=
+__dotenv_file=
+__dotenv_cmd=.env
+
+.env() {
+    REPLY=()
+    [[ $__dotenv_file || ${1-} == -* ]] || .env.--file .env || return
+    if declare -F -- ".env.${1-}" >/dev/null; then .env."$@"; return ; fi
+    .env --help >&2; return 64
+}
+
+.env.-f() { .env.--file "$@"; }
+
+.env.get() {
+    .env::arg "get requires a key" "$@" &&
+    [[ "$__dotenv" =~ ^(.*(^|$'\n'))([ ]*)"$1="(.*)$ ]] &&
+    REPLY=${BASH_REMATCH[4]%%$'\n'*} && REPLY=${REPLY%"${REPLY##*[![:space:]]}"}
+}
+
+.env.parse() {
+    local line key
+    while IFS= read -r line; do
+        line=${line#"${line%%[![:space:]]*}"}  # trim leading whitespace
+        line=${line%"${line##*[![:space:]]}"}  # trim trailing whitespace
+        if [[ ! "$line" || "$line" == '#'* ]]; then continue ; fi
+        if (($#)); then
+            for key; do
+                if [[ $key == "${line%%=*}" ]]; then REPLY+=("$line"); break;
+                fi
+            done
+        else
+            REPLY+=("$line")
+        fi
+    done <<<"$__dotenv"
+    ((${#REPLY[@]}))
+}
+
+.env.export() { ! .env.parse "$@" || export "${REPLY[@]}"; }
+
+.env.set() {
+    .env::file load || return ; local key saved=$__dotenv
+    while (($#)); do
+        key=${1#+}; key=${key%%=*}
+        if .env.get "$key"; then
+            REPLY=()
+            if [[ $1 == +* ]]; then shift; continue  # skip if already found
+            elif [[ $1 == *=* ]]; then
+                __dotenv=${BASH_REMATCH[1]}${BASH_REMATCH[3]}$1$'\n'${BASH_REMATCH[4]#*$'\n'}
+            else
+                __dotenv=${BASH_REMATCH[1]}${BASH_REMATCH[4]#*$'\n'}
+                continue   # delete all occurrences
+            fi
+        elif [[ $1 == *=* ]]; then
+            __dotenv+="${1#+}"$'\n'
+        fi
+        shift
+    done
+    [[ $__dotenv == "$saved" ]] || .env::file save
+}
+
+.env.puts() { echo "${1-}">>"$__dotenv_file" && __dotenv+="$1"$'\n'; }
+
+.env.generate() {
+    .env::arg "key required for generate" "$@" || return
+    .env.get "$1" && return || REPLY=$("${@:2}") || return
+    .env::one "generate: ouptut of '${*:2}' has more than one line" "$REPLY" || return
+    .env.puts "$1=$REPLY"
+}
+
+.env.--file() {
+    .env::arg "filename required for --file" "$@" || return
+    __dotenv_file=$1; .env::file load || return
+    (($#<2)) || .env "${@:2}"
+}
+
+.env::arg() { [[ "${2-}" ]] || { echo "$__dotenv_cmd: $1" >&2; return 64; }; }
+
+.env::one() { [[ "$2" != *$'\n'* ]] || .env::arg "$1"; }
+
+.env::file() {
+    local REPLY=$__dotenv_file
+    case "$1" in
+    load)
+        __dotenv=; ! [[ -f "$REPLY" ]] || __dotenv="$(<"$REPLY")"$'\n' || return ;;
+    save)
+        if [[ -L "$REPLY" ]] && declare -F -- realpath.resolved >/dev/null; then
+            realpath.resolved "$REPLY"
+        fi
+        { [[ ! -f "$REPLY" ]] || cp -p "$REPLY" "$REPLY.bak"; } &&
+        printf %s "$__dotenv" >"$REPLY.bak" && mv "$REPLY.bak" "$REPLY"
+    esac
+}
+### END https://github.com/bashup/dotenv/ ###
+
+export_env_file() {
   set -a
   source "$1"
   set +a
 }
 
+is_true() {
+    VAL="${1,,}"
+    [ "$VAL" != "" -a "$VAL" != "0" -a "$VAL" != "false" ]
+}
 
-# argparse() {
-#     argparser=$(mktemp 2>/dev/null || mktemp -t argparser)
-#     cat > "$argparser" <<EOF
-# from __future__ import print_function
-# import shlex
-# import sys
-# import argparse
-# import os
-# class MyArgumentParser(argparse.ArgumentParser):
-#     def print_help(self, file=None):
-#         """Print help and exit with error"""
-#         super(MyArgumentParser, self).print_help(file=file)
-#         sys.exit(1)
-# parser = MyArgumentParser(prog=os.path.basename("$0"),
-#             description="""$ARGPARSE_DESCRIPTION""")
-# EOF
-
-#     # stdin to this function should contain the parser definition
-#     cat >> "$argparser"
-
-#     cat >> "$argparser" <<EOF
-# args = parser.parse_args()
-# for arg in [a for a in dir(args) if not a.startswith('_')]:
-#     key = arg.upper()
-#     value = getattr(args, arg, None)
-#     if isinstance(value, bool) or value is None:
-#         print('{0}="{1}";'.format(key, 'yes' if value else ''))
-#     else:
-#         print('{0}="{1}";'.format(key, shlex.quote(value)))
-# EOF
-
-#     # Define variables corresponding to the options if the args can be
-#     # parsed without errors; otherwise, print the text of the error
-#     # message.
-#     if python3 "$argparser" "$@" &> /dev/null; then
-#         eval $(python3 "$argparser" "$@")
-#         retval=0
-#     else
-#         python3 "$argparser" "$@"
-#         retval=1
-#     fi
-
-#     rm "$argparser"
-#     return $retval
-# }
-
-# argparse "$@" <<EOF || exit 1
-# parser.add_argument('infile')
-# parser.add_argument('outfile')
-# parser.add_argument('-a', '--the-answer', default=42, type=int,
-#                     help='Pick a number [default %(default)s]')
-# parser.add_argument('-d', '--do-the-thing', action='store_true',
-#                     default=False, help='store a boolean [default %(default)s]')
-# parser.add_argument('-m', '--multiple', nargs='+',
-#                     help='multiple values allowed')
-# EOF
-export_env_file env.default.vars
-
-if [ -f env.vars ]; then
-    export_env_file env.vars
+export_env_file .default.env
+if [ ! -f .env ]; then
+    cat <<EOF > .env
+SECRET_KEY=$(base64 /dev/urandom | head -c50)
+EOF
 fi
+export_env_file .env
 
-if [ "$USE_HTTPS" = 1 ]; then
+if is_true "$USE_HTTPS"; then
     NGINX_COMPOSE_FILE=docker-compose.nginx-certbot.yml
 else
     NGINX_COMPOSE_FILE=docker-compose.nginx.yml
@@ -84,4 +130,4 @@ else
 fi
 
 set -x
-docker-compose -f docker-compose.yml -f "$NGINX_COMPOSE_FILE" $CMD
+exec docker-compose -f docker-compose.yml $CMD

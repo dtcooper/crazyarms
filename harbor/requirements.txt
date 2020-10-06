@@ -1,5 +1,0 @@
-dateutils
-gspread
-gspread-formatting
-oauth2client
-pytz

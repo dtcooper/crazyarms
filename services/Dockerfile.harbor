@@ -1,0 +1,43 @@
+FROM ubuntu:20.04
+
+ENV DISPLAY=:0
+ENV DEBIAN_FRONTEND noninteractive
+ENV LIQUIDSOAP_VERSION "1.4.3"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        festival \
+        festvox-kallpc16k \
+        ffmpeg \
+        gnupg \
+        sox \
+        libsox-fmt-all \
+        pulseaudio \
+        python3-pip \
+        python3 \
+        sudo \
+        supervisor \
+        telnet \
+        wget \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -qO /tmp/zoom.deb https://zoom.us/client/latest/zoom_amd64.deb \
+    && wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases/download/v${LIQUIDSOAP_VERSION}/liquidsoap-v${LIQUIDSOAP_VERSION}_${LIQUIDSOAP_VERSION}-ubuntu-focal-amd64-1_amd64.deb" \
+    && wget -qO - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2 \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        /tmp/liquidsoap.deb \
+        /tmp/zoom.deb \
+        google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/* /tmp/*.deb
+
+RUN pip3 install youtube-dl
+
+RUN adduser --gecos '' --disabled-password user
+
+COPY image/ /
+
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

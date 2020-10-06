@@ -1,0 +1,50 @@
+{% if HTTPS_ENABLED|int %}
+server {
+    listen 80 default_server reuseport;
+    listen [::]:80 default_server reuseport;
+
+    location '/.well-known/acme-challenge' {
+        default_type "text/plain";
+        proxy_pass http://localhost:8080;
+    }
+
+    location / {
+        return 301 https://$http_host$request_uri;
+    }
+}
+{% endif %}
+
+server {
+    server_name {{ DOMAIN_NAME }};
+
+    {% if HTTPS_ENABLED|int %}
+        listen 443 ssl default_server reuseport;
+        listen [::]:443 ssl default_server reuseport;
+
+        ssl_certificate /etc/letsencrypt/live/{{ DOMAIN_NAME }}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/{{ DOMAIN_NAME }}/privkey.pem;
+
+        include /usr/lib/python3/dist-packages/certbot_nginx/options-ssl-nginx.conf;
+    {% else %}
+        listen 80 default_server reuseport;
+        listen [::]:80 default_server reuseport;
+    {% endif %}
+
+    location = /favicon.ico {
+        return 204;
+        access_log off;
+        log_not_found off;
+    }
+
+    {% if not DEBUG|int %}
+        # gunicorn won't serve static root
+        location /static/ {
+            alias /usr/share/nginx/html/static_root/;
+        }
+    {% endif %}
+
+
+    location / {
+        proxy_pass http://admin:8000;
+    }
+}

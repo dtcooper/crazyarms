@@ -8,4 +8,4 @@
 __pycache__/
 
 # New
-env.vars
+.env

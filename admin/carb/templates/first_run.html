@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<form method="post">
+  {% csrf_token %}
+  <h2>Create Admin User</h2>
+  <p>
+    Welcome to Crazy Arms Radio Back-end! Since no account has yet been created,
+    you'll need to create an a new administrator below before proceeding.
+  </p>
+  <table>
+    {{ form.as_table }}
+  </table>
+  <p>
+    <button type="submit">Create User</button>
+    <button type="reset">Reset Form</button>
+  </p>
+</form>
+{% endblock %}

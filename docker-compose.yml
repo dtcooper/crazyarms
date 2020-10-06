@@ -1,27 +1,64 @@
 version: '3'
 
 services:
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - admin
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - ./.env:/.env:ro
+
   admin:
     build:
       context: ./admin
     volumes:
+      - ./.env:/.env
       - ./admin:/app
+      - static_root:/static_root/
+      - services_config:/config
     depends_on:
       - db
-    environment:
-      DEBUG:
-      DOMAIN_NAME:
-      GUNICORN_WORKERS:
-      POSTGRES_PASSWORD:
-      POSTGRES_USER:
-      SECRET_KEY:
+      - icecast
+      - harbor
+      - upstream
+
   db:
     image: postgres:11
-    environment:
-      POSTGRES_PASSWORD:
-      POSTGRES_USER:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_PASSWORD: postgres
+
+  harbor:
+    build:
+      context: ./services
+      dockerfile: Dockerfile.harbor
+    volumes:
+      - services_config:/config
+
+  icecast:
+    build:
+      context: ./services
+      dockerfile: Dockerfile.icecast
+    ports:
+      - '8000:8000'
+    volumes:
+      - services_config:/config
+
+  upstream:
+    build:
+      context: ./services
+      dockerfile: Dockerfile.upstream
+    volumes:
+      - services_config:/config
 
 volumes:
   postgres_data:
+  letsencrypt:
+  static_root:
+  services_config:
