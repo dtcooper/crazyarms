@@ -18,7 +18,7 @@ services:
       context: ./admin
     volumes:
       - ./.env:/.env
-      - ./admin:/app
+      - ./admin/app:/app
       - static_root:/static_root/
       - services_config:/config
     depends_on:

@@ -36,7 +36,8 @@ RUN wget -qO /tmp/zoom.deb https://zoom.us/client/latest/zoom_amd64.deb \
 
 RUN pip3 install youtube-dl
 
-RUN adduser --gecos '' --disabled-password user
+RUN mkdir /etc/liquidsoap && ln -s /config/harbor/harbor.liq /etc/liquidsoap/harbor.liq \
+    && rmdir /etc/supervisor/conf.d && ln -s /config/harbor/supervisor /etc/supervisor/conf.d
 
 COPY image/ /
 
