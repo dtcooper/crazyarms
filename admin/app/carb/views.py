@@ -18,12 +18,12 @@ def status(request):
 class FirstRunView(FormView):
     template_name = 'first_run.html'
     form_class = UserCreationForm
-    success_url = reverse_lazy('index')
+    success_url = reverse_lazy('status')
 
     def dispatch(self, request, *args, **kwargs):
         # Only work if no user exists
         if User.objects.exists():
-            return redirect('index')
+            return redirect('status')
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):

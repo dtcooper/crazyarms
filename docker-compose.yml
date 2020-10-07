@@ -29,7 +29,7 @@ services:
       - upstream
 
   db:
-    image: postgres:11
+    image: postgres:alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
