@@ -11,7 +11,8 @@ class Command(BaseCommand):
     }
 
     def add_arguments(self, parser):
-        parser.add_argument('services', nargs='*', type=str, help='List of services to start (default: all)')
+        parser.add_argument('services', nargs='*', type=str, help='list of services to start (default: all)')
+        parser.add_argument('-r', '--restart', action='store_true', help='force a restart of the services')
 
     def handle(self, *args, **options):
         self.stdout.write('Initializing services:', ending='')
@@ -20,7 +21,7 @@ class Command(BaseCommand):
         for service_name in (options['services'] or self.services.keys()):
             service = self.services[service_name]()
             service.generate_conf()
-            service.reload_supervisor()
+            service.reload_supervisor(restart_services=options['restart'])
             self.stdout.write(f' {service_name}', ending='')
             self.stdout.flush()
 

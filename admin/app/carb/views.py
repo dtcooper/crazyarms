@@ -6,11 +6,11 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import FormView
 
 
-def index(request):
+def status(request):
     if not User.objects.exists():
         return redirect('first-run')
     elif request.user.is_authenticated:
-        return render(request, 'base.html', {'title': request.user.username})
+        return render(request, 'status.html', {'title': 'Server Status'})
     else:
         return redirect('admin:login')
 

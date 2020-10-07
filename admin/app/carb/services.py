@@ -7,13 +7,15 @@ from django.template.loader import render_to_string
 from constance import config
 
 
+SUPERVISOR_RUNNING_STATES = {'STARTING', 'RUNNING', 'BACKOFF'}
+
+
 class CarbServiceBase:
     service_name = None
 
     def __init__(self):
         self._server = None
-        self.services_to_start = []
-        self.services_to_stop = []
+        self.services_to_start = set()
 
     def generate_conf(self):
         raise NotImplementedError()
@@ -47,12 +49,22 @@ class CarbServiceBase:
 
         self.render_conf('service.conf', conf_filename=f'supervisor/{service_name}.conf', context=context)
         if start:
-            self.services_to_start.append(service_name)
-        else:
-            self.services_to_stop.append(service_name)
+            self.services_to_start.add(service_name)
 
-    def reload_supervisor(self):
+    def reload_supervisor(self, restart_services=False):
         self.server.supervisor.reloadConfig()
+
+        if restart_services:
+            for info in self.server.supervisor.getAllProcessInfo():
+                if info['statename'] in SUPERVISOR_RUNNING_STATES:
+                    self.server.supervisor.stopProcess(info['name'])
+
+        # Start all (and stop) services manually after config is reloaded
+        for info in self.server.supervisor.getAllProcessInfo():
+            if info['name'] in self.services_to_start and info['statename'] not in SUPERVISOR_RUNNING_STATES:
+                self.server.supervisor.startProcess(info['name'])
+            elif info['statename'] in SUPERVISOR_RUNNING_STATES:
+                self.server.supervisor.stopProcess(info['name'])
 
 
 class IcecastService(CarbServiceBase):
