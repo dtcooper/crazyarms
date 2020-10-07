@@ -11,12 +11,10 @@ BASE_DIR = os.path.dirname(__file__)
 SECRET_KEY = env('SECRET_KEY')
 
 DEBUG = env('DEBUG')
-STATION_NAME = env('STATION_NAME')
 
 ALLOWED_HOSTS = ['admin']
 if DEBUG:
     ALLOWED_HOSTS.append('localhost')
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -26,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'constance',
     'carb',
 ]
 
@@ -72,10 +71,6 @@ DATABASES = {
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -91,10 +86,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/3.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -105,9 +96,19 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.1/howto/static-files/
-
 STATIC_URL = '/static/'
 STATIC_ROOT = '/static_root'
+
+
+CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
+CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}
+
+CONSTANCE_CONFIG = {
+    'STATION_NAME': ('Crazy Arms Radio Station', 'The name of your radio station'),
+    'ICECAST_ENABLED': (True, 'Whether or not to run a local Icecast server (kh fork)'),
+    'ICECAST_LOCATION': ('The World', 'Location setting for local Icecast server'),
+    'ICECAST_ADMIN_EMAIL': (f'admin@{env("DOMAIN_NAME")}', 'The admin email address setting for local Icecast server'),
+    'ICECAST_MAX_BANDWITH': (0, 'Max bandwidth available for local Icecast server in MB, leave as 0 for unlimited'),
+    'ICECAST_MAX_CLIENTS': (2500, 'Max connected clients allowed local Iceacst server.'),
+    'ICECAST_MAX_SOURCES': (25, 'Max sources allowed to connect to local Icecast server.'),
+}

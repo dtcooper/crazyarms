@@ -29,6 +29,7 @@ class FirstRunView(FormView):
     def form_valid(self, form):
         user = form.save(commit=False)
         user.is_superuser = True
+        user.is_staff = True
         user.save()
         login(self.request, user)
         return super().form_valid(form)

@@ -1,3 +1,4 @@
+django-constance[redis]
 django-environ
 django-extensions
 Django>=3.0,<4.0

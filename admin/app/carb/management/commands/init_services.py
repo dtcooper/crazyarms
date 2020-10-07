@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
         for service_name in (options['services'] or self.services.keys()):
             service = self.services[service_name]()
-            service.generate_config()
+            service.generate_conf()
             service.reload_supervisor()
             self.stdout.write(f' {service_name}', ending='')
             self.stdout.flush()

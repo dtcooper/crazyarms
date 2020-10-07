@@ -23,8 +23,9 @@ services:
       - services_config:/config
     depends_on:
       - db
-      - icecast
       - harbor
+      - icecast
+      - redis
       - upstream
 
   db:
@@ -33,6 +34,11 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       POSTGRES_PASSWORD: postgres
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
 
   harbor:
     build:
@@ -58,7 +64,8 @@ services:
       - services_config:/config
 
 volumes:
-  postgres_data:
   letsencrypt:
-  static_root:
+  postgres_data:
+  redis_data:
   services_config:
+  static_root:
