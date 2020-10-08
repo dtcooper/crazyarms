@@ -1,9 +1,10 @@
 from django.contrib.auth import login
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic.edit import FormView
+
+from .forms import FirstRunForm
 
 
 def status(request):
@@ -17,7 +18,7 @@ def status(request):
 
 class FirstRunView(FormView):
     template_name = 'first_run.html'
-    form_class = UserCreationForm
+    form_class = FirstRunForm
     success_url = reverse_lazy('status')
 
     def dispatch(self, request, *args, **kwargs):
@@ -27,14 +28,11 @@ class FirstRunView(FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        user = form.save(commit=False)
-        user.is_superuser = True
-        user.is_staff = True
-        user.save()
+        user = form.save()
         login(self.request, user)
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({'title': 'Initial Setup', 'hidenav': True})
+        context.update({'hidenav': True})
         return context

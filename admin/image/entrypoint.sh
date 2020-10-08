@@ -4,7 +4,7 @@
 if [ -z "$(dotenv -f /.env get SECRET_KEY)" ]; then
     # Set secret key on first run (.env set uses mv, so we need to use a temporary file)
     cp /.env /tmp/.env
-    .env -f /tmp/.env set SECRET_KEY="$(tr -dc 'a-z0-9!@#$%^&*(-_=+)' < /dev/urandom | head -c50)"
+    .env -f /tmp/.env set SECRET_KEY="'$(tr -dc 'a-z0-9!@#$%^&*(-_=+)' < /dev/urandom | head -c50)'"
     cp /tmp/.env /.env
     rm /tmp/.env
 fi

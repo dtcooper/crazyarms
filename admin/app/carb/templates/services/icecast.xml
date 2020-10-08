@@ -1,27 +1,28 @@
 <icecast>
-    <location>{{ settings.ICECAST_LOCATION|default:'The World' }}</location>
-    <admin>{% if settings.ICECAST_ADMIN_EMAIL %}{{ settings.ICECAST_ADMIN_EMAIL }}{% else %}admin@{{ DOMAIN_NAME }}{% endif %}</admin>
-    <hostname>localhost</hostname>
+    <location>{{ config.ICECAST_LOCATION }}</location>
+    <admin>{{ config.ICECAST_ADMIN_EMAIL }}</admin>
+    <hostname>{{</hostname>
 
     <limits>
-        <clients>{{ ICECAST_MAX_CLIENTS|default:'2500' }}</clients>
-        <sources>{{ ICECAST_MAX_SOURCES|default:'25' }}</sources>
+        {% if config.ICECAST_MAX_CLIENTS > 0 %}
+            <clients>{{ config.ICECAST_MAX_CLIENTS }}</clients>
+        {% endif %}
+        {% if config.ICECAST_MAX_SOURCES > 0%}
+            <sources>{{ ICECAST_MAX_SOURCES }}</sources>
+        {% endif %}
         <queue-size>524288</queue-size>
         <client-timeout>30</client-timeout>
         <header-timeout>15</header-timeout>
         <source-timeout>10</source-timeout>
         <burst-size>65535</burst-size>
-        {% if ICECAST_MAX_BANDWITH %}
-            <max-bandwidth>{{ ICECAST_MAX_BANDWITH }}</max-bandwidth>
-        {% endif %}
     </limits>
 
     <authentication>
-        <source-password>{{ settings.ICECAST_SOURCE_PASSWORD|default:settings.SECRET_KEY }}</source-password>
-        <relay-password>{{ settings.ICECAST_RELAY_PASSWORD|default:settings.SECRET_KEY }}</relay-password>
+        <source-password>{{ config.ICECAST_SOURCE_PASSWORD }}</source-password>
+        <relay-password>{{ config.ICECAST_RELAY_PASSWORD }}</relay-password>
 
         <admin-user>admin</admin-user>
-        <admin-password>{{ settings.ICECAST_ADMIN_PASSWORD|default:'hackme' }}</admin-password>
+        <admin-password>{{ config.ICECAST_ADMIN_PASSWORD }}</admin-password>
     </authentication>
 
     <hostname>localhost</hostname>

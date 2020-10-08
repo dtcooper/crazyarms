@@ -23,6 +23,7 @@ auto_j2() {
     subdir=$(dirname "$relative_path")
     mkdir -p "$output_dir/$subdir"
     echo >&3 "$ME: Running j2 on $template to $output_path"
+    export SSL_OPTIONS_PATH="$(python3 -c 'import site; print(site.getsitepackages()[0])')/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"
     j2 --format=env "$template" "$env_file" > "$output_path"
   done
 }

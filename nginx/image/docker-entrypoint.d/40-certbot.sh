@@ -1,9 +1,8 @@
-#!/bin/bash
-. /usr/local/bin/dotenv
+#!/bin/sh
 
 ME=$(basename $0)
 
-.env -f /.env export
+. /.env
 
 if [ "$HTTPS_ENABLED" -a "$HTTPS_ENABLED" != '0' ]; then
     CERT_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}"

@@ -11,6 +11,7 @@ services:
       - admin
     volumes:
       - letsencrypt:/etc/letsencrypt
+      - static_root:/usr/share/nginx/html/static_root:ro
       - ./.env:/.env:ro
 
   admin:
@@ -19,7 +20,7 @@ services:
     volumes:
       - ./.env:/.env
       - ./admin/app:/app
-      - static_root:/static_root/
+      - static_root:/static_root
       - services_config:/config
     depends_on:
       - db
@@ -45,7 +46,7 @@ services:
       context: ./services
       dockerfile: Dockerfile.harbor
     volumes:
-      - services_config:/config
+      - services_config:/config:ro
 
   icecast:
     build:
@@ -54,14 +55,14 @@ services:
     ports:
       - '8000:8000'
     volumes:
-      - services_config:/config
+      - services_config:/config:ro
 
   upstream:
     build:
       context: ./services
       dockerfile: Dockerfile.upstream
     volumes:
-      - services_config:/config
+      - services_config:/config:ro
 
 volumes:
   letsencrypt:

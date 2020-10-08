@@ -1,17 +1,14 @@
-FROM library/nginx
+FROM library/nginx:alpine
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        certbot \
-        python-certbot-nginx \
-        python3 \
-        python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    certbot \
+    certbot-nginx \
+    py3-pip \
+    openssl
 
-RUN pip3 install j2cli
+RUN pip install j2cli
 
-RUN curl -sLo /usr/local/bin/dotenv https://raw.githubusercontent.com/bashup/dotenv/d71c9d78/dotenv \
-    && curl -sLo /usr/local/bin/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/81b1373f/wait-for-it.sh \
-    && chmod +x /usr/local/bin/dotenv /usr/local/bin/wait-for-it
+RUN curl -sLo /usr/local/bin/wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for \
+    && chmod +x /usr/local/bin/wait-for
 
 COPY image/ /

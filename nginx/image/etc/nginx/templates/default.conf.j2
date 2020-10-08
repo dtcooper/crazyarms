@@ -24,7 +24,7 @@ server {
         ssl_certificate /etc/letsencrypt/live/{{ DOMAIN_NAME }}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/{{ DOMAIN_NAME }}/privkey.pem;
 
-        include /usr/lib/python3/dist-packages/certbot_nginx/options-ssl-nginx.conf;
+        include {{ env('SSL_OPTIONS_PATH') }};
     {% else %}
         listen 80 default_server reuseport;
         listen [::]:80 default_server reuseport;

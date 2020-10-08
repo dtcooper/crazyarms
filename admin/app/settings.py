@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import os
 
 import environ
@@ -47,6 +48,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'constance.context_processors.config',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -103,12 +105,20 @@ STATIC_ROOT = '/static_root'
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
 CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}
 
-CONSTANCE_CONFIG = {
-    'STATION_NAME': ('Crazy Arms Radio Station', 'The name of your radio station'),
-    'ICECAST_ENABLED': (True, 'Whether or not to run a local Icecast server (kh fork)'),
-    'ICECAST_LOCATION': ('The World', 'Location setting for local Icecast server'),
-    'ICECAST_ADMIN_EMAIL': (f'admin@{env("DOMAIN_NAME")}', 'The admin email address setting for local Icecast server'),
-    'ICECAST_MAX_BANDWITH': (0, 'Max bandwidth available for local Icecast server in MB, leave as 0 for unlimited'),
-    'ICECAST_MAX_CLIENTS': (2500, 'Max connected clients allowed local Iceacst server.'),
-    'ICECAST_MAX_SOURCES': (25, 'Max sources allowed to connect to local Icecast server.'),
+CONSTANCE_CONFIG = OrderedDict((
+    ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station')),
+    ('ICECAST_ENABLED', (True, 'Whether or not to run a local Icecast server (kh fork)')),
+    ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server')),
+    ('ICECAST_ADMIN_EMAIL', (f'admin@{env("DOMAIN_NAME")}', 'The admin email address setting for the Icecast server')),
+    ('ICECAST_ADMIN_PASSWORD', ('hackme', 'Admin password for the Icecast server')),
+    ('ICECAST_SOURCE_PASSWORD', ('hackme', 'Source password for the Icecast server')),
+    ('ICECAST_RELAY_PASSWORD', ('hackme', 'Relay password for the Icecast server')),
+    ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited)')),
+    ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited)')),
+))
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    'General Options': ('STATION_NAME', 'ICECAST_ENABLED'),
+    'Icecast Settings': ('ICECAST_LOCATION', 'ICECAST_ADMIN_EMAIL', 'ICECAST_ADMIN_PASSWORD', 'ICECAST_SOURCE_PASSWORD',
+                         'ICECAST_RELAY_PASSWORD', 'ICECAST_MAX_CLIENTS', 'ICECAST_MAX_SOURCES'),
 }

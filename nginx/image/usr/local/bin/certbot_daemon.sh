@@ -1,6 +1,4 @@
-#!/bin/bash
-. /usr/local/bin/dotenv
-.env -f /.env export
+#!/bin/sh
 
 check_self_signed() {
     openssl x509 -noout -subject -nameopt multiline -in "$CERT_PATH/fullchain.pem" \
@@ -12,14 +10,16 @@ log() {
 }
 
 run_certbot() {
+    . /.env
+
     certbot_args=
-    if [ "$HTTPS_CERTBOT_STAGING" -a "$HTTPS_CERTBOT_STAGING" != '0' ]; then
+    if [ "$HTTPS_CERTBOT_STAGING_CERT" -a "$HTTPS_CERTBOT_STAGING_CERT" != '0' ]; then
         log 'Using staging certificate (for testing)'
         certbot_args='--server https://acme-staging-v02.api.letsencrypt.org/directory'
     fi
 
+    # undocumented, for testing
     if [ "$HTTPS_CERTBOT_FORCE_RENEW" -a "$HTTPS_CERTBOT_FORCE_RENEW" != '0' ]; then
-        # undocumented, for testing
         log "Forcing certificate renwal"
         certbot_args="$certbot_args --force-renewal"
     fi
@@ -29,7 +29,8 @@ run_certbot() {
         --deploy-hook 'nginx -s reload' $certbot_args
 }
 
-wait-for-it -t 0 localhost:80
+wait-for localhost:80
+. /.env
 
 CERT_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}"
 if check_self_signed; then

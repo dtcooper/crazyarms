@@ -1,5 +1,5 @@
 import os
-from xmlrpc.client import ServerProxy
+from xmlrpc.client import Fault as XMLRPCFault, ServerProxy
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -62,7 +62,10 @@ class CarbServiceBase:
         # Start all (and stop) services manually after config is reloaded
         for info in self.server.supervisor.getAllProcessInfo():
             if info['name'] in self.services_to_start and info['statename'] not in SUPERVISOR_RUNNING_STATES:
-                self.server.supervisor.startProcess(info['name'])
+                try:
+                    self.server.supervisor.startProcess(info['name'])
+                except XMLRPCFault:
+                    pass
             elif info['statename'] in SUPERVISOR_RUNNING_STATES:
                 self.server.supervisor.stopProcess(info['name'])
 
@@ -82,3 +85,17 @@ class HarborService(CarbServiceBase):
     def generate_conf(self):
         self.render_conf('harbor.liq')
         self.render_supervisor_conf(command='liquidsoap /etc/liquidsoap/harbor.liq', user='liquidsoap', start=True)
+
+
+SERVICES = {s.service_name: s for s in (IcecastService, HarborService)}
+
+
+def init_services(services=None, restart_services=False):
+    if not services:
+        services = SERVICES.keys()
+
+    for service in services:
+        service_cls = SERVICES[service]
+        service = service_cls()
+        service.generate_conf()
+        service.reload_supervisor(restart_services=restart_services)
