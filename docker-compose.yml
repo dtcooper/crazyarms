@@ -25,44 +25,38 @@ services:
     depends_on:
       - db
       - harbor
-      - icecast
       - redis
       - upstream
 
   db:
-    image: postgres:alpine
+    image: postgres:13-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       POSTGRES_PASSWORD: postgres
 
   redis:
-    image: redis:alpine
+    image: redis:6-alpine
     volumes:
       - redis_data:/data
 
   harbor:
     build:
-      context: ./services
-      dockerfile: Dockerfile.harbor
+      context: ./liquidsoap
+      dockerfile: Dockerfile
     volumes:
       - services_config:/config:ro
-
-  icecast:
-    build:
-      context: ./services
-      dockerfile: Dockerfile.icecast
-    ports:
-      - '8000:8000'
-    volumes:
-      - services_config:/config:ro
+    environment:
+      CONTAINER_NAME: harbor
 
   upstream:
     build:
-      context: ./services
-      dockerfile: Dockerfile.upstream
+      context: ./liquidsoap
+      dockerfile: Dockerfile
     volumes:
       - services_config:/config:ro
+    environment:
+      CONTAINER_NAME: upstream
 
 volumes:
   letsencrypt:

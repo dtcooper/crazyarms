@@ -6,6 +6,14 @@ ENV LIQUIDSOAP_VERSION "1.4.3"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        festival \
+        festvox-kallpc16k \
+        ffmpeg \
+        libsox-fmt-all \
+        pulseaudio \
+        python3 \
+        python3-pip \
+        sox \
         supervisor \
         wget \
     && rm -rf /var/lib/apt/lists/*
@@ -16,8 +24,11 @@ RUN wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases
         /tmp/liquidsoap.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/*.deb
 
-RUN rmdir /etc/supervisor/conf.d && ln -s /config/upstream/supervisor /etc/supervisor/conf.d
+RUN pip3 install youtube-dl
+
+RUN rmdir /etc/supervisor/conf.d
 
 COPY image/ /
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

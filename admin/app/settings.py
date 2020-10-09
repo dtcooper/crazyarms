@@ -3,15 +3,15 @@ import os
 
 import environ
 
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+env = environ.Env()
 env.read_env('/.env')
 
 BASE_DIR = os.path.dirname(__file__)
 SECRET_KEY = env('SECRET_KEY')
 
-DEBUG = env('DEBUG')
+DEBUG = env.bool('DEBUG', default=False)
+ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
+ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 
 ALLOWED_HOSTS = ['admin']
 if DEBUG:
@@ -107,18 +107,26 @@ CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}
 
 CONSTANCE_CONFIG = OrderedDict((
     ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station')),
-    ('ICECAST_ENABLED', (True, 'Whether or not to run a local Icecast server (kh fork)')),
-    ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server')),
-    ('ICECAST_ADMIN_EMAIL', (f'admin@{env("DOMAIN_NAME")}', 'The admin email address setting for the Icecast server')),
-    ('ICECAST_ADMIN_PASSWORD', ('hackme', 'Admin password for the Icecast server')),
-    ('ICECAST_SOURCE_PASSWORD', ('hackme', 'Source password for the Icecast server')),
-    ('ICECAST_RELAY_PASSWORD', ('hackme', 'Relay password for the Icecast server')),
-    ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited)')),
-    ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited)')),
 ))
 
-CONSTANCE_CONFIG_FIELDSETS = {
-    'General Options': ('STATION_NAME', 'ICECAST_ENABLED'),
-    'Icecast Settings': ('ICECAST_LOCATION', 'ICECAST_ADMIN_EMAIL', 'ICECAST_ADMIN_PASSWORD', 'ICECAST_SOURCE_PASSWORD',
-                         'ICECAST_RELAY_PASSWORD', 'ICECAST_MAX_CLIENTS', 'ICECAST_MAX_SOURCES'),
-}
+if ICECAST_ENABLED:
+    CONSTANCE_CONFIG.update(OrderedDict((
+        ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server')),
+        ('ICECAST_ADMIN_EMAIL', (f'admin@{env("DOMAIN_NAME")}', 'The admin email address setting for the Icecast server')),
+        ('ICECAST_ADMIN_PASSWORD', ('hackme', 'Admin password for the Icecast server')),
+        ('ICECAST_SOURCE_PASSWORD', ('hackme', 'Source password for the Icecast server')),
+        ('ICECAST_RELAY_PASSWORD', ('hackme', 'Relay password for the Icecast server')),
+        ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited)')),
+        ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited)')),
+    )))
+
+CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
+    ('General Options', ('STATION_NAME',)),
+))
+
+if ICECAST_ENABLED:
+    CONSTANCE_CONFIG_FIELDSETS.update(OrderedDict((
+        ('Icecast Settings', ('ICECAST_LOCATION', 'ICECAST_ADMIN_EMAIL', 'ICECAST_ADMIN_PASSWORD',
+                              'ICECAST_SOURCE_PASSWORD', 'ICECAST_RELAY_PASSWORD', 'ICECAST_MAX_CLIENTS',
+                              'ICECAST_MAX_SOURCES')),
+    )))

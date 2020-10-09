@@ -1,0 +1,19 @@
+services:
+  admin:
+    depends_on:
+      - zoom
+
+  zoom:
+    build:
+      context: ./zoom
+    volumes:
+      - ./.env:/.env
+      - services_config:/config
+      - zoom_config:/home/user/.config
+    cap_add:
+      - SYS_ADMIN
+    ports:
+      - '5900:5900'
+
+volumes:
+  zoom_config:

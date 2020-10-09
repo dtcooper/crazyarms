@@ -4,7 +4,7 @@ from django.urls import path
 from carb import views
 
 urlpatterns = [
-    path('', views.status, name='status'),
+    path('', views.StatusView.as_view(), name='status'),
     path('first-run/', views.FirstRunView.as_view(), name='first-run'),
     path('admin/', admin.site.urls),
 ]

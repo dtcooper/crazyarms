@@ -1,5 +1,6 @@
 import os
-from xmlrpc.client import Fault as XMLRPCFault, ServerProxy
+import shutil
+import subprocess
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -11,22 +12,21 @@ SUPERVISOR_RUNNING_STATES = {'STARTING', 'RUNNING', 'BACKOFF'}
 
 
 class CarbServiceBase:
-    service_name = None
+    supervisor_enabled = True
 
     def __init__(self):
         self._server = None
-        self.services_to_start = set()
+        self.programs_to_start = []
 
-    def generate_conf(self):
+    def render_conf(self):
         raise NotImplementedError()
 
-    @property
-    def server(self):
-        if self._server is None:
-            self._server = ServerProxy(f'http://{self.service_name}:9001/RPC2')
-        return self._server
+    def supervisorctl(self, *args):
+        cmd = ['supervisorctl', '-s', f'http://{self.service_name}:9001']
+        cmd.extend(args)
+        subprocess.run(cmd)
 
-    def render_conf(self, filename, context=None, conf_filename=None):
+    def render_conf_file(self, filename, context=None, conf_filename=None):
         default_context = {'settings': settings, 'config': config}
         if context is not None:
             default_context.update(context)
@@ -37,57 +37,72 @@ class CarbServiceBase:
         os.makedirs(os.path.dirname(conf_filename), exist_ok=True)
         with open(conf_filename, 'w') as conf_file:
             conf_file.write(conf)
+            print(f'writing {conf_filename}')
 
-    def render_supervisor_conf(self, command, service_name=None, start=False, **extras):
-        service_name = self.service_name if service_name is None else service_name
-        context = {
+    def clear_supervisor_conf(self):
+        shutil.rmtree(f'/config/{self.service_name}/supervisor', ignore_errors=True)
+
+    def render_supervisor_conf_file(self, command, program_name=None, start=True, **extras):
+        program_name = self.service_name if program_name is None else program_name
+        self.render_conf_file('service.conf', conf_filename=f'supervisor/{program_name}.conf', context={
             'command': command,
-            'program': service_name,
-            'autostart': start,
+            'program': program_name,
             'extras': extras,
-        }
+        })
 
-        self.render_conf('service.conf', conf_filename=f'supervisor/{service_name}.conf', context=context)
         if start:
-            self.services_to_start.add(service_name)
+            self.programs_to_start.append(program_name)
 
     def reload_supervisor(self, restart_services=False):
-        self.server.supervisor.reloadConfig()
+        if self.supervisor_enabled:
+            if restart_services:
+                self.supervisorctl('stop', 'all')
 
-        if restart_services:
-            for info in self.server.supervisor.getAllProcessInfo():
-                if info['statename'] in SUPERVISOR_RUNNING_STATES:
-                    self.server.supervisor.stopProcess(info['name'])
+            self.supervisorctl('update')
 
-        # Start all (and stop) services manually after config is reloaded
-        for info in self.server.supervisor.getAllProcessInfo():
-            if info['name'] in self.services_to_start and info['statename'] not in SUPERVISOR_RUNNING_STATES:
-                try:
-                    self.server.supervisor.startProcess(info['name'])
-                except XMLRPCFault:
-                    pass
-            elif info['statename'] in SUPERVISOR_RUNNING_STATES:
-                self.server.supervisor.stopProcess(info['name'])
+            if self.programs_to_start:
+                self.supervisorctl('restart', *self.programs_to_start)
 
 
 class IcecastService(CarbServiceBase):
+    supervisor_enabled = False
     service_name = 'icecast'
 
-    def generate_conf(self):
-        self.render_conf('icecast.xml')
-        self.render_supervisor_conf(
-            command='icecast -c /etc/icecast.xml', user='icecast', start=config.ICECAST_ENABLED)
+    def render_conf(self):
+        self.render_conf_file('icecast.xml')
 
 
 class HarborService(CarbServiceBase):
     service_name = 'harbor'
 
-    def generate_conf(self):
-        self.render_conf('harbor.liq')
-        self.render_supervisor_conf(command='liquidsoap /etc/liquidsoap/harbor.liq', user='liquidsoap', start=True)
+    def render_conf(self):
+        self.render_conf_file('harbor.liq')
+        self.render_supervisor_conf_file(command='liquidsoap /config/harbor/harbor.liq', user='liquidsoap')
 
 
-SERVICES = {s.service_name: s for s in (IcecastService, HarborService)}
+class ZoomService(CarbServiceBase):
+    service_name = 'zoom'
+
+    def render_conf(self):
+        kwargs = {'environment': 'HOME="/home/user",DISPLAY=":0",PULSE_SERVER="docker.for.mac.localhost"', 'user': 'user'}
+        self.render_supervisor_conf_file(
+            program_name='xvfb-icewm',
+            command='xvfb-run --auth-file=/home/user/.Xauthority --server-num=0 '
+                    "--server-args='-screen 0 1280x800x16' icewm-session",
+            **kwargs
+        )
+        self.render_supervisor_conf_file(
+            program_name='x11vnc', command='x11vnc -shared -forever -passwd secret',
+            **kwargs
+        )
+
+
+SERVICES = {service_cls.service_name: service_cls for service_cls in CarbServiceBase.__subclasses__()}
+
+if not settings.ICECAST_ENABLED:
+    del SERVICES[IcecastService.service_name]
+if not settings.ZOOM_ENABLED:
+    del SERVICES[ZoomService.service_name]
 
 
 def init_services(services=None, restart_services=False):
@@ -97,5 +112,8 @@ def init_services(services=None, restart_services=False):
     for service in services:
         service_cls = SERVICES[service]
         service = service_cls()
-        service.generate_conf()
-        service.reload_supervisor(restart_services=restart_services)
+        if service.supervisor_enabled:
+            service.clear_supervisor_conf()
+        service.render_conf()
+        if service.supervisor_enabled:
+            service.reload_supervisor(restart_services=restart_services)

@@ -1,19 +1,28 @@
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
+from django.shortcuts import redirect
+from django.urls import reverse, reverse_lazy
+from django.utils.http import urlencode
+from django.views.generic import FormView, TemplateView
 
 from .forms import FirstRunForm
 
 
-def status(request):
-    if not User.objects.exists():
-        return redirect('first-run')
-    elif request.user.is_authenticated:
-        return render(request, 'status.html', {'title': 'Server Status'})
-    else:
-        return redirect('admin:login')
+class StatusView(TemplateView):
+    template_name = 'status.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not User.objects.exists():
+            return redirect('first-run')
+        elif not request.user.is_authenticated:
+            return redirect(f'{reverse("admin:login")}?{urlencode({"next": reverse("status")})}')
+        else:
+            return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'title': 'Server Status'})
+        return context
 
 
 class FirstRunView(FormView):

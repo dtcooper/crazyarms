@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
+{% load static %}
+
 <head>
   <meta charset="utf-8">
   <title>{% block title %}{{ config.STATION_NAME }}{% if title %} - {{ title }}{% endif %}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+  <link rel="stylesheet" href="{% static 'css/new.min.css' %}">
   <style>
     .errorlist {
       color: red;
@@ -22,10 +24,10 @@
     {% block header %}
       <h1>{{ config.STATION_NAME }}{% if title %} - {{ title }}{% endif %}</h1>
       <nav>
-        Welcome, {{ user.username }}. /
         <a href="{% url 'status' %}">Status</a> /
         <a href="{% url 'admin:index' %}">Admin</a> /
-        <a href="{% url 'admin:logout' %}">Logout</a>
+        <a href="{% url 'admin:logout' %}">Logout</a> /
+        Welcome, {{ user.username }}.
       </nav>
     {% endblock %}
   </header>

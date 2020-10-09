@@ -1,3 +1,5 @@
+{% autoescape off %}
+
 set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
@@ -15,3 +17,5 @@ output.icecast(
   fallible=true,
   input,
 )
+
+{% endautoescape %}
