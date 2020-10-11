@@ -44,6 +44,8 @@ services:
       context: ./liquidsoap
       dockerfile: Dockerfile
     image: dtcooper/test:${CARB_VERSION:-latest}
+    ports:
+      - '8001:8001'
     volumes:
       - services_config:/config:ro
     environment:

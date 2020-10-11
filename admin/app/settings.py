@@ -12,6 +12,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', default=False)
 ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
 ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
+EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
 
 ALLOWED_HOSTS = ['admin']
 if DEBUG:
