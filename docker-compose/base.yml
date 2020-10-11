@@ -6,7 +6,6 @@ services:
       context: ./nginx
     ports:
       - '80:80'
-      - '443:443'
     depends_on:
       - admin
     volumes:
@@ -29,14 +28,14 @@ services:
       - upstream
 
   db:
-    image: postgres:13-alpine
+    image: library/postgres:13-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       POSTGRES_PASSWORD: postgres
 
   redis:
-    image: redis:6-alpine
+    image: library/redis:6-alpine
     volumes:
       - redis_data:/data
 
@@ -44,6 +43,7 @@ services:
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile
+    image: dtcooper/test:${CARB_VERSION:-latest}
     volumes:
       - services_config:/config:ro
     environment:

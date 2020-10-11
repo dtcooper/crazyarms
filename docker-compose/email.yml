@@ -1,0 +1,9 @@
+services:
+  email:
+    image: juanluisbaptiste/postfix:alpine
+    environment:
+      SMTP_SERVER: "${EMAIL_SMTP_SERVER}"
+      SMTP_PORT: "${EMAIL_SMTP_PORT}"
+      SMTP_USERNAME: "${EMAIL_SMTP_USERNAME}"
+      SMTP_PASSWORD: "${EMAIL_SMTP_PASSWORD}"
+      SERVER_HOSTNAME: "${DOMAIN_NAME}"

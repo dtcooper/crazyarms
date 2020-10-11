@@ -106,19 +106,54 @@ cd "$(dirname "$0")"
 
 FIRST_RUN=
 
-bool() {
-    # Second argument is default return value, ie 0 = yes, 1 = no
-    if [ -z "$1" ]; then
-        return "${2:-0}"
+get_bool() {
+    # prompt, env name, default (0 = false / 1 = true)
+    if [ "$3" = 1 ]; then
+        PROMPT='Y/n'
+    else
+        PROMPT='y/N'
     fi
 
-    [ "${1:0:1}" = 'y' -o "${1:0:1}" = 'Y' ]
+    while true; do
+        read -p "$1 [$PROMPT]? " VALUE
+        VALUE="${VALUE:0:1}"
+        VALUE="${VALUE^^}"
+        if [ "$VALUE" = 'Y' ]; then
+            VALUE=1; break
+        elif [ "$VALUE" = 'N' ]; then
+            VALUE=0; break
+        elif [ -z "$VALUE" ]; then
+            VALUE="$3"; break
+        fi
+    done
+
+    .env set "$2=$VALUE"
+}
+
+get_str() {
+    # prompt, env name, default (optional, otherwise required)
+    if [ "$3" ]; then
+        PROMPT="$1 [$3]"
+    else
+        PROMPT="$1 (required)"
+    fi
+
+    while true; do
+        read -p "${PROMPT}? " VALUE
+        if [ "$VALUE" ]; then
+            break
+        elif [ "$3" ]; then
+            VALUE="$3"; break
+        fi
+    done
+
+    .env set "$2=$VALUE"
 }
 
 if [ ! -f .env ]; then
     FIRST_RUN=1
     cp .default.env .env
-elif [ "$1" = '--first-run' ]; then
+elif [ "$1" = '--force-first-run' ]; then
     FIRST_RUN=1
     shift 1
 fi
@@ -137,33 +172,21 @@ if [ "$FIRST_RUN" ]; then
     echo
     .env set SECRET_KEY="'$(LC_CTYPE=C tr -dc 'a-z0-9!@#$%^&*(-_=+)' < /dev/urandom | head -c50)'"
 
-    read -p 'Domain name [localhost]? ' DOMAIN_NAME
-    .env set DOMAIN_NAME="${DOMAIN_NAME:-localhost}"
-
-    read -p 'Use HTTPS with letsencrypt (must have a valid domain) [y/N]? ' HTTPS_ENABLED
-    if bool "$HTTPS_ENABLED" 1; then
-        .env set HTTPS_ENABLED=1
-
-        while true; do
-            read -p 'Administrator email for letsencrypt (required)? ' HTTPS_CERTBOT_EMAIL
-            # https://gist.github.com/guessi/82a73ee7eb2b1216eb9db17bb8d65dd1
-            EMAIL_REGEX="^([A-Za-z]+[A-Za-z0-9]*((\.|\-|\_)?[A-Za-z]+[A-Za-z0-9]*){1,})@(([A-Za-z]+[A-Za-z0-9]*)+((\.|\-|\_)?([A-Za-z]+[A-Za-z0-9]*)+){1,})+\.([A-Za-z]{2,})+"
-            if [[ "$HTTPS_CERTBOT_EMAIL" =~ $EMAIL_REGEX ]]; then
-                break
-            else
-                echo 'Invalid email. Please try again.'
-            fi
-        done
-        .env set HTTPS_CERTBOT_EMAIL="${HTTPS_CERTBOT_EMAIL}"
-    else
-        .env set HTTPS_ENABLED=0
+    get_str 'Domain name' DOMAIN_NAME 'localhost'
+    get_bool 'Use HTTPS with letsencrypt (must have a valid domain)' HTTPS_ENABLED 0
+    if .env get HTTPS_ENABLED && [ "$REPLY" = 1 ]; then
+        get_str 'Administrator email for letsencrypt' HTTPS_CERTBOT_EMAIL
     fi
 
-    read -p 'Run Icecast service (kh branch) [Y/n]? ' ICECAST_ENABLED
-    .env set ICECAST_ENABLED="$(bool "$ICECAST_ENABLED" && echo '1' || echo '0')"
-
-    read -p 'Run Zoom service (for DJs to broadcast using Zoom) [y/N]? ' ZOOM_ENABLED
-    .env set ZOOM_ENABLED="$(bool "$ZOOM_ENABLED" 1 && echo '1' || echo '0')"
+    get_bool 'Run Icecast service (kh branch)' ICECAST_ENABLED 1
+    get_bool 'Enable Zoom (for DJs to broadcast using a Zoom room)' ZOOM_ENABLED 0
+    get_bool 'Enable email notifications (via SMTP, like GMail)' EMAIL_ENABLED 0
+    if .env get EMAIL_ENABLED && [ "$REPLY" = 1 ]; then
+        get_str 'SMTP server, ie smtp.gmail.com' EMAIL_SMTP_SERVER
+        get_str 'STMP port' EMAIL_SMTP_PORT 587
+        get_str 'STMP username, ie user@gmail.com' EMAIL_SMTP_USERNAME
+        get_str 'STMP password (WARNING: stored in plain text)' EMAIL_SMTP_PASSWORD
+    fi
 
     echo
     echo "Setup completed! Settings saved in \`.env' file."
@@ -173,18 +196,20 @@ fi
 
 source .env
 
-COMPOSE_ARGS='-f docker-compose.yml'
+COMPOSE_ARGS='--env-file .env --project-directory . -f docker-compose/base.yml'
 
-if [ "$ICECAST_ENABLED" -a "$ICECAST_ENABLED" != '0' ]; then
-    COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose.icecast.yml"
+# Enable compose files for services
+for CONF in https icecast zoom email; do
+    CONF_VAR="${CONF^^}_ENABLED"
+    CONF_VAL="${!CONF_VAR}"
+    if [ "$CONF_VAL" -a "$CONF_VAL" != '0' ]; then
+        COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/$CONF.yml"
+    fi
+done
+
+if [ -f 'docker-compose/overrides.yml' ]; then
+    COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/overrides.yml"
 fi
 
-if [ "$ZOOM_ENABLED" -a "$ZOOM_ENABLED" != '0' ]; then
-    COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose.zoom.yml"
-fi
-
-if [ -f 'docker-compose.overrides.yml' ]; then
-    COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose.overrides.yml"
-fi
-
+set -x
 docker-compose $COMPOSE_ARGS $@
