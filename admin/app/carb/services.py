@@ -3,7 +3,9 @@ import shutil
 import subprocess
 
 from django.conf import settings
-from django.template.loader import render_to_string
+from django.template.context import make_context
+from django.template.loader import get_template
+
 
 from constance import config
 
@@ -31,7 +33,8 @@ class CarbServiceBase:
         if context is not None:
             default_context.update(context)
 
-        conf = render_to_string(f'services/{filename}', context=default_context)
+        template = get_template(f'services/{filename}')
+        conf = template.template.render(make_context(default_context, autoescape=False))
 
         conf_filename = f'/config/{self.service_name}/{filename if conf_filename is None else conf_filename}'
         os.makedirs(os.path.dirname(conf_filename), exist_ok=True)
@@ -78,6 +81,21 @@ class HarborService(CarbServiceBase):
     def render_conf(self):
         self.render_conf_file('harbor.liq')
         self.render_supervisor_conf_file(command='liquidsoap /config/harbor/harbor.liq', user='liquidsoap')
+
+
+class UpstreamService(CarbServiceBase):
+    service_name = 'upstream'
+
+    def render_conf(self):
+        if settings.ICECAST_ENABLED:
+            self.render_conf_file('upstream.liq', conf_filename='_icecast.liq', context={
+                'TELNET_PORT': 1234,
+                'HOST': 'icecast',
+                'PORT': 8000,
+                'PASSWORD': config.ICECAST_SOURCE_PASSWORD,
+                'MOUNT': '/live',
+            })
+            self.render_supervisor_conf_file(command='liquidsoap /config/upstream/_icecast.liq', user='liquidsoap')
 
 
 class ZoomService(CarbServiceBase):

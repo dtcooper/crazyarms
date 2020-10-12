@@ -1,11 +1,12 @@
-{% autoescape off %}
+{% load carb %}
 
 set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 
-API_HEADERS = [('X-CARB-Secret-Key', '{{ settings.SECRET_KEY }}')]
+SECERT_KEY = {{ settings.SECRET_KEY|liqstr:True }}
+API_HEADERS = [('X-CARB-Secret-Key', SECERT_KEY)]
 API_PREFIX = 'http://admin:8000/harbor/'
 
 def dj_auth(username, password)
@@ -31,23 +32,13 @@ dj_harbor = audio_to_stereo(
 )
 ignore(output.dummy(dj_harbor, fallible=true))
 
-failsafe = single('/failsafe.mp3')
+failsafe = single('/hold-music.mp3')
 radio = fallback(replay_metadata=false, track_sensitive=false, [dj_harbor, failsafe])
 
-{% if settings.ICECAST_ENABLED %}
-output.icecast(
-  %mp3(bitrate=128),
-  mount="/live",
-  host="icecast",
-  port=8000,
-  password="{{ config.ICECAST_SOURCE_PASSWORD }}",
-  fallible=true,
-  radio,
+output.harbor(
+    %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
+    id='broadcast',
+    mount='stream',
+    port=2817,
+    radio,
 )
-{% endif %}
-
-{% if not settings.ICECAST_ENABLED or UPSTREAM_SERVERS %}
-output.dummy(radio, fallible=true)
-{% endif %}
-
-{% endautoescape %}
