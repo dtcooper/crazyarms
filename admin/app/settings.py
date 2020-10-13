@@ -91,7 +91,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'US/Pacific'
 
 USE_I18N = True
 
@@ -108,6 +108,8 @@ CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}
 
 CONSTANCE_CONFIG = OrderedDict((
     ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station')),
+    ('GCAL_AUTH_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs')),
+    ('GCAL_AUTH_CREDENTIALS_JSON', ('', 'credentials.json service file from Google (TODO: document better)')),
 ))
 
 if ICECAST_ENABLED:
@@ -123,6 +125,7 @@ if ICECAST_ENABLED:
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME',)),
+    ('Google Calendar Based Authentication', ('GCAL_AUTH_ENABLED', 'GCAL_AUTH_CREDENTIALS_JSON')),
 ))
 
 if ICECAST_ENABLED:
