@@ -12,9 +12,18 @@ def boolstr(value):
 
 
 @register.filter
-def liqstr(value, with_comment=False):
-    encoded = base64.b64encode(value.encode("utf-8")).decode("utf-8")
-    encoded = f'base64.decode("{encoded}")'
-    if with_comment:
-        encoded = f'{encoded}  # {value!r}'
+def liqval(value):
+    if isinstance(value, str):
+        encoded = base64.b64encode(value.encode("utf-8")).decode("utf-8")
+        encoded = f'base64.decode("{encoded}")  # {value!r}'
+    elif isinstance(value, bool):
+        encoded = str(value).lower()
+    elif isinstance(value, float):
+        encoded = str(value)
+        if '.' not in encoded:
+            encoded += '.'
+    elif isinstance(value, int):
+        encoded = value
+    else:
+        raise ValueError('Invalid value to encode for liquidsoap')
     return encoded

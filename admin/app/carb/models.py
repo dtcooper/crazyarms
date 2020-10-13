@@ -27,6 +27,12 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     harbor_auth = models.CharField(max_length=1, choices=HARBOR_AUTH_CHOICES)
 
+    def __str__(self):
+        if self.user is None:
+            return 'New user profile'
+        else:
+            return f'Profile for {self.user.get_full_name()}'
+
 
 class ScheduledGCalShow(models.Model):
     gcal_id = models.CharField(max_length=1024, unique=True)

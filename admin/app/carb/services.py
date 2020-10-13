@@ -79,6 +79,9 @@ class HarborService(CarbServiceBase):
     service_name = 'harbor'
 
     def render_conf(self):
+        self.render_conf_file('harbor.vars.liq', context={'vars': {
+            'SECRET_KEY': settings.SECRET_KEY,
+        }})
         self.render_conf_file('harbor.liq')
         self.render_supervisor_conf_file(command='liquidsoap /config/harbor/harbor.liq', user='liquidsoap')
 

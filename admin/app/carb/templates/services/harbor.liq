@@ -1,12 +1,11 @@
-{% load carb %}
-
 set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 
-SECERT_KEY = {{ settings.SECRET_KEY|liqstr:True }}
-API_HEADERS = [('X-CARB-Secret-Key', SECERT_KEY)]
+%include "harbor.vars.liq"
+
+API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://admin:8000/harbor/'
 
 def dj_auth(username, password)
