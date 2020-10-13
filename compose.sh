@@ -117,7 +117,7 @@ get_bool() {
     while true; do
         read -p "$1 [$PROMPT]? " VALUE
         VALUE="${VALUE:0:1}"
-        VALUE="${VALUE^^}"
+        VALUE="$(echo "$VALUE" | awk '{ print toupper($0) }')"
         if [ "$VALUE" = 'Y' ]; then
             VALUE=1; break
         elif [ "$VALUE" = 'N' ]; then
@@ -160,15 +160,12 @@ fi
 
 if [ "$FIRST_RUN" ]; then
     echo
-    echo '########################################'
+    echo '########################'
+    echo 'Crazy Arms Radio Backend'
+    echo '########################'
     echo
-    echo 'Welcome to Crazy Arms Radio Backend!'
-    echo
-    echo '########################################'
-    echo
-    echo "Before we get started, you'll have to answer a few questions in order"
-    echo 'to decide which services to run. You can change your answers by'
-    echo "editing the file \`.env' in this directory."
+    echo 'Welcome to Crazy Arms Radio Backend (CARB). Before we get started, '
+    echo "you'll have to answer a few questions to configure its services."
     echo
     .env set SECRET_KEY="'$(LC_CTYPE=C tr -dc 'a-z0-9!@#$%^&*(-_=+)' < /dev/urandom | head -c50)'"
 
@@ -189,9 +186,20 @@ if [ "$FIRST_RUN" ]; then
     fi
 
     echo
-    echo "Setup completed! Settings saved in \`.env' file."
+    echo "Setup completed! Settings saved in \`.env' file. You can reconfigure"
+    echo 'things at any time by editing this file.'
     echo
-    echo '########################################'
+    if [ "$#" = 0 ]; then
+        echo "To start CARB, run \`$0 up'."
+        echo
+    fi
+fi
+
+if [ "$#" = 0 ]; then
+    if [ -z "$FIRST_RUN" ]; then
+        echo "Provide a command for docker-compose, i.e. \`$0 up', or \`$0 help' for help."
+    fi
+    exit 0
 fi
 
 source .env
@@ -200,7 +208,7 @@ COMPOSE_ARGS='--env-file .env --project-directory . -f docker-compose/base.yml'
 
 # Enable compose files for services
 for CONF in https icecast zoom email; do
-    CONF_VAR="${CONF^^}_ENABLED"
+    CONF_VAR="$(echo "$CONF" | awk '{ print toupper($0) }')_ENABLED"
     CONF_VAL="${!CONF_VAR}"
     if [ "$CONF_VAL" -a "$CONF_VAL" != '0' ]; then
         COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/$CONF.yml"
