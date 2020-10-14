@@ -105,17 +105,19 @@ class ZoomService(CarbServiceBase):
     service_name = 'zoom'
 
     def render_conf(self):
+        # TODO: run pulse on harbor (don't use docker.for.mac.localhost)
+        # TODO: set timezone properly from Django config
         kwargs = {'environment': 'HOME="/home/user",DISPLAY=":0",PULSE_SERVER="docker.for.mac.localhost"', 'user': 'user'}
         self.render_supervisor_conf_file(
             program_name='xvfb-icewm',
             command='xvfb-run --auth-file=/home/user/.Xauthority --server-num=0 '
-                    "--server-args='-screen 0 1280x800x16' icewm-session",
+                    "--server-args='-screen 0 1250x875x16' icewm-session",
             **kwargs
         )
         self.render_supervisor_conf_file(
-            program_name='x11vnc', command='x11vnc -shared -forever -passwd secret',
-            **kwargs
-        )
+            program_name='x11vnc', command='x11vnc -shared -forever -nopw', **kwargs)
+        self.render_supervisor_conf_file(
+            program_name='websockify', command='websockify 0.0.0.0:6080 localhost:5900', **kwargs)
 
 
 SERVICES = {service_cls.service_name: service_cls for service_cls in CarbServiceBase.__subclasses__()}

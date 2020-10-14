@@ -2,18 +2,22 @@ version: '3'
 
 services:
   nginx:
+    container_name: nginx
     build:
       context: ./nginx
     ports:
       - '80:80'
     depends_on:
       - admin
+      - logs
     volumes:
       - letsencrypt:/etc/letsencrypt
       - static_root:/usr/share/nginx/html/static_root:ro
       - ./.env:/.env:ro
 
+  # TODO: rename to app
   admin:
+    container_name: admin
     build:
       context: ./admin
     volumes:
@@ -27,7 +31,21 @@ services:
       - redis
       - upstream
 
+  celery:
+    container_name: celeryd
+    build:
+      context: ./admin
+    volumes:
+      - ./.env:/.env
+      - ./admin/app:/app
+    depends_on:
+      - db
+      - redis
+    environment:
+      RUN_CELERY: 1
+
   db:
+    container_name: db
     image: library/postgres:13-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
@@ -35,11 +53,13 @@ services:
       POSTGRES_PASSWORD: postgres
 
   redis:
+    container_name: redis
     image: library/redis:6-alpine
     volumes:
       - redis_data:/data
 
   harbor:
+    container_name: harbor
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile
@@ -52,6 +72,7 @@ services:
       CONTAINER_NAME: harbor
 
   upstream:
+    container_name: upstream
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile
@@ -59,6 +80,15 @@ services:
       - services_config:/config:ro
     environment:
       CONTAINER_NAME: upstream
+
+  logs:
+    container_name: logs
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      DOZZLE_BASE: "/logs"
+      DOZZLE_TAILSIZE: 5000
 
 volumes:
   letsencrypt:

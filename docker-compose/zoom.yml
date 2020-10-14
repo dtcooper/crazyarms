@@ -3,17 +3,20 @@ services:
     depends_on:
       - zoom
 
+  nginx:
+    depends_on:
+      - zoom
+
   zoom:
+    container_name: zoom
     build:
       context: ./zoom
     volumes:
       - ./.env:/.env
       - services_config:/config
-      - zoom_config:/home/user/.config
+      - zoom_user_home:/home/user
     cap_add:
       - SYS_ADMIN
-    ports:
-      - '5900:5900'
 
 volumes:
-  zoom_config:
+  zoom_user_home:

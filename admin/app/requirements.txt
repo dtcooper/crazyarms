@@ -1,3 +1,5 @@
+argh
+celery
 dateutils
 django-constance[redis]
 django-environ
@@ -7,6 +9,8 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-psycopg2-binary>=2.8
+psycopg2-binary
 python-dotenv
+pyyaml
 supervisor
+watchdog

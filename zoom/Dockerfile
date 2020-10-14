@@ -9,6 +9,7 @@ RUN apt-get update \
         gnupg \
         icewm \
         supervisor \
+        websockify \
         wget \
         x11vnc \
         xvfb \
@@ -24,9 +25,9 @@ RUN wget -qO /tmp/zoom.deb https://zoom.us/client/latest/zoom_amd64.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/*.deb \
     && adduser --gecos '' --disabled-password user
 
-RUN rmdir /etc/supervisor/conf.d && ln -s /config/zoom/supervisor /etc/supervisor/conf.d \
-    && mkdir -p /home/user/.config && chown user:user /home/user/.config
+RUN rmdir /etc/supervisor/conf.d && ln -s /config/zoom/supervisor /etc/supervisor/conf.d
 
 ADD image/ /
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

@@ -26,6 +26,10 @@
       <nav>
       {% if request.user.is_authenticated %}
         <a href="{% url 'status' %}">Status</a> /
+        <a href="/logs/" target="_blank">Logs</a> /
+        {% if settings.ZOOM_ENABLED %}
+          <a href="/vnc/" target="_blank">Zoom VNC</a> /
+        {% endif %}
         <a href="{% url 'admin:index' %}">Admin</a> /
         <a href="{% url 'admin:logout' %}">Logout</a> /
         Welcome, {{ user.username }}.

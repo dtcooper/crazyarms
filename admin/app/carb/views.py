@@ -4,7 +4,7 @@ from functools import wraps
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse, Http404
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.http import urlencode
@@ -80,3 +80,12 @@ def harbor_api_view(methods=['POST']):
 def harbor_auth(request, data):
     user = authenticate(username=data['username'], password=data['password'])
     return {'allowed': user is not None}
+
+
+def nginx_protected(request, module):
+    if not request.user.is_authenticated:
+        return HttpResponseForbidden()
+
+    response = HttpResponse()
+    response['X-Accel-Redirect'] = f'/protected{request.get_full_path()}'
+    return response

@@ -24,7 +24,7 @@ RUN wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases
         /tmp/liquidsoap.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/*.deb
 
-RUN pip3 install youtube-dl
+RUN pip3 install --no-cache-dir youtube-dl
 
 RUN rmdir /etc/supervisor/conf.d
 

@@ -1,5 +1,6 @@
 services:
   email:
+    container_name: email
     image: juanluisbaptiste/postfix:alpine
     environment:
       SMTP_SERVER: "${EMAIL_SMTP_SERVER}"

@@ -14,6 +14,18 @@ server {
 }
 {% endif %}
 
+upstream admin {
+    server admin:8000;
+}
+
+upstream logs {
+    server logs:8080;
+}
+
+upstream zoom {
+    server zoom:6080;
+}
+
 server {
     server_name {{ DOMAIN_NAME }};
 
@@ -43,7 +55,36 @@ server {
         }
     {% endif %}
 
+    location /protected/logs/ {
+        internal;
+        proxy_pass http://logs/logs/;
+        proxy_buffering off;
+        proxy_cache off;
+    }
+
+    {% if ZOOM_ENABLED|int %}
+        location /protected/websockify {
+            internal;
+
+            proxy_http_version 1.1;
+            proxy_pass http://zoom/;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+
+            # VNC connection timeout
+            proxy_read_timeout 61s;
+
+            # Disable cache
+            proxy_buffering off;
+        }
+
+        location /vnc/ {
+            index vnc.html;
+            alias /usr/share/noVNC/;
+        }
+    {% endif %}
+
     location / {
-        proxy_pass http://admin:8000;
+        proxy_pass http://admin;
     }
 }
