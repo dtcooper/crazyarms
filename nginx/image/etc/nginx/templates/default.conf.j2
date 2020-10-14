@@ -14,8 +14,8 @@ server {
 }
 {% endif %}
 
-upstream admin {
-    server admin:8000;
+upstream app {
+    server app:8000;
 }
 
 upstream logs {
@@ -85,6 +85,6 @@ server {
     {% endif %}
 
     location / {
-        proxy_pass http://admin;
+        proxy_pass http://app;
     }
 }

@@ -14,7 +14,7 @@ ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
 ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
 
-ALLOWED_HOSTS = ['admin']
+ALLOWED_HOSTS = ['app']
 if DEBUG:
     ALLOWED_HOSTS.append('localhost')
 

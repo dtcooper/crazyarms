@@ -8,21 +8,20 @@ services:
     ports:
       - '80:80'
     depends_on:
-      - admin
+      - app
       - logs
     volumes:
       - letsencrypt:/etc/letsencrypt
       - static_root:/usr/share/nginx/html/static_root:ro
       - ./.env:/.env:ro
 
-  # TODO: rename to app
-  admin:
-    container_name: admin
+  app:
+    container_name: app
     build:
-      context: ./admin
+      context: ./app
     volumes:
       - ./.env:/.env
-      - ./admin/app:/app
+      - ./app/app:/app
       - static_root:/static_root
       - services_config:/config
     depends_on:
@@ -34,10 +33,10 @@ services:
   celery:
     container_name: celeryd
     build:
-      context: ./admin
+      context: ./app
     volumes:
       - ./.env:/.env
-      - ./admin/app:/app
+      - ./app/app:/app
     depends_on:
       - db
       - redis

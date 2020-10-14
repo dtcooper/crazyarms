@@ -1,5 +1,5 @@
 services:
-  admin:
+  app:
     depends_on:
       - icecast
 

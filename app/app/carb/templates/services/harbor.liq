@@ -6,7 +6,7 @@ set('server.timeout', -1.)
 %include "harbor.vars.liq"
 
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
-API_PREFIX = 'http://admin:8000/harbor/'
+API_PREFIX = 'http://app:8000/harbor/'
 
 def dj_auth(username, password)
     data = json_of([('username', username), ('password', password)])
