@@ -1,4 +1,3 @@
-from collections import defaultdict
 import datetime
 import json
 
@@ -20,6 +19,15 @@ HARBOR_AUTH_CHOICES = (
     (HARBOR_AUTH_ALWAYS, 'Always'),
     (HARBOR_AUTH_NEVER, 'Never'),
     (HARBOR_AUTH_SCHEDULE, 'Schedule Based'),
+)
+
+PLAY_STATUS_PENDING = '-'
+PLAY_STATUS_PLAYED = 'p'
+PLAY_STATUS_ERROR = 'e'
+PLAY_STATUS_CHOICES = (
+    (PLAY_STATUS_PENDING, 'Pending'),
+    (PLAY_STATUS_PLAYED, 'Played'),
+    (PLAY_STATUS_ERROR, 'Error'),
 )
 
 
@@ -128,3 +136,31 @@ class ScheduledGCalShow(models.Model):
                 break
 
         cls.objects.exclude(gcal_id__in=seen_gcal_ids).delete()
+
+
+class ScheduledBroadcast(models.Model):
+    asset_path = models.CharField(max_length=1024)
+    scheduled_time = models.DateTimeField()
+    task_id = models.UUIDField(null=True)
+    play_status = models.CharField(max_length=1, choices=PLAY_STATUS_CHOICES, default=PLAY_STATUS_PENDING)
+
+    def __str__(self):
+        scheduled_time = self.scheduled_time.astimezone(get_default_timezone())
+        return f'{self.asset_path} @ {scheduled_time} [{self.get_play_status_display()}]'
+
+    class Meta:
+        ordering = ('-scheduled_time',)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.task_id is None:
+            from .tasks import play_scheduled_broadcast
+
+            task = play_scheduled_broadcast.apply_async(args=(self.id,), eta=self.scheduled_time)
+            ScheduledBroadcast.objects.filter(id=self.id).update(task_id=task.id)
+
+    def delete(self, *args, **kwargs):
+        from .tasks import app
+        app.control.revoke(self.task_id)
+        return super().delete(*args, **kwargs)

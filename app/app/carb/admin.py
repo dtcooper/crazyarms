@@ -1,10 +1,11 @@
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import User
 
 from constance import config
 
-from .models import ScheduledGCalShow, UserProfile
+from .models import ScheduledGCalShow, UserProfile, ScheduledBroadcast
 
 
 class UserProfileInline(admin.StackedInline):
@@ -49,6 +50,12 @@ class ScheduledGCalShowAdmin(admin.ModelAdmin):
         return config.GCAL_AUTH_ENABLED and super().has_view_permission(request, obj)
 
 
+class ScheduledBroadcastAdmin(admin.ModelAdmin):
+    fields = ('asset_path', 'scheduled_time', 'play_status', 'task_id')
+    readonly_fields = ('play_status', 'task_id')
+
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(ScheduledGCalShow, ScheduledGCalShowAdmin)
+admin.site.register(ScheduledBroadcast, ScheduledBroadcastAdmin)

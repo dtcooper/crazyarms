@@ -13,14 +13,14 @@ if [ "$#" = 0 ]; then
     fi
 
     if [ "${__RUN_CELERY}" ]; then
-        CMD="celery -A carb.tasks worker --loglevel=INFO"
+        if [ -z "$CELERY_WORKERS" ]; then
+            CELERY_WORKERS="$RECOMMENDED_NUM_WORKERS"
+        fi
+        CMD="celery -A carb.tasks worker -l INFO -c $CELERY_WORKERS"
         if [ "$DEBUG" -a "$DEBUG" != '0' ]; then
-            watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- $CMD -c 1
+            watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- $CMD
         else
-            if [ -z "$CELERY_WORKERS" ]; then
-                CELERY_WORKERS="$RECOMMENDED_NUM_WORKERS"
-            fi
-            $CMD -c $CELERY_WORKERS
+            $CMD
         fi
     else
         wait-for-it -t 0 db:5432
