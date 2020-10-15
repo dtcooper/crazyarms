@@ -205,12 +205,17 @@ fi
 source .env
 
 COMPOSE_ARGS='--env-file .env --project-directory . -f docker-compose/base.yml'
+ALL_SERVICES=
+if [ "$1" = '--force-all-services' ]; then
+    ALL_SERVICES=1
+    shift 1
+fi
 
 # Enable compose files for services
 for CONF in https icecast zoom email; do
     CONF_VAR="$(echo "$CONF" | awk '{ print toupper($0) }')_ENABLED"
     CONF_VAL="${!CONF_VAR}"
-    if [ "$CONF_VAL" -a "$CONF_VAL" != '0' ]; then
+    if [ "$CONF_VAL" -a "$CONF_VAL" != '0' -o "$ALL_SERVICES" ]; then
         COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/$CONF.yml"
     fi
 done

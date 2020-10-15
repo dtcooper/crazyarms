@@ -3,6 +3,7 @@ version: '3'
 services:
   nginx:
     container_name: nginx
+    image: dtcooper/carb-nginx:${CARB_VERSION:-latest}
     build:
       context: ./nginx
     ports:
@@ -17,6 +18,7 @@ services:
 
   app:
     container_name: app
+    image: dtcooper/carb-app:${CARB_VERSION:-latest}
     build:
       context: ./app
     volumes:
@@ -32,6 +34,7 @@ services:
 
   celery:
     container_name: celery
+    image: dtcooper/carb-app:${CARB_VERSION:-latest}
     build:
       context: ./app
     volumes:
@@ -59,10 +62,10 @@ services:
 
   harbor:
     container_name: harbor
+    image: dtcooper/carb-liquidsoap:${CARB_VERSION:-latest}
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile
-    image: dtcooper/test:${CARB_VERSION:-latest}
     ports:
       - '8001:8001'
     volumes:
@@ -72,6 +75,7 @@ services:
 
   upstream:
     container_name: upstream
+    image: dtcooper/carb-liquidsoap:${CARB_VERSION:-latest}
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile

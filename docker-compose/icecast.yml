@@ -5,6 +5,7 @@ services:
 
   icecast:
     container_name: icecast
+    image: dtcooper/carb-icecast-kh:${CARB_VERSION:-latest}
     build:
       context: ./icecast
       dockerfile: Dockerfile
