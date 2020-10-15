@@ -22,9 +22,11 @@ upstream logs {
     server logs:8080;
 }
 
-upstream zoom {
-    server zoom:6080;
-}
+{% if ZOOM_ENABLED|int %}
+    upstream zoom {
+        server zoom:6080;
+    }
+{% endif %}
 
 server {
     server_name {{ DOMAIN_NAME }};

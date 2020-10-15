@@ -32,7 +32,7 @@ dj_harbor = audio_to_stereo(
 ignore(output.dummy(dj_harbor, fallible=true))
 
 failsafe = single('/hold-music.mp3')
-radio = fallback(replay_metadata=false, track_sensitive=false, [dj_harbor, failsafe])
+radio = fallback(replay_metadata=false, track_sensitive=false, [request.equeue(id='request'), dj_harbor, failsafe])
 
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
