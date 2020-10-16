@@ -10,10 +10,10 @@ services:
   zoom:
     container_name: zoom
     image: dtcooper/carb-zoom:${CARB_VERSION:-latest}
+    restart: always
     build:
       context: ./zoom
     volumes:
-      - ./.env:/.env
       - services_config:/config
       - zoom_user_home:/home/user
     cap_add:

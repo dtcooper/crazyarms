@@ -8,9 +8,7 @@ source /.env
 
 if [ "$#" = 0 ]; then
     # Number of CPUs + 1, since most of our work will be DB + io bound
-    if [ "$DEBUG" -a "$DEBUG" != '0' ]; then
-        RECOMMENDED_NUM_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() + 1, 2))')"
-    fi
+    RECOMMENDED_NUM_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() + 1, 2))')"
 
     if [ "${__RUN_CELERY}" ]; then
         if [ -z "$CELERY_WORKERS" ]; then

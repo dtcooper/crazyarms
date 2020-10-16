@@ -2,6 +2,7 @@ services:
   email:
     container_name: email
     image: juanluisbaptiste/postfix:alpine
+    restart: always
     environment:
       SMTP_SERVER: "${EMAIL_SMTP_SERVER}"
       SMTP_PORT: "${EMAIL_SMTP_PORT}"

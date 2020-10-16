@@ -41,6 +41,7 @@ class FirstRunForm(UserCreationForm):
         if settings.ICECAST_ENABLED:
             for config_name in CONSTANCE_ICECAST_PASSWORD_FIELDS:
                 setattr(config, config_name, self.cleaned_data['icecast_passwords'])
+            config.ICECAST_ADMIN_EMAIL = user.email
 
         init_services(restart_services=True)
 

@@ -1,7 +1,7 @@
 <icecast>
     <location>{{ config.ICECAST_LOCATION }}</location>
     <admin>{{ config.ICECAST_ADMIN_EMAIL }}</admin>
-    <hostname>{{</hostname>
+    <hostname>{{ settings.DOMAIN_NAME }}</hostname>
 
     <limits>
         {% if config.ICECAST_MAX_CLIENTS > 0 %}

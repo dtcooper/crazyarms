@@ -4,6 +4,7 @@ services:
   nginx:
     container_name: nginx
     image: dtcooper/carb-nginx:${CARB_VERSION:-latest}
+    restart: always
     build:
       context: ./nginx
     ports:
@@ -19,10 +20,11 @@ services:
   app:
     container_name: app
     image: dtcooper/carb-app:${CARB_VERSION:-latest}
+    restart: always
     build:
       context: ./app
     volumes:
-      - ./.env:/.env
+      - ./.env:/.env:ro
       - ./app/app:/app
       - static_root:/static_root
       - services_config:/config
@@ -35,10 +37,11 @@ services:
   celery:
     container_name: celery
     image: dtcooper/carb-app:${CARB_VERSION:-latest}
+    restart: always
     build:
       context: ./app
     volumes:
-      - ./.env:/.env
+      - ./.env:/.env:ro
       - ./app/app:/app
     depends_on:
       - db
@@ -49,6 +52,7 @@ services:
   db:
     container_name: db
     image: library/postgres:13-alpine
+    restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
@@ -57,12 +61,14 @@ services:
   redis:
     container_name: redis
     image: library/redis:6-alpine
+    restart: always
     volumes:
       - redis_data:/data
 
   harbor:
     container_name: harbor
     image: dtcooper/carb-liquidsoap:${CARB_VERSION:-latest}
+    restart: always
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile
@@ -76,6 +82,7 @@ services:
   upstream:
     container_name: upstream
     image: dtcooper/carb-liquidsoap:${CARB_VERSION:-latest}
+    restart: always
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile
@@ -87,6 +94,7 @@ services:
   logs:
     container_name: logs
     image: amir20/dozzle:latest
+    restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
