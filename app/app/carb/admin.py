@@ -54,6 +54,16 @@ class ScheduledBroadcastAdmin(admin.ModelAdmin):
     fields = ('asset_path', 'scheduled_time', 'play_status', 'task_id')
     readonly_fields = ('play_status', 'task_id')
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            # Can only edit asset_path on creation
+            return self.readonly_fields + ('asset_path',)
+        return self.readonly_fields
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        obj.queue()
+
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)

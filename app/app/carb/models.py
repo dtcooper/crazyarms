@@ -7,13 +7,15 @@ from googleapiclient.discovery import build
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.transaction import on_commit as django_on_commit
 from django.utils.timezone import get_default_timezone
 
 from constance import config
+from huey.contrib.djhuey import revoke_by_id
 
 
-HARBOR_AUTH_NEVER = 'n'
 HARBOR_AUTH_ALWAYS = 'a'
+HARBOR_AUTH_NEVER = 'n'
 HARBOR_AUTH_SCHEDULE = 's'
 HARBOR_AUTH_CHOICES = (
     (HARBOR_AUTH_ALWAYS, 'Always'),
@@ -21,11 +23,13 @@ HARBOR_AUTH_CHOICES = (
     (HARBOR_AUTH_SCHEDULE, 'Schedule Based'),
 )
 
-PLAY_STATUS_PENDING = '-'
+PLAY_STATUS_NEWLY_CREATED = 'n'
+PLAY_STATUS_QUEUED = 'q'
 PLAY_STATUS_PLAYED = 'p'
 PLAY_STATUS_ERROR = 'e'
 PLAY_STATUS_CHOICES = (
-    (PLAY_STATUS_PENDING, 'Pending'),
+    (PLAY_STATUS_NEWLY_CREATED, 'Newly Created'),
+    (PLAY_STATUS_QUEUED, 'Queued'),
     (PLAY_STATUS_PLAYED, 'Played'),
     (PLAY_STATUS_ERROR, 'Error'),
 )
@@ -142,7 +146,7 @@ class ScheduledBroadcast(models.Model):
     asset_path = models.CharField(max_length=1024)
     scheduled_time = models.DateTimeField()
     task_id = models.UUIDField(null=True)
-    play_status = models.CharField(max_length=1, choices=PLAY_STATUS_CHOICES, default=PLAY_STATUS_PENDING)
+    play_status = models.CharField(max_length=1, choices=PLAY_STATUS_CHOICES, default=PLAY_STATUS_NEWLY_CREATED)
 
     def __str__(self):
         scheduled_time = self.scheduled_time.astimezone(get_default_timezone())
@@ -151,16 +155,20 @@ class ScheduledBroadcast(models.Model):
     class Meta:
         ordering = ('-scheduled_time',)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        if self.task_id is None:
+    def queue(self, on_commit=True):
+        if on_commit:
+            django_on_commit(lambda: self.queue(on_commit=False))
+        else:
             from .tasks import play_scheduled_broadcast
 
-            task = play_scheduled_broadcast.apply_async(args=(self.id,), eta=self.scheduled_time)
+            task = play_scheduled_broadcast.schedule(args=(self.id,), eta=self.scheduled_time)
             ScheduledBroadcast.objects.filter(id=self.id).update(task_id=task.id)
+            # Only update the status to queued if it's still NEWLY_CREATED -- so we don't thrash with
+            # task if it's already updated the status
+            ScheduledBroadcast.objects.filter(id=self.id, play_status=PLAY_STATUS_NEWLY_CREATED).update(
+                play_status=PLAY_STATUS_QUEUED)
 
     def delete(self, *args, **kwargs):
-        from .tasks import app
-        app.control.revoke(self.task_id)
+        if self.task_id:
+            revoke_by_id(self.task_id)
         return super().delete(*args, **kwargs)

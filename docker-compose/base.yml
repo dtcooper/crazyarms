@@ -34,8 +34,8 @@ services:
       - redis
       - upstream
 
-  celery:
-    container_name: celery
+  tasks:
+    container_name: tasks
     image: dtcooper/carb-app:${CARB_VERSION:-latest}
     restart: always
     build:
@@ -47,7 +47,7 @@ services:
       - db
       - redis
     environment:
-      RUN_CELERY: 1
+      RUN_HUEY: 1
 
   db:
     container_name: db

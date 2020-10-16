@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'constance',
+    'huey.contrib.djhuey',
     'carb',
 ]
 
@@ -87,8 +88,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = '/static_root'
-CELERY_BROKER_URL = 'redis://redis'
 
+HUEY = {
+    'name': 'carb',
+    'immediate': False,
+    'connection': {'host': 'redis'},
+}
 
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
 CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}

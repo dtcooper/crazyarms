@@ -1,20 +1,20 @@
 #!/bin/bash
 
-if [ "$RUN_CELERY" ]; then
-    __RUN_CELERY=1
+if [ "$RUN_HUEY" ]; then
+    __RUN_HUEY=1
 fi
 
 source /.env
 
 if [ "$#" = 0 ]; then
     # Number of CPUs + 1, since most of our work will be DB + io bound
-    RECOMMENDED_NUM_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() + 1, 2))')"
+    RECOMMENDED_NUM_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() // 2 + 1, 2))')"
 
-    if [ "${__RUN_CELERY}" ]; then
-        if [ -z "$CELERY_WORKERS" ]; then
-            CELERY_WORKERS="$RECOMMENDED_NUM_WORKERS"
+    if [ "${__RUN_HUEY}" ]; then
+        if [ -z "$HUEY_WORKERS" ]; then
+            HUEY_WORKERS="$RECOMMENDED_NUM_WORKERS"
         fi
-        CMD="celery -A carb.tasks worker -l INFO -c $CELERY_WORKERS"
+        CMD="./manage.py run_huey --workers $HUEY_WORKERS --worker-type process --simple"
         if [ "$DEBUG" -a "$DEBUG" != '0' ]; then
             watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- $CMD
         else
