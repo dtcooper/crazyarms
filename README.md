@@ -2,16 +2,19 @@
 
 ***Readme Deprecated as I tweak the BMIR code***
 
-## Doc Todos
+## TODOs
 
-1. Initial setup
-   - env file
-   - docker build
-2. Account creation + secret key
-3. Static deploy
-4. Updating section
-   - docker re-build
-   - migrations
+* Docs: Initial setup
+    - env file
+    - docker build
+* Docs: Account creation
+* Docs: Static deploy?
+* Docs: Updating section (Similar to AzuraCast self-update)
+    - docker re-build
+    - migrations
+* Liquidsoap interactive telnet container, similar to container logs
+    - https://github.com/nirui/sshwifty
+
 
 ## Harbor
 

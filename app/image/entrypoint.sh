@@ -23,6 +23,16 @@ if [ "$#" = 0 ]; then
     else
         wait-for-it -t 0 db:5432
         ./manage.py migrate
+
+        # Undocumented AUTOCREATE_ADMIN_USER env variable
+        if [ "$DEBUG" -a "$DEBUG" != '0' -a "$AUTOCREATE_ADMIN_USER" -a "$AUTOCREATE_ADMIN_USER" != '0' ]; then
+            NUM_USERS=$(./manage.py shell_plus --quiet-load -c 'print(User.objects.count())')
+            if [ "$NUM_USERS" = 0 ]; then
+                ./manage.py createsuperuser --noinput --username admin --email "admin@${DOMAIN_NAME}"
+                ./manage.py set_fake_passwords --password admin
+            fi
+        fi
+
         ./manage.py init_services
 
         if [ "$DEBUG" -a "$DEBUG" != '0' ]; then
