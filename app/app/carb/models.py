@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.transaction import on_commit as django_on_commit
-from django.utils.timezone import get_default_timezone
+from django.utils.timezone import localtime, make_aware
 
 from constance import config
 from huey.contrib.djhuey import revoke_by_id
@@ -38,6 +38,7 @@ PLAY_STATUS_CHOICES = (
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     harbor_auth = models.CharField(max_length=1, choices=HARBOR_AUTH_CHOICES)
+    early_entry = models.DurationField()
 
     def __str__(self):
         if self.user is None:
@@ -46,20 +47,22 @@ class UserProfile(models.Model):
             return f'Profile for {self.user.get_full_name()}'
 
 
-class ScheduledGCalShow(models.Model):
-    gcal_id = models.CharField(max_length=1024, unique=True)
-    title = models.CharField(max_length=1024)
-    start = models.DateTimeField()
-    end = models.DateTimeField()
-    users = models.ManyToManyField(User)
+class GoogleCalendarShow(models.Model):
+    uid = models.CharField(max_length=1024, unique=True)
+    title = models.CharField('Title', max_length=1024)
+    start = models.DateTimeField('Start Time')
+    end = models.DateTimeField('End Time')
+    users = models.ManyToManyField(User, verbose_name='Authorized Users')
 
     def __str__(self):
-        server_tz = get_default_timezone()
-        return f'{self.title} - {self.start.astimezone(server_tz)} to {self.end.astimezone(server_tz)}'
+        return f'{self.title} - {localtime(self.start)} to {localtime(self.end)}'
+
+    class Meta:
+        verbose_name = 'Google Calendar Show'
+        verbose_name_plural = 'Google Calendar Shows'
 
     @classmethod
-    def create_or_update_from_gcal_item(cls, item):
-        server_tz = get_default_timezone()
+    def create_or_update_from_api_item(cls, item, email_to_user_cache=None):
         emails = {attendee['email'] for attendee in item.get('attendees', [])}
         creator = item.get('creator', {}).get('email')
         if creator is not None:
@@ -68,30 +71,50 @@ class ScheduledGCalShow(models.Model):
         defaults = {
             'title': item.get('summary', 'Untitled Show'),
             # Start time / end time, server time if full day event
-            'start': (server_tz.localize(parse(item['start']['date']))
+            'start': (make_aware(parse(item['start']['date']), is_dst=False)
                       if item['start'].get('dateTime') is None else parse(item['start'].get('dateTime'))),
-            'end': (server_tz.localize(parse(item['end']['date']).replace(hour=23, minute=59, second=59))
+            'end': (make_aware(parse(item['end']['date']).replace(hour=23, minute=59, second=59), is_dst=True)
                     if item['end'].get('dateTime') is None else parse(item['end'].get('dateTime'))),
         }
 
-        return cls.objects.update_or_create(
-            gcal_id=item['id'],
+        obj, created = cls.objects.update_or_create(
+            uid=item['id'],
             defaults=defaults,
-        )[0]
+        )
+
+        allowed_users = set()
+        for email in emails:
+            cached_user = None if email_to_user_cache is None else email_to_user_cache.get(email)
+            if cached_user is None:
+                try:
+                    user = email_to_user_cache[email] = User.objects.get(email=email)
+                except User.DoesNotExist:
+                    user = email_to_user_cache[email] = False
+            else:
+                user = email_to_user_cache[email]
+
+            if user:
+                allowed_users.add(user)
+                obj.users.add(user)
+
+        for user in obj.users.all():
+            if user not in allowed_users:
+                obj.users.remove(user)
+
+        return obj
 
     @classmethod
-    def sync_with_gcal(cls):
-        server_tz = get_default_timezone()
-        credentials = Credentials.from_service_account_info(json.loads(config.GCAL_AUTH_CREDENTIALS_JSON))
+    def sync_api(cls):
+        credentials = Credentials.from_service_account_info(json.loads(config.GOOGLE_CALENDAR_CREDENTIALS_JSON))
         service = build('calendar', 'v3', credentials=credentials)
-        emails_to_users = {}
 
-        seen_gcal_ids = set()
+        seen_uids = set()
+        email_to_user_cache = {}
 
         page_token = None
         while True:
             response = service.events().list(
-                calendarId='shoutingfirehq@gmail.com',
+                calendarId=config.GOOGLE_CALENDAR_ID,
                 maxResults=2500,
                 timeMin=(datetime.datetime.utcnow() - datetime.timedelta(days=60)).isoformat() + 'Z',
                 timeMax=(datetime.datetime.utcnow() + datetime.timedelta(days=120)).isoformat() + 'Z',
@@ -101,45 +124,14 @@ class ScheduledGCalShow(models.Model):
             ).execute()
 
             for item in response['items']:
-                scheduled_show, created = cls.objects.update_or_create(
-                    gcal_id=item['id'],
-                    defaults={
-                        'title': item.get('summary', 'Untitled Show'),
-                        # Start time / end time, server time if full day event
-                        'start': (server_tz.localize(parse(item['start']['date']))
-                                  if item['start'].get('dateTime') is None else parse(item['start'].get('dateTime'))),
-                        'end': (server_tz.localize(parse(item['end']['date']).replace(hour=23, minute=59, second=59))
-                                if item['end'].get('dateTime') is None else parse(item['end'].get('dateTime'))),
-                    },
-                )
-                emails = {attendee['email'] for attendee in item.get('attendees', [])}
-                creator = item.get('creator', {}).get('email')
-                if creator is not None:
-                    emails.add(creator)
-
-                allowed_users = set()
-                for email in emails:
-                    if email not in emails_to_users:
-                        try:
-                            emails_to_users[email] = User.objects.get(email=email)
-                        except User.DoesNotExist:
-                            emails_to_users[email] = None
-
-                    user = emails_to_users[email]
-                    if user is not None:
-                        allowed_users.add(user)
-                        scheduled_show.users.add(user)
-
-                for user in scheduled_show.users.all():
-                    if user not in allowed_users:
-                        scheduled_show.users.remove(user)
-                seen_gcal_ids.add(scheduled_show.gcal_id)
+                obj = cls.create_or_update_from_api_item(item, email_to_user_cache=email_to_user_cache)
+                seen_uids.add(obj.uid)
 
             page_token = response.get('nextPageToken')
             if page_token is None:
                 break
 
-        cls.objects.exclude(gcal_id__in=seen_gcal_ids).delete()
+        cls.objects.exclude(uid__in=seen_uids).delete()
 
 
 class ScheduledBroadcast(models.Model):
@@ -149,8 +141,7 @@ class ScheduledBroadcast(models.Model):
     play_status = models.CharField(max_length=1, choices=PLAY_STATUS_CHOICES, default=PLAY_STATUS_NEWLY_CREATED)
 
     def __str__(self):
-        scheduled_time = self.scheduled_time.astimezone(get_default_timezone())
-        return f'{self.asset_path} @ {scheduled_time} [{self.get_play_status_display()}]'
+        return f'{self.asset_path} @ {localtime(self.scheduled_time)} [{self.get_play_status_display()}]'
 
     class Meta:
         ordering = ('-scheduled_time',)

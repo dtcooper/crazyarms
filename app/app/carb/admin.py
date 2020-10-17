@@ -1,11 +1,17 @@
-from django.conf import settings
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect
+from django.urls import path, reverse
+from django.utils.html import format_html_join
+from django.utils.safestring import mark_safe
 
 from constance import config
 
-from .models import ScheduledGCalShow, UserProfile, ScheduledBroadcast
+from .models import GoogleCalendarShow, UserProfile, ScheduledBroadcast
+from .tasks import sync_google_calendar_api
 
 
 class UserProfileInline(admin.StackedInline):
@@ -36,7 +42,31 @@ class UserAdmin(DjangoUserAdmin):
         return super(UserAdmin, self).get_inline_instances(request, obj)
 
 
-class ScheduledGCalShowAdmin(admin.ModelAdmin):
+class GoogleCalendarShowAdmin(admin.ModelAdmin):
+    list_display = ('title', 'start', 'end', 'users_list')
+    fields = ('title', 'start', 'end', 'users_list')
+    list_filter = ('users', 'start', 'end')
+
+    def get_urls(self):
+        return [path('sync/', self.admin_site.admin_view(self.sync_view),
+                name='carb_googlecalendarshow_sync')] + super().get_urls()
+
+    def users_list(self, obj):
+        return format_html_join(
+            ', ', '<a href="{}">{}</a>',
+            ((reverse('admin:auth_user_change', kwargs={'object_id': u.id}), u.username) for u in obj.users.all())
+        ) or 'none'
+    users_list.short_description = 'User(s)'
+
+    def sync_view(self, request):
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+
+        sync_google_calendar_api()
+        messages.add_message(request, messages.INFO,
+                             "Google Calendar is currently being sync'd. Please refresh the page in a few moments.")
+        return redirect('admin:carb_googlecalendarshow_changelist')
+
     def has_add_permission(self, request):
         return False
 
@@ -47,7 +77,7 @@ class ScheduledGCalShowAdmin(admin.ModelAdmin):
         return False
 
     def has_view_permission(self, request, obj=None):
-        return config.GCAL_AUTH_ENABLED and super().has_view_permission(request, obj)
+        return config.GOOGLE_CALENDAR_ENABLED and super().has_view_permission(request, obj)
 
 
 class ScheduledBroadcastAdmin(admin.ModelAdmin):
@@ -67,5 +97,5 @@ class ScheduledBroadcastAdmin(admin.ModelAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-admin.site.register(ScheduledGCalShow, ScheduledGCalShowAdmin)
+admin.site.register(GoogleCalendarShow, GoogleCalendarShowAdmin)
 admin.site.register(ScheduledBroadcast, ScheduledBroadcastAdmin)
