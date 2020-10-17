@@ -14,6 +14,7 @@
     - migrations
 * Liquidsoap interactive telnet container, similar to container logs
     - https://github.com/nirui/sshwifty
+* Use this [Go supervisord implementation](https://github.com/ochinchina/supervisord)
 
 
 ## Harbor
