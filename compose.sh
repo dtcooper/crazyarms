@@ -102,9 +102,6 @@ __dotenv_cmd=.env
 
 ### End dotenv
 
-cd "$(dirname "$0")"
-
-FIRST_RUN=
 
 get_bool() {
     # prompt, env name, default (0 = false / 1 = true)
@@ -150,6 +147,9 @@ get_str() {
     .env set "$2=$VALUE"
 }
 
+cd "$(dirname "$0")"
+
+FIRST_RUN=
 if [ ! -f .env ]; then
     FIRST_RUN=1
     cp .default.env .env
