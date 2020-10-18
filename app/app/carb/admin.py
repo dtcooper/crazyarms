@@ -14,9 +14,10 @@ from .tasks import sync_google_calendar_api
 
 
 class CarbUserAdmin(UserAdmin):
+    save_on_top = True
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Personal info', {'fields': (('first_name', 'last_name'), 'email')}),
         ('Permissions', {'fields': ('harbor_auth', 'is_active', 'is_superuser', 'groups',)}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
@@ -30,9 +31,11 @@ class CarbUserAdmin(UserAdmin):
 
 
 class GoogleCalendarShowAdmin(admin.ModelAdmin):
+    save_on_top = True
     list_display = ('title', 'start', 'end', 'users_list')
     fields = ('title', 'start', 'end', 'users_list')
-    list_filter = ('users', 'start', 'end')
+    list_filter = ('users', 'start')
+    date_hierarchy = 'start'
 
     def get_urls(self):
         return [path('sync/', self.admin_site.admin_view(self.sync_view),
@@ -41,7 +44,7 @@ class GoogleCalendarShowAdmin(admin.ModelAdmin):
     def users_list(self, obj):
         return format_html_join(
             ', ', '<a href="{}">{}</a>',
-            ((reverse('admin:auth_user_change', kwargs={'object_id': u.id}), u.username) for u in obj.users.all())
+            ((reverse('admin:carb_user_change', args=(u.id,)), u.username) for u in obj.users.all())
         ) or 'none'
     users_list.short_description = 'User(s)'
 
@@ -51,7 +54,7 @@ class GoogleCalendarShowAdmin(admin.ModelAdmin):
 
         sync_google_calendar_api()
         messages.add_message(request, messages.INFO,
-                             "Google Calendar is currently being sync'd. Please refresh the page in a few moments.")
+                             "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")
         return redirect('admin:carb_googlecalendarshow_changelist')
 
     def has_add_permission(self, request):
@@ -68,6 +71,7 @@ class GoogleCalendarShowAdmin(admin.ModelAdmin):
 
 
 class ScheduledBroadcastAdmin(admin.ModelAdmin):
+    save_on_top = True
     fields = ('asset_path', 'scheduled_time', 'play_status', 'task_id')
     readonly_fields = ('play_status', 'task_id')
 
