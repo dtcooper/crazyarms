@@ -1,4 +1,21 @@
-from django.apps import AppConfig
+from django.apps import apps, AppConfig
+from django.db.models.signals import post_migrate
+
+
+def create_groups(sender, **kwargs):
+    from django.contrib.auth.models import Group, Permission
+    from django.contrib.contenttypes.models import ContentType
+    from .models import ScheduledBroadcast
+
+    constance = apps.get_app_config('constance')
+    constance.create_perm()
+
+    scheduled_broadcast = ContentType.objects.get_for_model(ScheduledBroadcast)
+    group, _ = Group.objects.get_or_create(name='Add scheduled broadcasts')
+    group.permissions.add(*Permission.objects.filter(content_type=scheduled_broadcast))
+
+    group, _ = Group.objects.get_or_create(name='Modify settings and configuration')
+    group.permissions.add(Permission.objects.get(codename='change_config'))
 
 
 class CarbConfig(AppConfig):
@@ -7,5 +24,10 @@ class CarbConfig(AppConfig):
 
     def ready(self):
         from constance.apps import ConstanceConfig
+        from constance.admin import Config
 
-        ConstanceConfig.verbose_name = 'Configuration'
+        ConstanceConfig.verbose_name = 'Settings'
+        Config._meta.verbose_name = 'Configuration'
+        Config._meta.verbose_name_plural = 'Configuration'
+
+        post_migrate.connect(create_groups, sender=self)

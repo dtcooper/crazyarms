@@ -99,6 +99,7 @@ HUEY = {
 
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
 CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}
+CONSTANCE_SUPERUSER_ONLY = False
 
 CONSTANCE_CONFIG = OrderedDict((
     ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station')),

@@ -33,7 +33,6 @@ class FirstRunForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'email')
 
     def save(self):
         user = super().save(commit=False)

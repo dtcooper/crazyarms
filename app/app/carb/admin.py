@@ -64,7 +64,7 @@ class GoogleCalendarShowAdmin(admin.ModelAdmin):
         return False
 
     def has_view_permission(self, request, obj=None):
-        return config.GOOGLE_CALENDAR_ENABLED and super().has_view_permission(request, obj)
+        return config.GOOGLE_CALENDAR_ENABLED
 
 
 class ScheduledBroadcastAdmin(admin.ModelAdmin):

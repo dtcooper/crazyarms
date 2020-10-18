@@ -5,7 +5,8 @@ from django.views.generic import TemplateView
 from carb import views
 
 
-admin.site.enable_nav_sidebar = False
+admin.site.site_header = 'Crazy Arms Radio Backend Administration'
+admin.site.site_title = 'CARB Admin'
 
 urlpatterns = [
     path('', views.StatusView.as_view(), name='status'),
