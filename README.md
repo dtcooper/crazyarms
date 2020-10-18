@@ -28,6 +28,11 @@ cd carb
 ./compose.sh up
 ```
 
-Then your browser go to http://localhost/
+Then in your browser go to http://localhost/
 
 To stop, press `CTRL+C`
+
+## License
+ 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details.
