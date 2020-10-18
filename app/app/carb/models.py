@@ -5,7 +5,7 @@ from dateutil.parser import parse as parse
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.transaction import on_commit as django_on_commit
 from django.utils.timezone import localtime, make_aware
@@ -35,24 +35,17 @@ PLAY_STATUS_CHOICES = (
 )
 
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    harbor_auth = models.CharField(max_length=1, choices=HARBOR_AUTH_CHOICES)
-    early_entry = models.DurationField()
-
-    def __str__(self):
-        if self.user is None:
-            return 'New user profile'
-        else:
-            return f'Profile for {self.user.get_full_name()}'
+class User(AbstractUser):
+    harbor_auth = models.CharField('Harbor authorization', max_length=1, choices=HARBOR_AUTH_CHOICES,
+                                   default=HARBOR_AUTH_ALWAYS)
 
 
 class GoogleCalendarShow(models.Model):
     uid = models.CharField(max_length=1024, unique=True)
     title = models.CharField('Title', max_length=1024)
-    start = models.DateTimeField('Start Time')
-    end = models.DateTimeField('End Time')
-    users = models.ManyToManyField(User, verbose_name='Authorized Users')
+    start = models.DateTimeField('Start time')
+    end = models.DateTimeField('End time')
+    users = models.ManyToManyField(User, verbose_name='Authorized users')
 
     def __str__(self):
         return f'{self.title} - {localtime(self.start)} to {localtime(self.end)}'

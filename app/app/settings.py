@@ -86,6 +86,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+AUTH_USER_MODEL = 'carb.User'
+
 STATIC_URL = '/static/'
 STATIC_ROOT = '/static_root'
 

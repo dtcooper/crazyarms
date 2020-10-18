@@ -4,6 +4,9 @@ from django.views.generic import TemplateView
 
 from carb import views
 
+
+admin.site.enable_nav_sidebar = False
+
 urlpatterns = [
     path('', views.StatusView.as_view(), name='status'),
     path('first-run/', views.FirstRunView.as_view(), name='first-run'),

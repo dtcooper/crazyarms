@@ -3,8 +3,7 @@ from functools import wraps
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponse, Http404
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.http import urlencode
@@ -12,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, TemplateView
 
 from .forms import FirstRunForm
+from .models import User
 
 
 class StatusView(TemplateView):

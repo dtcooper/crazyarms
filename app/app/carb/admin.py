@@ -1,45 +1,32 @@
 from django.contrib import admin
 from django.contrib import messages
-from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils.html import format_html_join
-from django.utils.safestring import mark_safe
 
 from constance import config
 
-from .models import GoogleCalendarShow, UserProfile, ScheduledBroadcast
+from .models import GoogleCalendarShow, ScheduledBroadcast, User
 from .tasks import sync_google_calendar_api
 
 
-class UserProfileInline(admin.StackedInline):
-    model = UserProfile
-    can_delete = False
-    verbose_name_plural = 'User Profile'
-
-
-class UserAdmin(DjangoUserAdmin):
+class CarbUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Permissions', {'fields': ('is_active', 'is_superuser', 'groups',)}),
+        ('Permissions', {'fields': ('harbor_auth', 'is_active', 'is_superuser', 'groups',)}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_superuser')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth', 'is_superuser')
     list_filter = ('is_superuser', 'is_active', 'groups')
     readonly_fields = ('last_login', 'date_joined')
-    inlines = [UserProfileInline]
 
     def save_model(self, request, obj, form, change):
         obj.is_staff = True
         return super().save_model(request, obj, form, change)
-
-    def get_inline_instances(self, request, obj=None):
-        if not obj:
-            return list()
-        return super(UserAdmin, self).get_inline_instances(request, obj)
 
 
 class GoogleCalendarShowAdmin(admin.ModelAdmin):
@@ -95,7 +82,7 @@ class ScheduledBroadcastAdmin(admin.ModelAdmin):
         obj.queue()
 
 
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+admin.site.unregister(Group)
+admin.site.register(User, CarbUserAdmin)
 admin.site.register(GoogleCalendarShow, GoogleCalendarShowAdmin)
 admin.site.register(ScheduledBroadcast, ScheduledBroadcastAdmin)

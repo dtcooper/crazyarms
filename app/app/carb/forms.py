@@ -4,11 +4,13 @@ from django.contrib.auth.forms import UserCreationForm
 
 from constance import config
 
+from .models import User
 from .services import init_services
 
 
 CONSTANCE_FIELDS = ('STATION_NAME',)
 CONSTANCE_ICECAST_PASSWORD_FIELDS = ('ICECAST_SOURCE_PASSWORD', 'ICECAST_RELAY_PASSWORD', 'ICECAST_ADMIN_PASSWORD')
+
 
 
 class FirstRunForm(UserCreationForm):
@@ -28,6 +30,10 @@ class FirstRunForm(UserCreationForm):
             )
 
         self.order_fields(['station_name', 'username', 'password1', 'password2', 'icecast_passwords'])
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'email')
 
     def save(self):
         user = super().save(commit=False)
