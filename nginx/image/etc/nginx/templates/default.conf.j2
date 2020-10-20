@@ -30,6 +30,7 @@ upstream logs {
 
 server {
     server_name {{ DOMAIN_NAME }};
+    client_max_body_size 1024M;
 
     {% if HTTPS_ENABLED|int %}
         listen 443 ssl default_server reuseport;
@@ -53,9 +54,13 @@ server {
     {% if not DEBUG|int %}
         # gunicorn won't serve static root
         location /static/ {
-            alias /usr/share/nginx/html/static_root/;
+            alias /static_root/;
         }
     {% endif %}
+
+    location /media/ {
+        alias /media_root/;
+    }
 
     location /protected/logs/ {
         internal;

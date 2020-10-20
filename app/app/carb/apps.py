@@ -5,14 +5,14 @@ from django.db.models.signals import post_migrate
 def create_groups(sender, **kwargs):
     from django.contrib.auth.models import Group, Permission
     from django.contrib.contenttypes.models import ContentType
-    from .models import ScheduledBroadcast
+    from .models import PrerecordedBroadcast
 
     constance = apps.get_app_config('constance')
     constance.create_perm()
 
-    scheduled_broadcast = ContentType.objects.get_for_model(ScheduledBroadcast)
-    group, _ = Group.objects.get_or_create(name='Add scheduled broadcasts')
-    group.permissions.add(*Permission.objects.filter(content_type=scheduled_broadcast))
+    prerecorded_broadcast = ContentType.objects.get_for_model(PrerecordedBroadcast)
+    group, _ = Group.objects.get_or_create(name='Create and delete prerecorded broadcasts')
+    group.permissions.add(*Permission.objects.filter(content_type=prerecorded_broadcast))
 
     group, _ = Group.objects.get_or_create(name='Modify settings and configuration')
     group.permissions.add(Permission.objects.get(codename='change_config'))

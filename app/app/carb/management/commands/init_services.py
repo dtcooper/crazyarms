@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from .models import User
+from carb.models import User
 from carb.services import init_services
 
 

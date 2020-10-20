@@ -13,8 +13,8 @@ services:
       - app
       - logs
     volumes:
-      - letsencrypt:/etc/letsencrypt
-      - static_root:/usr/share/nginx/html/static_root:ro
+      - static_root:/static_root:ro
+      - media_root:/media_root:ro
       - ./.env:/.env:ro
 
   app:
@@ -27,6 +27,7 @@ services:
       - ./.env:/.env:ro
       - ./app/app:/app
       - static_root:/static_root
+      - media_root:/media_root
       - services_config:/config
     depends_on:
       - db
@@ -43,6 +44,7 @@ services:
     volumes:
       - ./.env:/.env:ro
       - ./app/app:/app
+      - media_root:/media_root
     depends_on:
       - db
       - redis
@@ -76,6 +78,7 @@ services:
       - '8001:8001'
     volumes:
       - services_config:/config:ro
+      - media_root:/media_root:ro
     environment:
       CONTAINER_NAME: harbor
 
@@ -102,8 +105,8 @@ services:
       DOZZLE_TAILSIZE: 5000
 
 volumes:
-  letsencrypt:
   postgres_data:
   redis_data:
   services_config:
   static_root:
+  media_root:

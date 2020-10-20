@@ -1,5 +1,8 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, re_path
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
 from carb import views
@@ -7,6 +10,7 @@ from carb import views
 
 admin.site.site_header = 'Crazy Arms Radio Backend Administration'
 admin.site.site_title = 'CARB Admin'
+admin.site.empty_value_display = mark_safe('<em>none</em>')
 
 urlpatterns = [
     path('', views.StatusView.as_view(), name='status'),
@@ -17,3 +21,6 @@ urlpatterns = [
     re_path('^(?P<module>logs|websockify)', views.nginx_protected, name='nginx-protected'),
     path('admin/', admin.site.urls),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

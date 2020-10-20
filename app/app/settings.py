@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     'constance',
     'huey.contrib.djhuey',
     'carb',
+    # needs to go at end
+    'django_cleanup',
 ]
 
 MIDDLEWARE = [
@@ -64,6 +66,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'wsgi.application'
 
+# In order to read uploaded audio metadata, we need a temporary file to exist
+FILE_UPLOAD_HANDLERS = ('django.core.files.uploadhandler.TemporaryFileUploadHandler',)
+
 
 DATABASES = {
     'default': {
@@ -90,6 +95,9 @@ AUTH_USER_MODEL = 'carb.User'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = '/static_root'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = '/media_root'
+
 
 HUEY = {
     'name': 'carb',
@@ -101,8 +109,27 @@ CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
 CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}
 CONSTANCE_SUPERUSER_ONLY = False
 
+CONSTANCE_ADDITIONAL_FIELDS = {
+    'EXTERNAL_ASSET_ENCODING': ['django.forms.fields.ChoiceField', {
+        'widget': 'django.forms.Select',
+        'choices': (('mp3', 'MP3'), ('vorbis', 'Ogg Vorbis'), ('flac', 'FLAC'))
+    }],
+    'EXTERNAL_ASSET_BITRATE': ['django.forms.fields.ChoiceField', {
+        'widget': 'django.forms.Select',
+        'choices': (('64K', '64kbit'), ('128K', '128kbit'), ('192K', '192kbit'), ('256K', '256kbit'),
+                    ('320K', '320kbit')),
+    }],
+}
+
+CONSTANCE_CONFIG = {
+    'MY_SELECT_KEY': ('yes', 'select yes or no', 'yes_no_null_select'),
+}
+
 CONSTANCE_CONFIG = OrderedDict((
     ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station')),
+    ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets', 'EXTERNAL_ASSET_ENCODING')),
+    ('EXTERNAL_ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
+                                'EXTERNAL_ASSET_BITRATE')),
     ('GOOGLE_CALENDAR_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs')),
     ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID')),
     ('GOOGLE_CALENDAR_CREDENTIALS_JSON', ('', 'credentials.json service file from Google (TODO: document better)')),
@@ -121,6 +148,7 @@ if ICECAST_ENABLED:
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME',)),
+    ('Externally Downloaded Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),
 ))

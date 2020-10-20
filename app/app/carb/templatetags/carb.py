@@ -14,7 +14,7 @@ def boolstr(value):
 @register.filter
 def liqval(value):
     if isinstance(value, str):
-        encoded = base64.b64encode(value.encode("utf-8")).decode("utf-8")
+        encoded = base64.b64encode(value.encode('utf-8')).decode('utf-8')
         encoded = f'base64.decode("{encoded}")  # {value!r}'
     elif isinstance(value, bool):
         encoded = str(value).lower()
