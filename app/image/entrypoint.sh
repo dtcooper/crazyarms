@@ -11,7 +11,7 @@ if [ "$#" = 0 ]; then
         if [ -z "$HUEY_WORKERS" ]; then
             HUEY_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count(), 4))')"
         fi
-        CMD="./manage.py run_huey --workers $HUEY_WORKERS --worker-type process --simple"
+        CMD="./manage.py run_huey --workers $HUEY_WORKERS --worker-type process --flush-locks"
         if [ "$DEBUG" -a "$DEBUG" != '0' ]; then
             watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- $CMD
         else

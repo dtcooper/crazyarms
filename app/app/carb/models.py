@@ -24,7 +24,6 @@ from huey.contrib.djhuey import revoke_by_id
 def after_db_commit(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        print(args, kwargs)
         on_commit(lambda: func(*args, **kwargs))
     return wrapped
 
@@ -37,30 +36,38 @@ class TruncatingCharField(models.CharField):
         return value
 
 
-class User(AbstractUser):
+class TimestampedModel(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class User(TimestampedModel, AbstractUser):
     class HarborAuth(models.TextChoices):
-        ALWAYS = 'a', 'Always'
-        NEVER = 'n', 'Never'
+        ALWAYS = 'a', 'always'
+        NEVER = 'n', 'never'
         GOOGLE_CALENDAR = 'g', 'Google Calendar based'
 
-    email = models.EmailField('Email address', unique=True)
-    harbor_auth = models.CharField('Harbor access type', max_length=1,
+    email = models.EmailField('email address', unique=True)
+    harbor_auth = models.CharField('harbor access type', max_length=1,
                                    choices=HarborAuth.choices, default=HarborAuth.ALWAYS)
 
 
-class GoogleCalendarShow(models.Model):
+class GoogleCalendarShow(TimestampedModel):
     uid = TruncatingCharField(max_length=1024, unique=True)
-    title = TruncatingCharField('Title', max_length=255)
-    start = models.DateTimeField('Start time')
-    end = models.DateTimeField('End time')
-    users = models.ManyToManyField(User, verbose_name='Authorized users')
+    title = TruncatingCharField('title', max_length=255)
+    start = models.DateTimeField('start time')
+    end = models.DateTimeField('end time')
+    users = models.ManyToManyField(User, verbose_name='authorized users')
 
     def __str__(self):
         return f'{self.title} - {localtime(self.start)} to {localtime(self.end)}'
 
     class Meta:
-        verbose_name = 'Google Calendar Show'
-        verbose_name_plural = 'Google Calendar Shows'
+        verbose_name = 'Google Calendar show'
+        verbose_name_plural = 'Google Calendar shows'
 
     @classmethod
     def create_or_update_from_api_item(cls, item, email_to_user_cache=None):
@@ -135,29 +142,28 @@ class GoogleCalendarShow(models.Model):
         cls.objects.exclude(uid__in=seen_uids).delete()
 
 
-class AudioAssetBase(models.Model):
-    class FileStatus(models.TextChoices):
-        PENDING = '-', 'Upload pending'
-        UPLOADED = 'u', 'Uploaded'
-        QUEUED = 'q', 'Download queued'
-        RUNNING = 'r', 'Download running'
-        FAILED = 'f', 'Download failed'
+class AudioAssetBase(TimestampedModel):
+    class Status(models.TextChoices):
+        PENDING = '-', 'upload pending'
+        UPLOADED = 'u', 'uploaded'
+        QUEUED = 'q', 'download queued'
+        RUNNING = 'r', 'download running'
+        FAILED = 'f', 'download failed'
 
-    title = TruncatingCharField('Title', max_length=255, blank=True,
+    title = TruncatingCharField('title', max_length=255, blank=True,
                                 help_text="If left empty, a title will be generated from the file's metadata.")
-    uploader = models.ForeignKey(User, verbose_name='Uploader', on_delete=models.SET_NULL, null=True)
-    file = models.FileField('Audio file', upload_to='prerecord/', blank=True,
-                            help_text="You can provide either an uploaded audio file or a URL to an external asset.")
+    uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
+    file = models.FileField('audio file', upload_to='prerecord/', blank=True,
+                            help_text='You can provide either an uploaded audio file or a URL to an external asset.')
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
-    file_status = models.CharField('Upload status', max_length=1,
-                                   choices=FileStatus.choices, default=FileStatus.PENDING)
+    status = models.CharField('Upload status', max_length=1, choices=Status.choices, default=Status.PENDING)
     task_id = models.UUIDField(null=True)
 
     @cached_property
     def task_log_line(self):
         # TODO clean up a bit, here and in PrerecordedAssetAdmin.get_fields()
-        if self.file_status == self.FileStatus.RUNNING:
-            return cache.get(f'ydl:{self.task_id}')
+        if self.status == self.Status.RUNNING:
+            return cache.get(f'ydl-log:{self.task_id}')
 
     @property
     def file_path(self):
@@ -193,14 +199,16 @@ class AudioAssetBase(models.Model):
         super().save(*args, **kwargs)
 
     @after_db_commit
-    def queue_download(self, url, title=None):
+    def queue_download(self, url):
         from .tasks import download_external_url
 
-        model_cls = self.__class__
-        task = download_external_url(model_cls, self.id, url, title)
+        title, self.title = self.title, f'Downloading {url}'
+        self.save()
+
+        task = download_external_url(self, url, title=title)
+        model_cls = type(self)
         model_cls.objects.filter(id=self.id).update(task_id=task.id)
-        model_cls.objects.filter(id=self.id, file_status=AudioAssetBase.FileStatus.PENDING).update(
-            file_status=AudioAssetBase.FileStatus.QUEUED)
+        model_cls.objects.filter(id=self.id, status=model_cls.Status.PENDING).update(status=model_cls.Status.QUEUED)
 
     class Meta:
         abstract = True
@@ -213,52 +221,52 @@ class AudioAssetBase(models.Model):
 
 
 class AudioAsset(AudioAssetBase):
-    artist = TruncatingCharField('Artist', max_length=255, blank=True,
+    artist = TruncatingCharField('artist', max_length=255, blank=True,
                                  help_text="If left empty, an artist will be generated from the file's metadata.")
-    album = TruncatingCharField('Album', max_length=255, blank=True,
+    album = TruncatingCharField('album', max_length=255, blank=True,
                                 help_text="If left empty, an album will be generated from the file's metadata.")
 
     class Meta:
-        verbose_name = 'Playout Audio Asset'
-        verbose_name_plural = 'Playout Audio Assets'
+        verbose_name = 'playout audio asset'
+        verbose_name_plural = 'playout audio assets'
 
 
 class PrerecordedAsset(AudioAssetBase):
     class Meta:
-        verbose_name = 'Prerecorded Broadcast Audio Asset'
-        verbose_name_plural = 'Prerecorded Broadcast Audio Assets'
+        verbose_name = 'prerecorded broadcast audio asset'
+        verbose_name_plural = 'prerecorded broadcast audio assets'
 
 
-class PrerecordedBroadcast(models.Model):
-    class PlayStatus(models.TextChoices):
-        PENDING = '-', 'Pending'
-        QUEUED = 'q', 'Queued'
-        PLAYED = 'p', 'Played'
-        FAILED = 'f', 'Queuing failed'
+class PrerecordedBroadcast(TimestampedModel):
+    class Status(models.TextChoices):
+        PENDING = '-', 'pending'
+        QUEUED = 'q', 'queued'
+        PLAYED = 'p', 'played'
+        FAILED = 'f', 'queuing failed'
 
-    asset = models.ForeignKey(PrerecordedAsset, verbose_name='Audio file', on_delete=models.CASCADE)
+    asset = models.ForeignKey(PrerecordedAsset, verbose_name='audio file', on_delete=models.CASCADE)
     scheduled_time = models.DateTimeField()
+    status = models.CharField(max_length=1, choices=Status.choices, default=Status.PENDING)
     task_id = models.UUIDField(null=True)
-    play_status = models.CharField(max_length=1, choices=PlayStatus.choices, default=PlayStatus.PENDING)
 
     def __str__(self):
-        return f'{self.asset} @ {localtime(self.scheduled_time)} [{self.get_play_status_display()}]'
+        return f'{self.asset} @ {localtime(self.scheduled_time)} [{self.get_status_display()}]'
 
     class Meta:
         ordering = ('-scheduled_time',)
-        verbose_name = 'Prerecorded Broadcast'
-        verbose_name_plural = 'Prerecorded Broadcasts'
+        verbose_name = 'prerecorded broadcast'
+        verbose_name_plural = 'prerecorded broadcasts'
 
     @after_db_commit
     def queue(self):
         from .tasks import play_prerecorded_broadcast
 
-        task = play_prerecorded_broadcast.schedule(args=(self.id,), eta=self.scheduled_time)
+        task = play_prerecorded_broadcast.schedule(args=(self,), eta=self.scheduled_time)
         PrerecordedBroadcast.objects.filter(id=self.id).update(task_id=task.id)
         # Only update the status to queued if it's still PENDING -- so we don't thrash with
         # task if it's already updated the status
-        PrerecordedBroadcast.objects.filter(id=self.id, play_status=PrerecordedBroadcast.PlayStatus.PENDING).update(
-            play_status=PrerecordedBroadcast.PlayStatus.QUEUED)
+        PrerecordedBroadcast.objects.filter(id=self.id, status=PrerecordedBroadcast.Status.PENDING).update(
+            status=PrerecordedBroadcast.Status.QUEUED)
 
     def delete(self, *args, **kwargs):
         if self.task_id:

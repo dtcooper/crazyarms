@@ -70,7 +70,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'console': {
-            'format': '%(asctime)s [%(filename)s:%(lineno)s %(levelname)s] %(name)s: %(message)s',
+            'format': '[%(asctime)s] %(levelname)s:%(name)s:%(filename)s:%(lineno)s:%(funcName)s: %(message)s',
         },
     },
     'handlers': {
@@ -141,7 +141,7 @@ HUEY = {
 }
 
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
-CONSTANCE_REDIS_CONNECTION = {'host': 'redis'}
+CONSTANCE_REDIS_CONNECTION_CLASS = 'django_redis.get_redis_connection'
 CONSTANCE_SUPERUSER_ONLY = False
 
 CONSTANCE_ADDITIONAL_FIELDS = {

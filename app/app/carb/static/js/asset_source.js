@@ -10,8 +10,8 @@
     }
 
     $(function() {
-        // No value for this on add page
-        if ($('#id_source').val()) {
+        // Detect add page (has a #source_id input)
+        if ($('#id_source').length) {
             selectAssetSource()
             $('#id_source').change(selectAssetSource)
         }

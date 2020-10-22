@@ -1,6 +1,8 @@
 import logging
+import os
 import shutil
 import subprocess
+import time
 
 import huey
 import pytz
@@ -20,26 +22,25 @@ logger = logging.getLogger(__name__)
 
 
 @djhuey.db_task()
-def play_prerecorded_broadcast(object_id):
-    obj = PrerecordedBroadcast.objects.get(id=object_id)
-
+def play_prerecorded_broadcast(prerecorded_broadcast):
     try:
-        file_url = f'file://{obj.asset.file.path}'
+        file_url = f'file://{prerecorded_broadcast.asset.file.path}'
 
         # TODO: have a thread local / open telnet per worker
         liquidsoap = Liquidsoap()
         liquidsoap.request__push(file_url)
 
-        PrerecordedBroadcast.objects.filter(id=object_id).update(play_status=PrerecordedBroadcast.PlayStatus.PLAYED)
+        PrerecordedBroadcast.objects.filter(id=prerecorded_broadcast.id).update(status=PrerecordedBroadcast.Status.PLAYED)
 
     except Exception:
-        PrerecordedBroadcast.objects.filter(id=object_id).update(play_status=PrerecordedBroadcast.PlayStatus.FAILED)
+        PrerecordedBroadcast.objects.filter(id=prerecorded_broadcast.id).update(status=PrerecordedBroadcast.Status.FAILED)
+        raise
 
 
 @djhuey.db_task(context=True, retries=3, retry_delay=5)
-def download_external_url(asset_cls, object_id, url, title='', task=None):
-    asset_cls.objects.filter(id=object_id).update(file_status=asset_cls.FileStatus.RUNNING)
-    asset = asset_cls.objects.get(id=object_id)
+def download_external_url(asset, url, title='', task=None):
+    asset_cls = type(asset)
+    asset_cls.objects.filter(id=asset.id).update(status=asset_cls.Status.RUNNING)
 
     try:
         # Upgrade / install youtube-dl once per day
@@ -51,30 +52,40 @@ def download_external_url(asset_cls, object_id, url, title='', task=None):
 
         logger.info(f'Running youtube-dl for {url}')
         args = ['youtube-dl', '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
-                config.EXTERNAL_ASSET_ENCODING, '--output', f'{settings.MEDIA_ROOT}/external-download/%(title)s.%(ext)s',
+                config.EXTERNAL_ASSET_ENCODING, '--output', f'{settings.MEDIA_ROOT}/external/%(title)s.%(ext)s',
                 '--no-continue', '--exec', 'echo {}']
         if config.EXTERNAL_ASSET_ENCODING != 'flac':
             args += ['--audio-quality', config.EXTERNAL_ASSET_BITRATE]
 
         cmd = subprocess.Popen(args + ['--', url], stdout=subprocess.PIPE, text=True)
+
+        # log progress to cache for UI + logger
+        last_dl_log_time = 0.0
         for line in cmd.stdout:
-            line = line.rstrip()
-            logger.info(f'youtube-dl: {line}')
-            cache.set(f'ydl:{task.id}', line)
+            line = line.removesuffix('\n')
+            if not line.startswith('[download]') or (time.time() - last_dl_log_time >= 2.5):
+                logger.info(f'youtube-dl: {line}')
+                cache.set(f'ydl-log:{task.id}', line)
+                last_dl_log_time = time.time()
 
         return_code = cmd.wait()
         if return_code:
             raise subprocess.CalledProcessError(return_code, cmd)
 
-        asset.title = title
-        asset.file = line.removeprefix(f'{settings.MEDIA_ROOT}/')
-        asset.file_status = asset_cls.FileStatus.UPLOADED
-        asset.save()
+        if os.path.exists(line):
+            asset.title = title
+            asset.file = line.removeprefix(f'{settings.MEDIA_ROOT}/')
+            asset.status = asset_cls.Status.UPLOADED
+            asset.save()
+            logger.info(f'{url} successfully downloaded to {line}')
+
+        else:
+            raise Exception(f'youtube-dl reported downloaded file {line!r}, but it does not exist!')
 
     except Exception:
         if task.retries == 0:
-            asset.file_status = asset_cls.FileStatus.FAILED
             asset.title = f'Failed to download {url}'
+            asset.status = asset_cls.Status.FAILED
             asset.save()
 
         raise
@@ -84,7 +95,10 @@ def download_external_url(asset_cls, object_id, url, title='', task=None):
 @djhuey.lock_task('sync-google-calendar-api-lock')
 def sync_google_calendar_api():
     if config.GOOGLE_CALENDAR_ENABLED:
+        logger.info('Synchronizing with Google Calendar API')
         GoogleCalendarShow.sync_api()
+    else:
+        logger.info('Synchronization with Google Calendar API disabled by config')
 
 
 def local_daily_task(hour, minute=0, sunday_only=False):

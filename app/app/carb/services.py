@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import subprocess
@@ -11,6 +12,7 @@ from constance import config
 
 
 SUPERVISOR_RUNNING_STATES = {'STARTING', 'RUNNING', 'BACKOFF'}
+logger = logging.getLogger(__name__)
 
 
 class CarbServiceBase:
@@ -26,6 +28,7 @@ class CarbServiceBase:
     def supervisorctl(self, *args):
         cmd = ['supervisorctl', '-s', f'http://{self.service_name}:9001']
         cmd.extend(args)
+        logger.info(f'running: {" ".join(cmd)}')
         subprocess.run(cmd)
 
     def render_conf_file(self, filename, context=None, conf_filename=None):
@@ -40,7 +43,7 @@ class CarbServiceBase:
         os.makedirs(os.path.dirname(conf_filename), exist_ok=True)
         with open(conf_filename, 'w') as conf_file:
             conf_file.write(conf)
-            print(f'writing {conf_filename}')
+            logger.info(f'writing config file {conf_filename}')
 
     def clear_supervisor_conf(self):
         shutil.rmtree(f'/config/{self.service_name}/supervisor', ignore_errors=True)
@@ -133,6 +136,7 @@ def init_services(services=None, restart_services=False):
         services = SERVICES.keys()
 
     for service in services:
+        logger.info(f'initializing service: {service}')
         service_cls = SERVICES[service]
         service = service_cls()
         if service.supervisor_enabled:

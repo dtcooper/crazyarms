@@ -70,12 +70,12 @@ class GoogleCalendarShowAdmin(admin.ModelAdmin):
 
 class PrerecordedAssetAdmin(admin.ModelAdmin):
     save_on_top = True
-    add_fields = ('title', 'source', 'file', 'url', 'file_status', 'uploader')
-    change_fields = ('title', 'file', 'duration', 'file_status', 'uploader')
-    add_readonly_fields = ('uploader', 'file_status')
+    add_fields = ('title', 'source', 'file', 'url', 'status', 'uploader')
+    change_fields = ('title', 'file', 'duration', 'status', 'uploader', 'task_log_line')
+    add_readonly_fields = ('uploader', 'status')
     change_readonly_field = add_readonly_fields + ('duration', 'file', 'task_log_line')
     search_fields = ('title',)
-    list_display = ('title', 'uploader', 'duration', 'file_status')
+    list_display = ('title', 'uploader', 'duration', 'status')
     list_filter = (('uploader', admin.RelatedOnlyFieldListFilter),)
 
     class Media:
@@ -84,10 +84,13 @@ class PrerecordedAssetAdmin(admin.ModelAdmin):
     def get_fields(self, request, obj=None):
         if obj is None:
             return self.add_fields
-        elif obj.task_log_line:
-            return self.change_fields + ('task_log_line',)
         else:
-            return self.change_fields
+            fields = list(self.change_fields)
+            # Remove these if they're falsey
+            for field in ('file', 'duration', 'task_log_line'):
+                if not getattr(obj, field):
+                    fields.remove(field)
+            return fields
 
     def get_readonly_fields(self, request, obj=None):
         return self.add_readonly_fields if obj is None else self.change_readonly_field
@@ -98,29 +101,25 @@ class PrerecordedAssetAdmin(admin.ModelAdmin):
         return super().get_form(request, obj, **kwargs)
 
     def save_model(self, request, obj, form, change):
+        download_url = None
         if not change:
             obj.uploader = request.user
-            is_external = form.cleaned_data['source'] == 'url'
-            if is_external:
-                url = form.cleaned_data['url']
-                obj.file_status = PrerecordedAsset.FileStatus.PENDING
-                obj.title = f'Downloading {url}'
-            else:
-                obj.file_status = PrerecordedAsset.FileStatus.UPLOADED
+            if form.cleaned_data['source'] == 'url':
+                download_url = form.cleaned_data['url']
 
         super().save_model(request, obj, form, change)
 
-        if not change and is_external:
+        if download_url:
             messages.add_message(request, messages.WARNING,
-                                 f'The audio file is being downloaded from {url}. Please refresh the page or come back '
-                                 'later to check on its progress.')
-            obj.queue_download(url=url, title=form.cleaned_data['title'])
+                                 f'The audio file is being downloaded from {download_url}. Please refresh the page or '
+                                 'come back later to check on its progress.')
+            obj.queue_download(url=download_url)
 
 
 class PrerecordedBroadcastAdmin(admin.ModelAdmin):
     save_on_top = True
-    fields = ('asset', 'scheduled_time', 'play_status')
-    readonly_fields = ('play_status',)
+    fields = ('asset', 'scheduled_time', 'status')
+    readonly_fields = ('status',)
     autocomplete_fields = ('asset',)
 
     def has_change_permission(self, request, obj=None):
