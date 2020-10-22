@@ -10,9 +10,11 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 from django.contrib.auth.models import AbstractUser
+from django.core.cache import cache
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db import models
 from django.db.transaction import on_commit
+from django.utils.functional import cached_property
 from django.utils.timezone import localtime, make_aware
 
 from constance import config
@@ -150,6 +152,12 @@ class AudioAssetBase(models.Model):
     file_status = models.CharField('Upload status', max_length=1,
                                    choices=FileStatus.choices, default=FileStatus.PENDING)
     task_id = models.UUIDField(null=True)
+
+    @cached_property
+    def task_log_line(self):
+        # TODO clean up a bit, here and in PrerecordedAssetAdmin.get_fields()
+        if self.file_status == self.FileStatus.RUNNING:
+            return cache.get(f'ydl:{self.task_id}')
 
     @property
     def file_path(self):

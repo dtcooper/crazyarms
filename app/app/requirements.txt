@@ -2,6 +2,7 @@ argh
 dateutils
 django-cleanup
 django-constance[redis]
+django-redis
 django-environ
 django-extensions
 Django>=3.0,<4.0

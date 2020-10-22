@@ -1,9 +1,12 @@
+import logging
+import shutil
 import subprocess
 
 import huey
 import pytz
 
 from django.conf import settings
+from django.core.cache import cache
 from django.utils.timezone import localtime
 
 from constance import config
@@ -11,6 +14,9 @@ from huey.contrib import djhuey
 
 from .liquidsoap import Liquidsoap
 from .models import GoogleCalendarShow, PrerecordedBroadcast
+
+
+logger = logging.getLogger(__name__)
 
 
 @djhuey.db_task()
@@ -29,26 +35,39 @@ def play_prerecorded_broadcast(object_id):
     except Exception:
         PrerecordedBroadcast.objects.filter(id=object_id).update(play_status=PrerecordedBroadcast.PlayStatus.FAILED)
 
+
 @djhuey.db_task(context=True, retries=3, retry_delay=5)
 def download_external_url(asset_cls, object_id, url, title='', task=None):
     asset_cls.objects.filter(id=object_id).update(file_status=asset_cls.FileStatus.RUNNING)
     asset = asset_cls.objects.get(id=object_id)
 
     try:
-        # Upgrade / install youtube-dl
-        subprocess.run(['pip', 'install', '--upgrade', 'youtube-dl'], check=True)
+        # Upgrade / install youtube-dl once per day
+        if not cache.get('ydl:up2date') or not shutil.which('youtube-dl'):
+            logger.info('youtube-dl not updated in last 24 hours. Updating.')
+            subprocess.run(['pip', 'install', '--upgrade', 'youtube-dl'], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            cache.set('ydl:up2date', True, timeout=60 * 60 * 24)
 
-        args = ['youtube-dl', '--quiet', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
-                config.EXTERNAL_ASSET_ENCODING, '--output', f'{settings.MEDIA_ROOT}/downloaded/%(title)s.%(ext)s',
+        logger.info(f'Running youtube-dl for {url}')
+        args = ['youtube-dl', '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
+                config.EXTERNAL_ASSET_ENCODING, '--output', f'{settings.MEDIA_ROOT}/external-download/%(title)s.%(ext)s',
                 '--no-continue', '--exec', 'echo {}']
         if config.EXTERNAL_ASSET_ENCODING != 'flac':
             args += ['--audio-quality', config.EXTERNAL_ASSET_BITRATE]
 
-        cmd = subprocess.run(args + ['--', url], check=True, capture_output=True)
-        audio_file = cmd.stdout.decode().strip()
+        cmd = subprocess.Popen(args + ['--', url], stdout=subprocess.PIPE, text=True)
+        for line in cmd.stdout:
+            line = line.rstrip()
+            logger.info(f'youtube-dl: {line}')
+            cache.set(f'ydl:{task.id}', line)
+
+        return_code = cmd.wait()
+        if return_code:
+            raise subprocess.CalledProcessError(return_code, cmd)
 
         asset.title = title
-        asset.file = audio_file.removeprefix(f'{settings.MEDIA_ROOT}/')
+        asset.file = line.removeprefix(f'{settings.MEDIA_ROOT}/')
         asset.file_status = asset_cls.FileStatus.UPLOADED
         asset.save()
 
@@ -57,6 +76,8 @@ def download_external_url(asset_cls, object_id, url, title='', task=None):
             asset.file_status = asset_cls.FileStatus.FAILED
             asset.title = f'Failed to download {url}'
             asset.save()
+
+        raise
 
 
 @djhuey.db_periodic_task(huey.crontab(minute='*/15'))

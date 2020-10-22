@@ -2,6 +2,8 @@ from collections import OrderedDict
 import os
 
 import environ
+from redis import ConnectionPool
+
 
 env = environ.Env()
 env.read_env('/.env')
@@ -23,7 +25,6 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
@@ -64,6 +65,28 @@ TEMPLATES = [
     },
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(asctime)s [%(filename)s:%(lineno)s %(levelname)s] %(name)s: %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        'carb': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
+
 WSGI_APPLICATION = 'wsgi.application'
 
 # In order to read uploaded audio metadata, we need a temporary file to exist
@@ -80,6 +103,18 @@ DATABASES = {
         'PORT': 5432,
     }
 }
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis',
+        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient'},
+        'KEY_PREFIX': 'cache'
+    }
+}
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -102,7 +137,7 @@ MEDIA_ROOT = '/media_root'
 HUEY = {
     'name': 'carb',
     'immediate': False,
-    'connection': {'host': 'redis'},
+    'connection_pool': ConnectionPool(host='redis', max_connections=10),
 }
 
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'

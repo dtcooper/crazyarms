@@ -73,7 +73,7 @@ class PrerecordedAssetAdmin(admin.ModelAdmin):
     add_fields = ('title', 'source', 'file', 'url', 'file_status', 'uploader')
     change_fields = ('title', 'file', 'duration', 'file_status', 'uploader')
     add_readonly_fields = ('uploader', 'file_status')
-    change_readonly_field = add_readonly_fields + ('duration', 'file',)
+    change_readonly_field = add_readonly_fields + ('duration', 'file', 'task_log_line')
     search_fields = ('title',)
     list_display = ('title', 'uploader', 'duration', 'file_status')
     list_filter = (('uploader', admin.RelatedOnlyFieldListFilter),)
@@ -82,7 +82,12 @@ class PrerecordedAssetAdmin(admin.ModelAdmin):
         js = ('js/asset_source.js',)
 
     def get_fields(self, request, obj=None):
-        return self.add_fields if obj is None else self.change_fields
+        if obj is None:
+            return self.add_fields
+        elif obj.task_log_line:
+            return self.change_fields + ('task_log_line',)
+        else:
+            return self.change_fields
 
     def get_readonly_fields(self, request, obj=None):
         return self.add_readonly_fields if obj is None else self.change_readonly_field
