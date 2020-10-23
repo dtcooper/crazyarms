@@ -3,6 +3,14 @@ FROM python:3.9
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+# TODO: Remove for initial release / development only
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        netcat \
+        telnet \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir ipdb ipython
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         exiftool \

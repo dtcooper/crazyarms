@@ -1,16 +1,28 @@
+import datetime
+import logging
+
+from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.core.files.storage import default_storage
 from django.shortcuts import redirect
 from django.urls import path
+from django.utils import timezone
+from django.utils.text import normalize_newlines
 
-from constance import config
+from constance import admin as constance_admin, config
 
 from .forms import PrerecordedAssetCreateForm
 from .models import GoogleCalendarShow, PrerecordedAsset, PrerecordedBroadcast, User
+from .services import init_services
 from .tasks import sync_google_calendar_api
+
+
+logger = logging.getLogger(__name__)
 
 
 class CarbUserAdmin(UserAdmin):
@@ -50,10 +62,14 @@ class GoogleCalendarShowAdmin(admin.ModelAdmin):
         if not self.has_view_permission(request):
             raise PermissionDenied
 
+        cache.set('gcal:last-sync', 'currently running', timeout=None)
         sync_google_calendar_api()
         messages.add_message(request, messages.INFO,
                              "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")
         return redirect('admin:carb_googlecalendarshow_changelist')
+
+    def changelist_view(self, request, extra_context=None):
+        return super().changelist_view(request, {'last_sync': GoogleCalendarShow.get_last_sync()})
 
     def has_add_permission(self, request):
         return False
@@ -106,6 +122,7 @@ class PrerecordedAssetAdmin(admin.ModelAdmin):
             obj.uploader = request.user
             if form.cleaned_data['source'] == 'url':
                 download_url = form.cleaned_data['url']
+                obj.title = f'Downloading {download_url}'
 
         super().save_model(request, obj, form, change)
 
@@ -113,7 +130,7 @@ class PrerecordedAssetAdmin(admin.ModelAdmin):
             messages.add_message(request, messages.WARNING,
                                  f'The audio file is being downloaded from {download_url}. Please refresh the page or '
                                  'come back later to check on its progress.')
-            obj.queue_download(url=download_url)
+            obj.queue_download(url=download_url, set_title=form.cleaned_data['title'])
 
 
 class PrerecordedBroadcastAdmin(admin.ModelAdmin):
@@ -133,7 +150,46 @@ class PrerecordedBroadcastAdmin(admin.ModelAdmin):
         obj.queue()
 
 
+class CarbConstanceForm(constance_admin.ConstanceForm):
+    def save(self):
+        # Modified from parent class in order to hook changes in groups (instead of one signal for each)
+        changes = []
+
+        for file_field in self.files:
+            file = self.cleaned_data[file_field]
+            self.cleaned_data[file_field] = default_storage.save(file.name, file)
+
+        for name in settings.CONSTANCE_CONFIG:
+            current = getattr(config, name)
+            new = self.cleaned_data[name]
+
+            if isinstance(new, str):
+                new = normalize_newlines(new)
+
+            if settings.USE_TZ and isinstance(current, datetime.datetime) and not timezone.is_aware(current):
+                current = timezone.make_aware(current)
+
+            if current != new:
+                setattr(config, name, new)
+                changes.append(name)
+
+        if changes:
+            self.process_config_changes(changes)
+
+    def process_config_changes(self, changes):
+        if any(change.startswith('GOOGLE_CALENDAR') for change in changes):
+            sync_google_calendar_api()
+        if any(change.startswith('ICECAST') for change in changes):
+            init_services(services=('upstream', 'icecast',), restart_services=True)
+
+
+class CarbConstanceAdmin(constance_admin.ConstanceAdmin):
+    change_list_form = CarbConstanceForm
+
+
 admin.site.unregister(Group)
+admin.site.unregister([constance_admin.Config])
+admin.site.register([constance_admin.Config], CarbConstanceAdmin)
 admin.site.register(User, CarbUserAdmin)
 admin.site.register(GoogleCalendarShow, GoogleCalendarShowAdmin)
 admin.site.register(PrerecordedAsset, PrerecordedAssetAdmin)

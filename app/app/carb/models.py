@@ -58,16 +58,21 @@ class User(TimestampedModel, AbstractUser):
 class GoogleCalendarShow(TimestampedModel):
     uid = TruncatingCharField(max_length=1024, unique=True)
     title = TruncatingCharField('title', max_length=255)
-    start = models.DateTimeField('start time')
+    start = models.DateTimeField('start time', db_index=True)
     end = models.DateTimeField('end time')
-    users = models.ManyToManyField(User, verbose_name='authorized users')
+    users = models.ManyToManyField(User, verbose_name='authorized users', db_index=True)
 
     def __str__(self):
         return f'{self.title} - {localtime(self.start)} to {localtime(self.end)}'
 
     class Meta:
+        ordering = ('start', 'id')
         verbose_name = 'Google Calendar show'
         verbose_name_plural = 'Google Calendar shows'
+
+    @classmethod
+    def get_last_sync(self):
+        return cache.get('gcal:last-sync')
 
     @classmethod
     def create_or_update_from_api_item(cls, item, email_to_user_cache=None):
@@ -162,6 +167,8 @@ class AudioAssetBase(TimestampedModel):
     @cached_property
     def task_log_line(self):
         # TODO clean up a bit, here and in PrerecordedAssetAdmin.get_fields()
+        # This is cached for the lifetime of the object so it isn't read twice with different values
+        # by admin
         if self.status == self.Status.RUNNING:
             return cache.get(f'ydl-log:{self.task_id}')
 
@@ -199,13 +206,10 @@ class AudioAssetBase(TimestampedModel):
         super().save(*args, **kwargs)
 
     @after_db_commit
-    def queue_download(self, url):
+    def queue_download(self, url, set_title=''):
         from .tasks import download_external_url
 
-        title, self.title = self.title, f'Downloading {url}'
-        self.save()
-
-        task = download_external_url(self, url, title=title)
+        task = download_external_url(self, url, title=set_title)
         model_cls = type(self)
         model_cls.objects.filter(id=self.id).update(task_id=task.id)
         model_cls.objects.filter(id=self.id, status=model_cls.Status.PENDING).update(status=model_cls.Status.QUEUED)
