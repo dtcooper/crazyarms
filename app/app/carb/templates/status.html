@@ -1,5 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Status Page!</h2>
+<table>
+  <tr><th>User:</th><td>{{ request.user.username }}</td></tr>
+  <tr><th>Contact:</th><td>&quot;{{ request.user.get_full_name }} &lt;{{ request.user.email }}&gt;&quot;</td></tr>
+  <tr><th>Harbor Authorization:</th><td>{{ request.user.get_harbor_auth_display }}</td></tr>
+</table>
+
+{% if request.user.harbor_auth != request.user.HarborAuth.NEVER %}
+  <details>
+    <summary>My Google Calendar show times from {{ show_times_range_start }} to {{ show_times_range_end }}</summary>
+      {% if show_times %}
+        {{ show_times|length }} show{{ show_times|pluralize }}
+        <ol>
+        {% for show_time in show_times %}
+          <li>{{ show_time.lower }} - {{ show_time.upper }}</li>
+        {% endfor %}
+        </ol>
+      {% else %}
+        <em>
+          No show times scheduled{% if request.user.harbor_auth == request.user.HarborAuth.ALWAYS %}, however you are
+          <u>always</u> authorized to broadcast on the harbor{% endif %}.
+        </em>
+      {% endif %}
+  </details>
+{% endif %}
 {% endblock %}

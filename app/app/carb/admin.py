@@ -8,6 +8,9 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from django.urls import path
+from django.utils import timezone
+from django.utils.formats import date_format
+from django.utils.functional import cached_property
 from django.utils.html import escape, format_html_join
 from django.utils.safestring import mark_safe
 
@@ -41,27 +44,39 @@ class HarborAuthListFilter(admin.SimpleListFilter):
 
 class CarbUserAdmin(UserAdmin):
     save_on_top = True
+    add_form_template = None
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
         ('Personal info', {'fields': (('first_name', 'last_name'),)}),
-        ('Permissions', {'fields': ('harbor_auth', 'is_active', 'is_staff', 'is_superuser', 'groups')}),
+        ('Permissions', {'fields': ('harbor_auth', ('google_calender_entry_grace_minutes',
+                                    'google_calender_exit_grace_minutes'), 'is_active', 'is_staff', 'is_superuser',
+                                    'groups')}),
         ('Important dates', {'fields': ('last_login', 'date_joined', 'modified')}),
     )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_list', 'is_superuser')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_list', 'is_staff')
     list_filter = (HarborAuthListFilter, 'is_superuser', 'is_active', 'groups')
     readonly_fields = ('last_login', 'date_joined', 'modified')
     add_fieldsets = (
         (None, {'fields': ('username', 'email', 'password1', 'password2')}),
         ('Personal info', {'fields': (('first_name', 'last_name'),)}),
-        ('Permissions', {'fields': ('harbor_auth', 'is_staff', 'is_superuser', 'groups')}),
+        ('Permissions', {'fields': ('harbor_auth', ('google_calender_entry_grace_minutes',
+                                    'google_calender_exit_grace_minutes'), 'is_staff', 'is_superuser', 'groups')}),
     )
 
+    class Media:
+        js = ('js/harbor_auth_google_calendar.js',)
+
     def harbor_auth_list(self, obj):
-        if not config.GOOGLE_CALENDAR_ENABLED and obj.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
-            return User.HarborAuth.ALWAYS.label
+        if obj.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
+            if config.GOOGLE_CALENDAR_ENABLED:
+                return (f'{obj.get_harbor_auth_display()} ({obj.google_calender_entry_grace_minutes} mins early entry, '
+                        f'{obj.google_calender_exit_grace_minutes} mins late exit)')
+            else:
+                return User.HarborAuth.ALWAYS.label
         else:
             return obj.get_harbor_auth_display()
     harbor_auth_list.short_description = User._meta.get_field('harbor_auth').verbose_name
+    harbor_auth_list.admin_order_field = 'harbor_auth'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -79,23 +94,42 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
     readonly_fields = ('shows',)
     list_filter = (('user', admin.RelatedOnlyFieldListFilter),)
 
-    def num_shows(self, obj):
-        shows = len(obj.show_times)
-        return f'{shows} show{"s" if shows != 1 else ""}'
-    num_shows.short_description = 'Show(s)'
+    class ShowsField:
+        def __init__(self, include_individual_shows=True):
+            self.include_individual_shows = include_individual_shows
 
-    def shows(self, obj):
-        s = mark_safe(escape(self.num_shows(obj)))
-        if obj.show_times:
-            s += mark_safe('\n<ol>\n')
-            s += format_html_join(
-                '\n',
-                '<li>{} - {}</li>',
-                ((t.lower, t.upper) for t in obj.show_times),
-            )
-            s += mark_safe('\n</ol>')
-        return s
-    shows.short_description = 'Show(s)'
+        def __call__(self, obj):
+            num_shows = len(obj.show_times)
+            s = f'{num_shows} show{"s" if num_shows != 1 else ""}'
+            if self.include_individual_shows and obj.show_times:
+                s = mark_safe(escape(s))
+                s += mark_safe('\n<ol>\n')
+                s += format_html_join(
+                    '\n',
+                    '<li>{} - {}</li>',
+                    ((
+                        date_format(timezone.localtime(t.lower), 'SHORT_DATETIME_FORMAT'),
+                        date_format(timezone.localtime(t.upper), 'SHORT_DATETIME_FORMAT'),
+                     )
+                     for t in obj.show_times),
+                )
+                s += mark_safe('\n</ol>')
+            return s
+
+        @cached_property
+        def short_description(self):
+            now = timezone.now()
+            show_times_range_start = date_format(now - GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MIN, 'SHORT_DATE_FORMAT')
+            show_times_range_end = date_format(now + GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MAX, 'SHORT_DATE_FORMAT')
+            return f'show(s) from {show_times_range_start} to {show_times_range_end}'
+
+    @cached_property
+    def shows(self):
+        return self.ShowsField()
+
+    @cached_property
+    def num_shows(self):
+        return self.ShowsField(include_individual_shows=False)
 
     def get_urls(self):
         return [path('sync/', self.admin_site.admin_view(self.sync_view),

@@ -5,10 +5,12 @@ from django.urls import path, re_path
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
+from constance import config
+
 from carb import views
 
 
-admin.site.site_header = 'Crazy Arms Radio Backend Administration'
+admin.site.site_header = lambda: config.STATION_NAME
 admin.site.site_title = 'CARB Admin'
 admin.site.empty_value_display = mark_safe('<em>none</em>')
 

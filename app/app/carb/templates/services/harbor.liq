@@ -14,8 +14,8 @@ def dj_auth(username, password)
     if status_code != 200 then
         false
     else
-        response = of_json(default=[('allowed', false)], response)
-        list.assoc(default=false, 'allowed', response)
+        response = of_json(default=[('authorized', false)], response)
+        list.assoc(default=false, 'authorized', response)
     end
 end
 

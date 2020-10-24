@@ -92,6 +92,7 @@ WSGI_APPLICATION = 'wsgi.application'
 # In order to read uploaded audio metadata, we need a temporary file to exist
 FILE_UPLOAD_HANDLERS = ('django.core.files.uploadhandler.TemporaryFileUploadHandler',)
 
+LOGIN_REDIRECT_URL = '/'
 
 DATABASES = {
     'default': {
@@ -132,7 +133,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/static_root'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media_root'
-
 
 HUEY = {
     'name': 'carb',

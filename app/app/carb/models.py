@@ -2,6 +2,7 @@ from collections import defaultdict
 import datetime
 from functools import wraps
 import json
+import logging
 import math
 import os
 import subprocess
@@ -18,10 +19,13 @@ from django.db import models
 from django.db.transaction import on_commit
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
-from django.utils.timezone import localtime, make_aware
+from django.utils import timezone
 
 from constance import config
 from huey.contrib.djhuey import revoke_by_id
+
+
+logger = logging.getLogger(__name__)
 
 
 def after_db_commit(func):
@@ -49,8 +53,8 @@ class TimestampedModel(models.Model):
 
 class User(AbstractUser):
     class HarborAuth(models.TextChoices):
-        ALWAYS = 'a', 'always'
-        NEVER = 'n', 'never'
+        ALWAYS = 'a', 'always allowed'
+        NEVER = 'n', 'never allowed'
         GOOGLE_CALENDAR = 'g', 'Google Calendar based'
 
     modified = models.DateTimeField('last modified', auto_now=True)
@@ -64,10 +68,60 @@ class User(AbstractUser):
         'harbor exit grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>after</strong> a scheduled show that the user is kicked off the harbor.'))
 
+    def get_full_name(self):
+        s = ' '.join(filter(None, (self.first_name, self.last_name))).strip()
+        return s if s else self.username
+
+    def get_show_times(self):
+        try:
+            return GoogleCalendarShowTimes.objects.get(user=self).show_times
+        except GoogleCalendarShowTimes.DoesNotExist:
+            return []
+
+    def currently_harbor_authorized(self, now=None):
+        auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
+
+        if self.harbor_auth == self.HarborAuth.ALWAYS:
+            logger.info(f'auth requested by {self}: allowed ({auth_log})')
+            return True
+
+        elif self.harbor_auth == self.HarborAuth.GOOGLE_CALENDAR:
+            if config.GOOGLE_CALENDAR_ENABLED:
+                show_times = self.get_show_times()
+
+                if show_times:
+                    if now is None:
+                        now = timezone.now()
+                    entry_grace = datetime.timedelta(minutes=self.google_calender_entry_grace_minutes)
+                    exit_grace = datetime.timedelta(minutes=self.google_calender_exit_grace_minutes)
+                    for show_time in show_times:
+                        if (show_time.lower - entry_grace) <= now <= (show_time.upper + exit_grace):
+                            logger.info(f'auth requested by {self}: allowed ({auth_log} and {now} in time bounds - '
+                                        f'{timezone.localtime(show_time.lower)} [{entry_grace} entry grace] - '
+                                        f'{timezone.localtime(show_time.upper)} [{exit_grace} exit grace])')
+                            return True
+                    else:
+                        logger.info(f'auth requested by {self}: denied ({auth_log} with {now} not in time bounds for '
+                                    f'{len(google_calendar_show_times.show_times)} show times)')
+                        return False
+                else:
+                    logger.info(f'auth requested by {self}: denied ({auth_log} with no show times)')
+                    return False
+            else:
+                logger.info(f'auth requested by {self}: allowed ({auth_log}, however GOOGLE_CALENDAR_ENABLED = False, '
+                            f'so treating this like harbor_auth = {self.HarborAuth.ALWAYS.label})')
+                return True
+        else:
+            logger.info(f'auth requested by {self}: denied ({auth_log})')
+            return False
+
 
 class GoogleCalendarShowTimes(TimestampedModel):
+    SYNC_RANGE_DAYS_MIN = datetime.timedelta(days=60)
+    SYNC_RANGE_DAYS_MAX = datetime.timedelta(days=120)
+
     user = models.ForeignKey(User, verbose_name='user', db_index=True, on_delete=models.CASCADE)
-    show_times = ArrayField(DateTimeRangeField(), db_index=True)
+    show_times = ArrayField(DateTimeRangeField())
 
     def __str__(self):
         return f'{self.user} ({len(self.show_times)} shows)'
@@ -87,25 +141,29 @@ class GoogleCalendarShowTimes(TimestampedModel):
         service = build('calendar', 'v3', credentials=credentials)
 
         email_to_user = {}
-        user_to_show_times = defaultdict(list)
+        user_to_show_times = defaultdict(set)
 
         page_token = None
         while True:
             response = service.events().list(
                 calendarId=config.GOOGLE_CALENDAR_ID,
                 maxResults=2500,
-                timeMin=(datetime.datetime.utcnow() - datetime.timedelta(days=60)).isoformat() + 'Z',
-                timeMax=(datetime.datetime.utcnow() + datetime.timedelta(days=120)).isoformat() + 'Z',
+                timeMin=(datetime.datetime.utcnow() - cls.SYNC_RANGE_DAYS_MIN).isoformat() + 'Z',
+                timeMax=(datetime.datetime.utcnow() + cls.SYNC_RANGE_DAYS_MAX).isoformat() + 'Z',
                 timeZone='UTC',
                 singleEvents='true',
                 pageToken=page_token,
             ).execute()
 
             for item in response['items']:
-                start = (make_aware(parse(item['start']['date']), is_dst=False)
-                         if item['start'].get('dateTime') is None else parse(item['start'].get('dateTime')))
-                end = (make_aware(parse(item['end']['date']).replace(hour=23, minute=59, second=59), is_dst=True)
-                       if item['end'].get('dateTime') is None else parse(item['end'].get('dateTime')))
+                start = (
+                    timezone.make_aware(parse(item['start']['date']), is_dst=False)
+                    if item['start'].get('dateTime') is None else parse(item['start'].get('dateTime'))
+                )
+                end = (
+                    timezone.make_aware(parse(item['end']['date']).replace(hour=23, minute=59, second=59), is_dst=True)
+                    if item['end'].get('dateTime') is None else parse(item['end'].get('dateTime'))
+                )
 
                 emails = [attendee['email'] for attendee in item.get('attendees', [])]
                 creator = item.get('creator', {}).get('email')
@@ -121,14 +179,14 @@ class GoogleCalendarShowTimes(TimestampedModel):
                             pass
 
                     if user:
-                        user_to_show_times[user].append((start, end))
+                        user_to_show_times[user].add((start, end))
 
             page_token = response.get('nextPageToken')
             if page_token is None:
                 break
 
         for user, show_times in user_to_show_times.items():
-            cls.objects.update_or_create(user=user, defaults={'show_times': show_times})
+            cls.objects.update_or_create(user=user, defaults={'show_times': sorted(show_times)})
 
         cls.objects.exclude(user__in=list(user_to_show_times.keys())).delete()
 
@@ -240,7 +298,7 @@ class PrerecordedBroadcast(TimestampedModel):
     task_id = models.UUIDField(null=True)
 
     def __str__(self):
-        return f'{self.asset} @ {localtime(self.scheduled_time)} [{self.get_status_display()}]'
+        return f'{self.asset} @ {timezone.localtime(self.scheduled_time)} [{self.get_status_display()}]'
 
     class Meta:
         ordering = ('-scheduled_time',)

@@ -1,4 +1,6 @@
+import datetime
 import json
+import logging
 from functools import wraps
 
 from django.conf import settings
@@ -6,12 +8,17 @@ from django.contrib.auth import authenticate, login
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.http import urlencode
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, TemplateView
 
+
 from .forms import FirstRunForm
-from .models import User
+from .models import GoogleCalendarShowTimes, User
+
+
+logger = logging.getLogger(__name__)
 
 
 class StatusView(TemplateView):
@@ -27,7 +34,13 @@ class StatusView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({'title': 'Server Status'})
+        today = timezone.now().date()
+        context.update({
+            'title': 'Server Status',
+            'show_times_range_start': today - GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MIN,
+            'show_times_range_end': today + GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MAX,
+            'show_times': self.request.user.get_show_times(),
+        })
         return context
 
 
@@ -79,7 +92,7 @@ def harbor_api_view(methods=['POST']):
 @harbor_api_view
 def harbor_auth(request, data):
     user = authenticate(username=data['username'], password=data['password'])
-    return {'allowed': user is not None}
+    return {'authorized': user is not None and user.currently_harbor_authorized()}
 
 
 def nginx_protected(request, module):
