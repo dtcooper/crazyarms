@@ -15,7 +15,7 @@ from constance import config
 from huey.contrib import djhuey
 
 from .liquidsoap import Liquidsoap
-from .models import GoogleCalendarShow, PrerecordedBroadcast
+from .models import GoogleCalendarShowTimes, PrerecordedBroadcast
 
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ def sync_google_calendar_api():
     if config.GOOGLE_CALENDAR_ENABLED:
         logger.info('Synchronizing with Google Calendar API')
         try:
-            GoogleCalendarShow.sync_api()
+            GoogleCalendarShowTimes.sync_api()
         except Exception:
             cache.set('gcal:last-sync', "failed, please check your settings and try again.", timeout=None)
             raise

@@ -1,3 +1,4 @@
+from collections import defaultdict
 import datetime
 from functools import wraps
 import json
@@ -10,11 +11,13 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField, DateTimeRangeField
 from django.core.cache import cache
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db import models
 from django.db.transaction import on_commit
 from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.utils.timezone import localtime, make_aware
 
 from constance import config
@@ -37,37 +40,41 @@ class TruncatingCharField(models.CharField):
 
 
 class TimestampedModel(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField('created', auto_now_add=True)
+    modified = models.DateTimeField('last modified', auto_now=True)
 
     class Meta:
         abstract = True
 
 
-class User(TimestampedModel, AbstractUser):
+class User(AbstractUser):
     class HarborAuth(models.TextChoices):
         ALWAYS = 'a', 'always'
         NEVER = 'n', 'never'
         GOOGLE_CALENDAR = 'g', 'Google Calendar based'
 
+    modified = models.DateTimeField('last modified', auto_now=True)
     email = models.EmailField('email address', unique=True)
     harbor_auth = models.CharField('harbor access type', max_length=1,
                                    choices=HarborAuth.choices, default=HarborAuth.ALWAYS)
+    google_calender_entry_grace_minutes = models.PositiveIntegerField(
+        'harbor entry grace period (minutes)', default=0, help_text=mark_safe(
+            'The minutes <strong>before</strong> a scheduled show that the user is allowed to enter the harbor.'))
+    google_calender_exit_grace_minutes = models.PositiveIntegerField(
+        'harbor exit grace period (minutes)', default=0, help_text=mark_safe(
+            'The minutes <strong>after</strong> a scheduled show that the user is kicked off the harbor.'))
 
 
-class GoogleCalendarShow(TimestampedModel):
-    uid = TruncatingCharField(max_length=1024, unique=True)
-    title = TruncatingCharField('title', max_length=255)
-    start = models.DateTimeField('start time', db_index=True)
-    end = models.DateTimeField('end time')
-    users = models.ManyToManyField(User, verbose_name='authorized users', db_index=True)
+class GoogleCalendarShowTimes(TimestampedModel):
+    user = models.ForeignKey(User, verbose_name='user', db_index=True, on_delete=models.CASCADE)
+    show_times = ArrayField(DateTimeRangeField(), db_index=True)
 
     def __str__(self):
-        return f'{self.title} - {localtime(self.start)} to {localtime(self.end)}'
+        return f'{self.user} ({len(self.show_times)} shows)'
 
     class Meta:
-        ordering = ('start', 'id')
-        verbose_name = 'Google Calendar show'
+        order_with_respect_to = 'user'
+        verbose_name = 'Google Calendar shows'
         verbose_name_plural = 'Google Calendar shows'
 
     @classmethod
@@ -75,54 +82,12 @@ class GoogleCalendarShow(TimestampedModel):
         return cache.get('gcal:last-sync')
 
     @classmethod
-    def create_or_update_from_api_item(cls, item, email_to_user_cache=None):
-        emails = {attendee['email'] for attendee in item.get('attendees', [])}
-        creator = item.get('creator', {}).get('email')
-        if creator is not None:
-            emails.add(creator)
-
-        defaults = {
-            'title': item.get('summary', 'Untitled Show'),
-            # Start time / end time, server time if full day event
-            'start': (make_aware(parse(item['start']['date']), is_dst=False)
-                      if item['start'].get('dateTime') is None else parse(item['start'].get('dateTime'))),
-            'end': (make_aware(parse(item['end']['date']).replace(hour=23, minute=59, second=59), is_dst=True)
-                    if item['end'].get('dateTime') is None else parse(item['end'].get('dateTime'))),
-        }
-
-        obj, created = cls.objects.update_or_create(
-            uid=item['id'],
-            defaults=defaults,
-        )
-
-        allowed_users = set()
-        for email in emails:
-            cached_user = None if email_to_user_cache is None else email_to_user_cache.get(email)
-            if cached_user is None:
-                try:
-                    user = email_to_user_cache[email] = User.objects.get(email=email)
-                except User.DoesNotExist:
-                    user = email_to_user_cache[email] = False
-            else:
-                user = email_to_user_cache[email]
-
-            if user:
-                allowed_users.add(user)
-                obj.users.add(user)
-
-        for user in obj.users.all():
-            if user not in allowed_users:
-                obj.users.remove(user)
-
-        return obj
-
-    @classmethod
     def sync_api(cls):
         credentials = Credentials.from_service_account_info(json.loads(config.GOOGLE_CALENDAR_CREDENTIALS_JSON))
         service = build('calendar', 'v3', credentials=credentials)
 
-        seen_uids = set()
-        email_to_user_cache = {}
+        email_to_user = {}
+        user_to_show_times = defaultdict(list)
 
         page_token = None
         while True:
@@ -137,14 +102,35 @@ class GoogleCalendarShow(TimestampedModel):
             ).execute()
 
             for item in response['items']:
-                obj = cls.create_or_update_from_api_item(item, email_to_user_cache=email_to_user_cache)
-                seen_uids.add(obj.uid)
+                start = (make_aware(parse(item['start']['date']), is_dst=False)
+                         if item['start'].get('dateTime') is None else parse(item['start'].get('dateTime')))
+                end = (make_aware(parse(item['end']['date']).replace(hour=23, minute=59, second=59), is_dst=True)
+                       if item['end'].get('dateTime') is None else parse(item['end'].get('dateTime')))
+
+                emails = [attendee['email'] for attendee in item.get('attendees', [])]
+                creator = item.get('creator', {}).get('email')
+                if creator is not None:
+                    emails.append(creator)
+
+                for email in emails:
+                    user = email_to_user.get(email)
+                    if not user:
+                        try:
+                            user = email_to_user[email] = User.objects.get(email=email)
+                        except User.DoesNotExist:
+                            pass
+
+                    if user:
+                        user_to_show_times[user].append((start, end))
 
             page_token = response.get('nextPageToken')
             if page_token is None:
                 break
 
-        cls.objects.exclude(uid__in=seen_uids).delete()
+        for user, show_times in user_to_show_times.items():
+            cls.objects.update_or_create(user=user, defaults={'show_times': show_times})
+
+        cls.objects.exclude(user__in=list(user_to_show_times.keys())).delete()
 
 
 class AudioAssetBase(TimestampedModel):

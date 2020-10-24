@@ -1,28 +1,42 @@
-import datetime
 import logging
 
-from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.core.files.storage import default_storage
 from django.shortcuts import redirect
 from django.urls import path
-from django.utils import timezone
-from django.utils.text import normalize_newlines
+from django.utils.html import escape, format_html_join
+from django.utils.safestring import mark_safe
 
 from constance import admin as constance_admin, config
 
-from .forms import PrerecordedAssetCreateForm
-from .models import GoogleCalendarShow, PrerecordedAsset, PrerecordedBroadcast, User
-from .services import init_services
+from .forms import ConstanceForm, PrerecordedAssetCreateForm
+from .models import GoogleCalendarShowTimes, PrerecordedAsset, PrerecordedBroadcast, User
 from .tasks import sync_google_calendar_api
 
 
 logger = logging.getLogger(__name__)
+
+
+class HarborAuthListFilter(admin.SimpleListFilter):
+    title = User._meta.get_field('harbor_auth').verbose_name
+    parameter_name = 'harbor_auth'
+
+    def lookups(self, request, model_admin):
+        if config.GOOGLE_CALENDAR_ENABLED:
+            return User.HarborAuth.choices
+        else:
+            return list(filter(lambda c: c[0] != User.HarborAuth.GOOGLE_CALENDAR, User.HarborAuth.choices))
+
+    def queryset(self, request, queryset):
+        if self.value():
+            if not config.GOOGLE_CALENDAR_ENABLED and self.value() == User.HarborAuth.ALWAYS:
+                return queryset.filter(harbor_auth__in=(User.HarborAuth.ALWAYS, User.HarborAuth.GOOGLE_CALENDAR))
+            else:
+                return queryset.filter(harbor_auth=self.value())
 
 
 class CarbUserAdmin(UserAdmin):
@@ -31,28 +45,61 @@ class CarbUserAdmin(UserAdmin):
         (None, {'fields': ('username', 'email', 'password')}),
         ('Personal info', {'fields': (('first_name', 'last_name'),)}),
         ('Permissions', {'fields': ('harbor_auth', 'is_active', 'is_staff', 'is_superuser', 'groups')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined', 'modified')}),
     )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth', 'is_superuser')
-    list_filter = ('is_superuser', 'is_active', 'groups')
-    readonly_fields = ('last_login', 'date_joined')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_list', 'is_superuser')
+    list_filter = (HarborAuthListFilter, 'is_superuser', 'is_active', 'groups')
+    readonly_fields = ('last_login', 'date_joined', 'modified')
     add_fieldsets = (
         (None, {'fields': ('username', 'email', 'password1', 'password2')}),
         ('Personal info', {'fields': (('first_name', 'last_name'),)}),
         ('Permissions', {'fields': ('harbor_auth', 'is_staff', 'is_superuser', 'groups')}),
     )
 
+    def harbor_auth_list(self, obj):
+        if not config.GOOGLE_CALENDAR_ENABLED and obj.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
+            return User.HarborAuth.ALWAYS.label
+        else:
+            return obj.get_harbor_auth_display()
+    harbor_auth_list.short_description = User._meta.get_field('harbor_auth').verbose_name
 
-class GoogleCalendarShowAdmin(admin.ModelAdmin):
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not config.GOOGLE_CALENDAR_ENABLED:
+            harbor_auth_field = form.base_fields['harbor_auth']
+            harbor_auth_field.choices = list(filter(lambda c: c[0] != User.HarborAuth.GOOGLE_CALENDAR,
+                                                    harbor_auth_field.choices))
+        return form
+
+
+class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
     save_on_top = True
-    list_display = ('title', 'start', 'end', 'users_list')
-    fields = ('title', 'start', 'end', 'users_list')
-    list_filter = (('users', admin.RelatedOnlyFieldListFilter), 'start')
-    date_hierarchy = 'start'
+    list_display = ('user', 'num_shows')
+    fields = ('user', 'shows')
+    readonly_fields = ('shows',)
+    list_filter = (('user', admin.RelatedOnlyFieldListFilter),)
+
+    def num_shows(self, obj):
+        shows = len(obj.show_times)
+        return f'{shows} show{"s" if shows != 1 else ""}'
+    num_shows.short_description = 'Show(s)'
+
+    def shows(self, obj):
+        s = mark_safe(escape(self.num_shows(obj)))
+        if obj.show_times:
+            s += mark_safe('\n<ol>\n')
+            s += format_html_join(
+                '\n',
+                '<li>{} - {}</li>',
+                ((t.lower, t.upper) for t in obj.show_times),
+            )
+            s += mark_safe('\n</ol>')
+        return s
+    shows.short_description = 'Show(s)'
 
     def get_urls(self):
         return [path('sync/', self.admin_site.admin_view(self.sync_view),
-                name='carb_googlecalendarshow_sync')] + super().get_urls()
+                name='carb_googlecalendarshowtimes_sync')] + super().get_urls()
 
     def users_list(self, obj):
         return ', '.join(obj.users.order_by('username').values_list('username', flat=True)) or None
@@ -66,10 +113,10 @@ class GoogleCalendarShowAdmin(admin.ModelAdmin):
         sync_google_calendar_api()
         messages.add_message(request, messages.INFO,
                              "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")
-        return redirect('admin:carb_googlecalendarshow_changelist')
+        return redirect('admin:carb_googlecalendarshowtimes_changelist')
 
     def changelist_view(self, request, extra_context=None):
-        return super().changelist_view(request, {'last_sync': GoogleCalendarShow.get_last_sync()})
+        return super().changelist_view(request, {'last_sync': GoogleCalendarShowTimes.get_last_sync()})
 
     def has_add_permission(self, request):
         return False
@@ -150,47 +197,14 @@ class PrerecordedBroadcastAdmin(admin.ModelAdmin):
         obj.queue()
 
 
-class CarbConstanceForm(constance_admin.ConstanceForm):
-    def save(self):
-        # Modified from parent class in order to hook changes in groups (instead of one signal for each)
-        changes = []
-
-        for file_field in self.files:
-            file = self.cleaned_data[file_field]
-            self.cleaned_data[file_field] = default_storage.save(file.name, file)
-
-        for name in settings.CONSTANCE_CONFIG:
-            current = getattr(config, name)
-            new = self.cleaned_data[name]
-
-            if isinstance(new, str):
-                new = normalize_newlines(new)
-
-            if settings.USE_TZ and isinstance(current, datetime.datetime) and not timezone.is_aware(current):
-                current = timezone.make_aware(current)
-
-            if current != new:
-                setattr(config, name, new)
-                changes.append(name)
-
-        if changes:
-            self.process_config_changes(changes)
-
-    def process_config_changes(self, changes):
-        if any(change.startswith('GOOGLE_CALENDAR') for change in changes):
-            sync_google_calendar_api()
-        if any(change.startswith('ICECAST') for change in changes):
-            init_services(services=('upstream', 'icecast',), restart_services=True)
-
-
-class CarbConstanceAdmin(constance_admin.ConstanceAdmin):
-    change_list_form = CarbConstanceForm
+class ConstanceAdmin(constance_admin.ConstanceAdmin):
+    change_list_form = ConstanceForm
 
 
 admin.site.unregister(Group)
 admin.site.unregister([constance_admin.Config])
-admin.site.register([constance_admin.Config], CarbConstanceAdmin)
+admin.site.register([constance_admin.Config], ConstanceAdmin)
 admin.site.register(User, CarbUserAdmin)
-admin.site.register(GoogleCalendarShow, GoogleCalendarShowAdmin)
+admin.site.register(GoogleCalendarShowTimes, GoogleCalendarShowTimesAdmin)
 admin.site.register(PrerecordedAsset, PrerecordedAssetAdmin)
 admin.site.register(PrerecordedBroadcast, PrerecordedBroadcastAdmin)
