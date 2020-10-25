@@ -1,44 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-
-{% load static %}
-
 <head>
+  {% load static %}
+
   <meta charset="utf-8">
-  <title>{% block title %}{{ config.STATION_NAME }}{% if title %} - {{ title }}{% endif %}{% endblock %}</title>
+  <title>{% block title %}{% if title %}{{ title }} - {% endif %}{{ config.STATION_NAME }}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{% static 'css/new.min.css' %}">
-  <style>
-    .errorlist {
-      color: red;
-    }
-
-    button[type=reset] {
-      background-color: orangered;
-    }
-  </style>
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <script src="{% static 'js/base.js' %}"></script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>
   {% block header %}
     <header>
-      <h1>{{ config.STATION_NAME }}{% if title %} - {{ title }}{% endif %}</h1>
-      <nav>
-      {% if request.user.is_authenticated %}
-        <a href="{% url 'status' %}">Status</a> /
-        <a href="/logs/" target="_blank">Logs</a> /
-        {% if settings.ZOOM_ENABLED %}
-          <a href="/vnc/" target="_blank">Zoom VNC</a> /
+      <h1>
+        {{ config.STATION_NAME }}
+        {% if title %}
+          <br><em><small>{{ title }}</small></em>
         {% endif %}
-        <a href="{% url 'admin:index' %}">Admin</a> /
-        <a href="{% url 'admin:logout' %}">Logout</a> /
-        Welcome, {{ user.username }}.
-      {% else %}
-        <a href="{% url 'admin:login' %}?next={{ request.get_full_path|urlencode }}">Login</a>
+      </h1>
+      {% if not hide_nav %}
+        <nav>
+          {% if request.user.is_authenticated %}
+            <a href="{% url 'status' %}">Status</a> /
+            <a href="/logs/" target="_blank">Logs</a> /
+            {% if settings.ZOOM_ENABLED %}
+              <a href="/vnc/" target="_blank">Zoom VNC</a> /
+            {% endif %}
+            <a href="{% url 'admin:index' %}">Admin</a> /
+            <a href="{% url 'password_change' %}">Change Password</a> /
+            <a href="{% url 'logout' %}">Logout</a> /
+            Welcome, {{ user.username }}.
+          {% else %}
+            <a href="{% url 'login' %}">Login</a>
+          {% endif %}
+        </nav>
       {% endif %}
-      </nav>
     </header>
   {% endblock %}
+
+  {% if messages %}
+    <blockquote>
+      Notifications:
+      <ul>
+        {% for message in messages %}
+          <li class="message {{ message.tags }}"><em>{{ message }}</em></li>
+        {% endfor %}
+      </ul>
+    </blockquote>
+  {% endif %}
+
   <main>
     {% block content %}{% endblock %}
   </main>

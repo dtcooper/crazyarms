@@ -1,15 +1,14 @@
-import datetime
 import json
 import logging
 from functools import wraps
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, views as auth_views
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.shortcuts import redirect
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.utils import timezone
-from django.utils.http import urlencode
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, TemplateView
 
@@ -28,7 +27,7 @@ class StatusView(TemplateView):
         if not User.objects.exists():
             return redirect('first-run')
         elif not request.user.is_authenticated:
-            return redirect(f'{reverse("admin:login")}?{urlencode({"next": reverse("status")})}')
+            return redirect('login')
         else:
             return super().dispatch(request, *args, **kwargs)
 
@@ -102,3 +101,16 @@ def nginx_protected(request, module):
     response = HttpResponse()
     response['X-Accel-Redirect'] = f'/protected{request.get_full_path()}'
     return response
+
+
+class PasswordChangeView(auth_views.PasswordChangeView):
+    success_url = reverse_lazy('status')
+    template_name = 'auth_form.html'
+    title = 'Change Password'
+
+    def __init__(self):
+        super().__init__(extra_context={'submit_text': 'Change Password'})
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Your password was successfully changed')
+        return super().form_valid(form)

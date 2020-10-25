@@ -64,7 +64,7 @@ class CarbUserAdmin(UserAdmin):
     )
 
     class Media:
-        js = ('js/harbor_auth_google_calendar.js',)
+        js = ('js/admin/harbor_auth_google_calendar.js',)
 
     def harbor_auth_list(self, obj):
         if obj.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
@@ -176,7 +176,7 @@ class PrerecordedAssetAdmin(admin.ModelAdmin):
     list_filter = (('uploader', admin.RelatedOnlyFieldListFilter),)
 
     class Media:
-        js = ('js/asset_source.js',)
+        js = ('js/admin/asset_source.js',)
 
     def get_fields(self, request, obj=None):
         if obj is None:

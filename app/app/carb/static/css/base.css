@@ -1,0 +1,15 @@
+.errorlist {
+  color: red;
+}
+
+button[type=reset] {
+  background-color: orangered;
+}
+
+input[type=text], input[type=password] {
+  width: 100%;
+}
+
+.message.warning { color: darkorange; }
+.message.error { color: red; font-weight: bold; }
+.message.success { color: seagreen; }

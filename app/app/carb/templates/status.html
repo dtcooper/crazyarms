@@ -2,14 +2,17 @@
 
 {% block content %}
 <table>
-  <tr><th>User:</th><td>{{ request.user.username }}</td></tr>
-  <tr><th>Contact:</th><td>&quot;{{ request.user.get_full_name }} &lt;{{ request.user.email }}&gt;&quot;</td></tr>
-  <tr><th>Harbor Authorization:</th><td>{{ request.user.get_harbor_auth_display }}</td></tr>
+  <tr><td><strong>User:</strong></td><td>{{ request.user.username }}</td></tr>
+  <tr><td><strong>Contact:</strong></td><td>&quot;{{ request.user.get_full_name }} &lt;{{ request.user.email }}&gt;&quot;</td></tr>
+  <tr><td><strong>Harbor Autdorization:</strong></td><td>{{ request.user.get_harbor_auth_display }}</td></tr>
 </table>
 
 {% if request.user.harbor_auth != request.user.HarborAuth.NEVER %}
   <details>
     <summary>My Google Calendar show times from {{ show_times_range_start }} to {{ show_times_range_end }}</summary>
+      {% if request.user.harbor_auth == request.user.HarborAuth.ALWAYS %}
+        <p><em>Note: you are <u>always</u> authorized to broadcast on the harbor.</em></p>
+      {% endif %}
       {% if show_times %}
         {{ show_times|length }} show{{ show_times|pluralize }}
         <ol>
@@ -18,10 +21,7 @@
         {% endfor %}
         </ol>
       {% else %}
-        <em>
-          No show times scheduled{% if request.user.harbor_auth == request.user.HarborAuth.ALWAYS %}, however you are
-          <u>always</u> authorized to broadcast on the harbor{% endif %}.
-        </em>
+          <p>No show times scheduled.</p>
       {% endif %}
   </details>
 {% endif %}
