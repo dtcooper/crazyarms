@@ -30,6 +30,8 @@ class FirstRunView(FormView):
 
     def form_valid(self, form):
         user = form.save()
+        messages.success(self.request, 'Crazy Arms Radio Backend has successfully been setup! You can change any of '
+                         'the settings that you chose in the admin section.')
         login(self.request, user)
         return super().form_valid(form)
 

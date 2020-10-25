@@ -16,6 +16,7 @@ class FirstRunForm(UserCreationForm):
     if settings.ICECAST_ENABLED:
         icecast_passwords = forms.CharField(
             label='Icecast Password', help_text='The password for Icecast (admin, source, relay)')
+    email = forms.EmailField(label='Email Address')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -28,7 +29,7 @@ class FirstRunForm(UserCreationForm):
                 initial=default,
             )
 
-        self.order_fields(['station_name', 'username', 'password1', 'password2', 'icecast_passwords'])
+        self.order_fields(['station_name', 'username', 'email', 'password1', 'password2', 'icecast_passwords'])
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -37,6 +38,7 @@ class FirstRunForm(UserCreationForm):
         user = super().save(commit=False)
         user.is_superuser = True
         user.is_staff = True
+        user.email = self.cleaned_data['email']
         user.save()
 
         for config_name in CONSTANCE_FIELDS:

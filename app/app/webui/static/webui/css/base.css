@@ -6,7 +6,7 @@ button[type=reset] {
   background-color: orangered;
 }
 
-input[type=text], input[type=password] {
+input[type=text], input[type=password], input[type=email] {
   width: 100%;
 }
 

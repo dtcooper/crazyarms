@@ -169,29 +169,25 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     }],
 }
 
-CONSTANCE_CONFIG = {
-    'MY_SELECT_KEY': ('yes', 'select yes or no', 'yes_no_null_select'),
-}
-
 CONSTANCE_CONFIG = OrderedDict((
-    ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station')),
-    ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets', 'EXTERNAL_ASSET_ENCODING')),
+    ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.')),
+    ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets.', 'EXTERNAL_ASSET_ENCODING')),
     ('EXTERNAL_ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
                                 'EXTERNAL_ASSET_BITRATE')),
-    ('GOOGLE_CALENDAR_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs')),
-    ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID')),
+    ('GOOGLE_CALENDAR_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs.')),
+    ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID.')),
     ('GOOGLE_CALENDAR_CREDENTIALS_JSON', ('', 'credentials.json service file from Google (TODO: document better)')),
 ))
 
 if ICECAST_ENABLED:
     CONSTANCE_CONFIG.update(OrderedDict((
-        ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server')),
-        ('ICECAST_ADMIN_EMAIL', (f'admin@{env("DOMAIN_NAME")}', 'The admin email setting for the Icecast server')),
-        ('ICECAST_ADMIN_PASSWORD', ('hackme', 'Admin password for the Icecast server')),
-        ('ICECAST_SOURCE_PASSWORD', ('hackme', 'Source password for the Icecast server')),
-        ('ICECAST_RELAY_PASSWORD', ('hackme', 'Relay password for the Icecast server')),
-        ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited)')),
-        ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited)')),
+        ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server.')),
+        ('ICECAST_ADMIN_EMAIL', (f'admin@{env("DOMAIN_NAME")}', 'The admin email setting for the Icecast server.')),
+        ('ICECAST_ADMIN_PASSWORD', ('hackme', 'Admin password for the Icecast server.')),
+        ('ICECAST_SOURCE_PASSWORD', ('hackme', 'Source password for the Icecast server.')),
+        ('ICECAST_RELAY_PASSWORD', ('hackme', 'Relay password for the Icecast server.')),
+        ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited).')),
+        ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited).')),
     )))
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
