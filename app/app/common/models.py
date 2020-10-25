@@ -81,14 +81,13 @@ class User(AbstractUser):
 
         elif self.harbor_auth == self.HarborAuth.GOOGLE_CALENDAR:
             if config.GOOGLE_CALENDAR_ENABLED:
-                show_times = self.get_show_times()
 
-                if show_times:
+                if self.show_times:
                     if now is None:
                         now = timezone.now()
                     entry_grace = datetime.timedelta(minutes=self.google_calender_entry_grace_minutes)
                     exit_grace = datetime.timedelta(minutes=self.google_calender_exit_grace_minutes)
-                    for show_time in show_times:
+                    for show_time in self.show_times:
                         if (show_time.lower - entry_grace) <= now <= (show_time.upper + exit_grace):
                             logger.info(f'auth requested by {self}: allowed ({auth_log} and {now} in time bounds - '
                                         f'{timezone.localtime(show_time.lower)} [{entry_grace} entry grace] - '
@@ -96,7 +95,7 @@ class User(AbstractUser):
                             return True
                     else:
                         logger.info(f'auth requested by {self}: denied ({auth_log} with {now} not in time bounds for '
-                                    f'{len(google_calendar_show_times.show_times)} show times)')
+                                    f'{len(self.show_times)} show times)')
                         return False
                 else:
                     logger.info(f'auth requested by {self}: denied ({auth_log} with no show times)')
