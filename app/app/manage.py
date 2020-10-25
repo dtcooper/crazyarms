@@ -6,7 +6,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'carb.settings')
     try:
         from django.core.management import execute_from_command_line
         from django.core.management.commands.runserver import Command as runserver
@@ -17,7 +17,7 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    runserver.default_addr = '0.0.0.0'
+    runserver.default_addr = '0.0.0.0'  # For Docker
     execute_from_command_line(sys.argv)
 
 

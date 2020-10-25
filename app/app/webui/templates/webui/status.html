@@ -1,0 +1,42 @@
+{% extends 'webui/base.html' %}
+
+{% block content %}
+<table>
+  <tr><td><strong>User:</strong></td><td>{{ user.username }}</td></tr>
+  <tr><td><strong>Contact:</strong></td><td>&quot;{{ user.get_full_name }} &lt;{{ user.email }}&gt;&quot;</td></tr>
+  <tr><td><strong>Harbor Autdorization:</strong></td><td>{{ user.get_harbor_auth_display }}</td></tr>
+</table>
+
+{% if user.harbor_auth != user.HarborAuth.NEVER %}
+  <details>
+    <summary>
+      My Google Calendar {{ user.show_times|length }} show time{{ user.show_times|pluralize }}
+      from {{ show_times_range_start }} to {{ show_times_range_end }}
+    </summary>
+    {% if user.harbor_auth == user.HarborAuth.ALWAYS %}
+      <p><em>Note: you are <u>always</u> authorized to broadcast on the harbor.</em></p>
+    {% endif %}
+    {% if user.show_times %}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Start Time</th>
+            <th>End Time</th></tr>
+        </thead>
+        <tbody>
+          {% for show_time in user.show_times %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ show_time.lower }}</td>
+              <td>{{ show_time.upper }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No show times scheduled.</p>
+    {% endif %}
+  </details>
+{% endif %}
+{% endblock %}
