@@ -38,6 +38,7 @@ class FirstRunView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({
+            'station_name_override': 'Crazy Arms Radio Backend',
             'hide_nav': True,
             'form_description': "Welcome to Crazy Arms Radio Backend! Since no account has been created, you'll need "
                                 'to create a new administrator and specify some settings below before proceeding.',

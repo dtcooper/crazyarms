@@ -7,10 +7,10 @@
   <tr><td><strong>Harbor Autdorization:</strong></td><td>{{ user.get_harbor_auth_display }}</td></tr>
 </table>
 
-{% if user.harbor_auth != user.HarborAuth.NEVER %}
+{% if config.GOOGLE_CALENDAR_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
   <details>
     <summary>
-      My Google Calendar {{ user.show_times|length }} show time{{ user.show_times|pluralize }}
+      {{ user.show_times|length }} Google Calendar show time{{ user.show_times|pluralize }}
       from {{ show_times_range_start }} to {{ show_times_range_end }}
     </summary>
     {% if user.harbor_auth == user.HarborAuth.ALWAYS %}

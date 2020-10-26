@@ -3,30 +3,35 @@ from django.apps import apps, AppConfig
 from django.db.models.signals import post_migrate
 
 
+def create_user_perm_group(codename, description):
+    from django.contrib.auth.models import Group, Permission
+    from django.contrib.contenttypes.models import ContentType
+
+    from .models import User
+
+    user = ContentType.objects.get_for_model(User)
+    group, _ = Group.objects.get_or_create(name=description)
+    group.permissions.add(Permission.objects.get_or_create(
+        content_type=user, codename=codename, defaults={'name': description})[0])
+
+
 def create_groups(sender, **kwargs):
     from django.contrib.auth.models import Group, Permission
     from django.contrib.contenttypes.models import ContentType
+
     from broadcast.models import Broadcast, BroadcastAsset
-    from .models import User
 
-    constance = apps.get_app_config('constance')
-    constance.create_perm()
-
+    # Go in alphabetical order
     broadcast = ContentType.objects.get_for_model(Broadcast)
     broadcast_asset = ContentType.objects.get_for_model(BroadcastAsset)
     group, _ = Group.objects.get_or_create(name='Add prerecorded broadcasts')
     group.permissions.add(*Permission.objects.filter(content_type__in=(broadcast, broadcast_asset)))
 
-    user = ContentType.objects.get_for_model(User)
-    group, _ = Group.objects.get_or_create(name='Can view server logs')
-    group.permissions.add(Permission.objects.get_or_create(
-        content_type=user, codename='view_logs', defaults={'name': 'Can view server logs'})[0])
+    create_user_perm_group('view_websockify', 'Can configure and administrate Zoom over VNC')
+    create_user_perm_group('view_logs', 'Can view server logs')
 
-    user = ContentType.objects.get_for_model(User)
-    group, _ = Group.objects.get_or_create(name='Can administer Zoom over VNC')
-    group.permissions.add(Permission.objects.get_or_create(
-        content_type=user, codename='view_websockify', defaults={'name': 'Can view server logs'})[0])
-
+    constance = apps.get_app_config('constance')
+    constance.create_perm()
     group, _ = Group.objects.get_or_create(name='Modify settings and configuration')
     group.permissions.add(Permission.objects.get(codename='change_config'))
 
