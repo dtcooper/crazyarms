@@ -61,7 +61,8 @@ ROOT_URLCONF = 'carb.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # To override admin templates
+        'DIRS': [f'{BASE_DIR}/common/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

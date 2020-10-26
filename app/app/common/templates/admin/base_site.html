@@ -1,0 +1,124 @@
+{% extends 'admin/base_site.html' %}
+
+{% block extrastyle %}
+    {{ block.super}}
+    <style>
+      .help {
+        font-size: 14px !important;
+      }
+
+      {# Loosely based on https://github.com/codersforcauses/tedxuwa-server-backend/blob/master/root/common_static/admin_colours.css #}
+      #branding h1, #branding h1 a:link, #branding h1 a:visited {
+        color: #fff;
+      }
+
+      #header {
+        background: #17a2b8;
+        color: #fff;
+      }
+
+      #header a:link, #header a:visited {
+        color: #fff;
+      }
+
+      #header a:hover {
+        color: #fff;
+      }
+
+      div.breadcrumbs {
+        background: #f8f8f8;
+        color: #999;
+      }
+
+      div.breadcrumbs a {
+        color: #17a2b8;
+      }
+
+      div.breadcrumbs a.active {
+        color: #999;
+      }
+
+      div.breadcrumbs a:focus, div.breadcrumbs a:hover {
+        color: #999;
+      }
+
+      .select2-container--admin-autocomplete .select2-results__option--highlighted[aria-selected] {
+        background-color: #17a2b8;
+      }
+
+      .paginator a:link, .paginator a:visited {
+        background: #fff;
+        color: #17a2b8
+      }
+
+      .button, input[type=submit], input[type=button], .submit-row input, a.button {
+        background: #79aec8;
+      }
+
+      .module h2, .module caption, .inline-group h2 {
+        background: #17a2b8;
+      }
+
+      #user-tools a:focus, #user-tools a:hover {
+        border: 0;
+        color: #e0f3ff;
+      }
+
+      .selector-chosen h2 {
+        background: #17a2b8;
+      }
+
+      .calendar td.selected a {
+        background: #17a2b8;
+      }
+
+      .calendar td a:focus, .timelist a:focus,
+      .calendar td a:hover, .timelist a:hover {
+        background: #17a2b8;
+      }
+
+      fieldset.collapsed .collapse-toggle {
+        color: #5b80b2;
+      }
+
+      a:link, a:visited {
+        color: #5b80b2;
+      }
+
+      table thead th.sorted .sortoptions a.sortremove:focus:after,
+      table thead th.sorted .sortoptions a.sortremove:hover:after {
+        color: #5b80b2;
+      }
+
+      a.active.selector-chooseall:focus, a.active.selector-clearall:focus,
+      a.active.selector-chooseall:hover, a.active.selector-clearall:hover {
+        color: #5b80b2;
+      }
+
+      .button.default, input[type=submit].default, .submit-row input.default {
+        background: #17a2b8;
+      }
+
+      .calendar td a:active, .timelist a:active {
+        background: #5b80b2;
+      }
+
+      .select2-container--admin-autocomplete .select2-results__option--highlighted[aria-selected] {
+        background-color: #17a2b8;
+      }
+    </style>
+{% endblock %}
+
+{% block footer %}
+    <div id="footer">
+        <hr/>
+        <div class="container pull-left">
+            <h5 style="text-align: center;">
+                {% now 'Y' as year %}
+                <a href="https://github.com/dtcooper/carb" target="_blank">Crazy Arms Radio Backend</a>
+                &copy;Copyright 2020{% if year > '2020' %}-{{ year }}{% endif %} David Cooper.
+                All rights reserved.
+            </h5>
+        </div>
+    </div>
+{% endblock %}
