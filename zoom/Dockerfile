@@ -2,8 +2,9 @@ FROM ubuntu:20.04
 
 ENV DISPLAY=:0
 
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
         ca-certificates \
         gnupg \
         icewm \

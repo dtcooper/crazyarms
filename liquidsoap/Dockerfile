@@ -1,8 +1,8 @@
 FROM ubuntu:20.04
 
-ENV DEBIAN_FRONTEND noninteractive
 ENV LIQUIDSOAP_VERSION "1.4.3"
 
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \

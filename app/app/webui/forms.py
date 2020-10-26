@@ -15,7 +15,7 @@ CONSTANCE_ICECAST_PASSWORD_FIELDS = ('ICECAST_SOURCE_PASSWORD', 'ICECAST_RELAY_P
 class FirstRunForm(UserCreationForm):
     if settings.ICECAST_ENABLED:
         icecast_passwords = forms.CharField(
-            label='Icecast Password', help_text='The password for Icecast (admin, source, relay)')
+            label='Icecast Password', help_text='The password for Icecast (admin, source, relay).')
     email = forms.EmailField(label='Email Address')
 
     def __init__(self, *args, **kwargs):
