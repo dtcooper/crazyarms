@@ -12,9 +12,17 @@ RUN apt-get update \
         wget \
     && echo 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main' > /etc/apt/sources.list.d/deadsnakes.list \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6A755776 \
-    && apt-get install -y \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
         python3.9 \
     && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/bin/python3.9 /usr/local/bin/python \
+    && ln -s /usr/bin/python3.9 /usr/local/bin/python3 \
+    && cd /tmp \
+    && wget -q https://bootstrap.pypa.io/get-pip.py \
+    && python3.9 get-pip.py \
+    && rm get-pip.py
 
 # ln python links
 # download pip (wget get-pip)
