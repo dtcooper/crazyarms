@@ -4,6 +4,7 @@ import shutil
 import subprocess
 
 from django.conf import settings
+from django.core.cache import cache
 from django.template.context import make_context
 from django.template.loader import get_template
 
@@ -80,13 +81,14 @@ class IcecastService(ServiceBase):
 
 
 class HarborService(ServiceBase):
+    CUSTOM_CONFIG_NUM_SECTIONS = 3
     service_name = 'harbor'
 
     def render_conf(self):
         self.render_conf_file('harbor.vars.liq', context={'vars': {
             'SECRET_KEY': settings.SECRET_KEY,
         }})
-        self.render_conf_file('harbor.liq')
+        self.render_conf_file('harbor.liq', context=cache.get('harbor-custom-config'))
         self.render_supervisor_conf_file(command='liquidsoap /config/harbor/harbor.liq', user='liquidsoap')
 
 

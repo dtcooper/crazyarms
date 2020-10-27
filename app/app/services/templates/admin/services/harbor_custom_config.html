@@ -1,0 +1,48 @@
+{% extends 'admin/base_site.html' %}
+
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/changelists.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}" />
+{{ media.css }}
+<style>
+textarea {
+  width: 100%;
+  font-family: monospace;
+}
+pre {
+  border: 1px solid #ccc;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <p>
+    Please make any additions to the Liquidsoap harbor source code below. After
+    you are done the harbor will be restarted. (Read more about Liquidsoap
+    <a href="https://www.liquidsoap.info/" target="_blank">here</a>.)
+  </p>
+  <p>
+    <strong>WARNING:</strong> This is for advanced use cases ONLY. A mistake
+    while configuring the harbor could take down the whole station.
+  </p>
+
+  <div class="module" id="changelist">
+    <form id="changelist-form" action="" method="post" >
+      {% csrf_token %}
+
+      {# There shouldn't be any errors, but just in case #}
+      {{ form.errors }}
+
+      <pre>{{ form_with_code }}</pre>
+
+      <div class="submit-row">
+        <input type="submit" class="default" value="Save and Restart Liquidsoap Harbor"/>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

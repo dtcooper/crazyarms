@@ -3,7 +3,12 @@ set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 
+# Safely rendered environment variables based on configuration.
 %include "harbor.vars.liq"
+
+### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
+{{ section1 }}
+#### END SECTION 1 OF CUSTOM USER SOURCE CODE ####
 
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://app:8000/api/'
@@ -31,8 +36,16 @@ dj_harbor = audio_to_stereo(
 )
 ignore(output.dummy(dj_harbor, fallible=true))
 
+### BEGIN SECTION 2 OF CUSTOM USER SOURCE CODE ###
+{{ section2 }}
+#### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
+
 failsafe = single('/hold-music.mp3')
 radio = fallback(replay_metadata=false, track_sensitive=false, [request.equeue(id='request'), dj_harbor, failsafe])
+
+### BEGIN SECTION 3 OF CUSTOM USER SOURCE CODE ###
+{{ section3 }}
+#### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
 
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),

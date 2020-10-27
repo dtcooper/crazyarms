@@ -23,11 +23,11 @@ if DEBUG:
 
 INSTALLED_APPS = [
     # Django
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'carb.apps.CARBAdminConfig',
 
     # Third-party
     'django_extensions',
@@ -62,7 +62,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # To override admin templates
-        'DIRS': [f'{BASE_DIR}/common/templates'],
+        'DIRS': [f'{BASE_DIR}/carb/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -71,7 +71,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'constance.context_processors.config',
-                'common.context_processors.settings',
+                'carb.context_processors.settings',
             ],
         },
     },
