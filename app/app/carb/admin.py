@@ -1,6 +1,10 @@
 from django.contrib import admin
+from django.template.response import TemplateResponse
 from django.urls import path, resolve
+from django.utils.safestring import mark_safe
 from django.views.generic import View
+
+from constance import config
 
 
 class AdminBaseContextMixin:
@@ -12,9 +16,13 @@ class AdminBaseContextMixin:
 
 class CARBAdminSite(admin.AdminSite):
     AdminBaseContextMixin = AdminBaseContextMixin
-    site_title = 'test'
-    site_header = 'test'
-    index_title = 'test'
+    index_title = 'Station administration'
+    empty_value_display = mark_safe('<em>none</em>')
+
+    @property
+    def site_title(self):
+        return f'{config.STATION_NAME} admin'
+    site_header = site_title
 
     def __init__(self, *args, **kwargs):
         self.extra_urls = []
@@ -44,5 +52,16 @@ class CARBAdminSite(admin.AdminSite):
             return cls_or_func
         return register
 
+    def app_list_extra(self, request, extra_context=None):
+        context = {
+            **self.each_context(request),
+            'title': 'Additional Settings',
+            **(extra_context or {}),
+        }
+        request.current_app = self.name
+        return TemplateResponse(request, self.index_template or 'admin/app_list_extra.html', context)
+
     def get_urls(self):
-        return super().get_urls() + [pattern for _, pattern in self.extra_urls]
+        return super().get_urls() + [pattern for _, pattern in self.extra_urls] + [
+            path('additional-settings/', self.admin_view(self.app_list_extra), name='app_list_extra')
+        ]

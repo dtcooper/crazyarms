@@ -1,18 +1,14 @@
-{% url 'admin:app_list' app_label='constance' as settings_url %}
-
-{% if current_url_name != 'app_list' or settings_url in request.path %}
-  <div class="module{% if is_extra_url %} current-app{% endif %}">
-    <table>
-      <caption>
-        <a href="{{ settings_url }}" class="section">Additional Settings</a>
-      </caption>
-      {% for name, url_name in extra_urls %}
-        <tr{% if url_name == current_url_name %} class="current-model"{% endif %}>
-            <th scope="row"><a href="{% url 'admin:'|add:url_name %}">{{ name }}</a></th>
-            <td></td>
-            <td></td>
-        </tr>
-      {% endfor %}
-    </table>
-  </div>
-{% endif %}
+<div class="module{% if is_extra_url %} current-app{% endif %}">
+  <table>
+    <caption>
+      <a href="{% url 'admin:app_list_extra' %}" class="section">Additional Settings</a>
+    </caption>
+    {% for name, url_name in extra_urls %}
+      <tr{% if url_name == current_url_name %} class="current-model"{% endif %}>
+          <th scope="row"><a href="{% url 'admin:'|add:url_name %}">{{ name }}</a></th>
+          <td></td>
+          <td></td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
