@@ -8,6 +8,8 @@ RUN apt-get update \
         ca-certificates \
         gnupg \
         icewm \
+        libxkbcommon-x11-0 \
+        pulseaudio \
         supervisor \
         websockify \
         wget \

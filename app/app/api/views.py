@@ -1,3 +1,4 @@
+import logging
 import json
 from functools import wraps
 
@@ -5,6 +6,11 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
+
+from common.models import User
+
+
+logger = logging.getLogger(f'carb.{__name__}')
 
 
 def api_view(methods=['POST']):
@@ -32,5 +38,16 @@ def api_view(methods=['POST']):
 
 @api_view
 def auth(request, data):
-    user = authenticate(username=data['username'], password=data['password'])
-    return {'authorized': user is not None and user.currently_harbor_authorized()}
+    username, password = data['username'], data['password']
+    user = authenticate(username=username, password=password)
+    if user is None:
+        authorized = False
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            logger.info(f'auth requested by {username}: denied (user does not exist)')
+        else:
+            logger.info(f'auth requested by {username}: denied (incorrect password)')
+    else:
+        authorized = user.currently_harbor_authorized()
+    return {'authorized': authorized}
