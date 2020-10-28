@@ -1,0 +1,8 @@
+{% extends 'webui/form.html' %}
+
+{% block content %}
+{{ block.super }}
+{% if settings.EMAIL_ENABLED %}
+  <p>If you have forgotten your password, <a href="{% url 'admin_password_reset' %}">click here</a> to reset it.</p>
+{% endif %}
+{% endblock %}

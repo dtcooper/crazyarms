@@ -1,10 +1,12 @@
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 from django.views.generic import FormView
+
 
 from .services import init_services, HarborService
 
@@ -17,10 +19,11 @@ class HarborCustomConfigForm(forms.Form):
 
 
 @admin.site.register_view(route='harbor-custom-config/', title='Liquidsoap Harbor Source Code')
-class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, FormView):
+class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRequiredMixin, FormView):
     form_class = HarborCustomConfigForm
     template_name = 'admin/services/harbor_custom_config.html'
     success_url = reverse_lazy('admin:harbor_custom_config')
+    permission_required = 'common.change_liquidsoap'
 
     def get_initial(self):
         initial = super().get_initial()

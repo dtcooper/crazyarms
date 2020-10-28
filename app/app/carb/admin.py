@@ -1,6 +1,8 @@
+from collections import UserList
+
 from django.contrib import admin
 from django.template.response import TemplateResponse
-from django.urls import path, resolve
+from django.urls import path, resolve, reverse
 from django.utils.safestring import mark_safe
 from django.views.generic import View
 
@@ -18,6 +20,10 @@ class CARBAdminSite(admin.AdminSite):
     AdminBaseContextMixin = AdminBaseContextMixin
     index_title = 'Station administration'
     empty_value_display = mark_safe('<em>none</em>')
+    nginx_proxy_views = (
+        ('View server logs', '/logs/', 'common.view_logs'),
+        ('Administer Zoom over VNC', '/vnc/', 'common.view_websockify'),
+    )
 
     @property
     def site_title(self):
@@ -31,10 +37,20 @@ class CARBAdminSite(admin.AdminSite):
     def each_context(self, request):
         context = super().each_context(request)
         current_url_name = resolve(request.path_info).url_name
+        # Registered views
+        extra_urls = [
+            (title, reverse(f'admin:{pattern.name}'), False)
+            for title, pattern, permission in self.extra_urls
+            if permission is None or request.user.has_perm(permission)
+        ]
+        for title, url, permission in self.nginx_proxy_views:
+            if request.user.has_perm(permission):
+                extra_urls.append((title, url, True))
+
         context.update({
             'current_url_name': current_url_name,
-            'extra_urls': sorted((name, pattern.name) for name, pattern in self.extra_urls),
-            'is_extra_url': any(current_url_name == pattern.name for _, pattern in self.extra_urls),
+            'extra_urls': sorted(extra_urls),
+            'is_extra_url': any(current_url_name == pattern.name for _, pattern, _ in self.extra_urls),
         })
         return context
 
@@ -45,10 +61,9 @@ class CARBAdminSite(admin.AdminSite):
         def register(cls_or_func):
             cls_or_func._admin_title = title
             view = self.admin_view(cls_or_func.as_view() if issubclass(cls_or_func, View) else cls_or_func)
-
             pattern = path(route=route, view=self.admin_view(view), kwargs=kwargs, name=name)
-            self.extra_urls.append((title, pattern))
-            self.extra_urls.sort()
+            permission = getattr(cls_or_func, 'permission_required', None)
+            self.extra_urls.append((title, pattern, permission))
             return cls_or_func
         return register
 
@@ -62,6 +77,6 @@ class CARBAdminSite(admin.AdminSite):
         return TemplateResponse(request, self.index_template or 'admin/app_list_extra.html', context)
 
     def get_urls(self):
-        return super().get_urls() + [pattern for _, pattern in self.extra_urls] + [
+        return super().get_urls() + [pattern for _, pattern, _ in self.extra_urls] + [
             path('additional-settings/', self.admin_view(self.app_list_extra), name='app_list_extra')
         ]

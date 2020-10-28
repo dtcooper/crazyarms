@@ -108,6 +108,9 @@ LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+if EMAIL_ENABLED:
+    EMAIL_HOST = 'email'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

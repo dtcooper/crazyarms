@@ -1,4 +1,10 @@
 services:
+  app:
+    depends_on:
+      - email
+  tasks:
+    depends_on:
+      - email
   email:
     container_name: email
     image: juanluisbaptiste/postfix:alpine
