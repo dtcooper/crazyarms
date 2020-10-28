@@ -9,6 +9,7 @@ RUN apt-get update \
         gnupg \
         icewm \
         libxkbcommon-x11-0 \
+        psmisc \
         pulseaudio \
         supervisor \
         websockify \

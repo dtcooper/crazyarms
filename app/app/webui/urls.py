@@ -5,7 +5,9 @@ from . import views
 
 urlpatterns = [
     path('', views.StatusView.as_view(), name='status'),
-    path('first-run', views.FirstRunView.as_view(), name='first-run'),
+    path('zoom/', views.ZoomView.as_view(), name='zoom'),
+    path('first-run/', views.FirstRunView.as_view(), name='first_run'),
+    path('profile/', views.UserProfileView.as_view(), name='user_profile'),
     path('login/', auth_views.LoginView.as_view(extra_context={'hide_nav': True}, redirect_authenticated_user=True,
                                                 template_name='webui/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),

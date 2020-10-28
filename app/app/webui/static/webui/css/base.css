@@ -2,7 +2,7 @@
   color: red;
 }
 
-button[type=reset] {
+button[type=reset], button[type=submit].reset-btn {
   background-color: orangered;
 }
 

@@ -2,9 +2,10 @@
 
 {% block content %}
 <table>
-  <tr><td><strong>User:</strong></td><td>{{ user.username }}</td></tr>
+  <tr><td><strong>Username:</strong></td><td>{{ user.username }}</td></tr>
   <tr><td><strong>Contact:</strong></td><td>&quot;{{ user.get_full_name }} &lt;{{ user.email }}&gt;&quot;</td></tr>
-  <tr><td><strong>Harbor Autdorization:</strong></td><td>{{ user.get_harbor_auth_display }}</td></tr>
+  <tr><td><strong>Harbor Authorization:</strong></td><td>{{ user.harbor_auth_pretty }}</td></tr>
+  <tr><td><strong>Timezone:</strong></td><td>{{ user.get_timezone_display }} (currently {% now 'SHORT_DATETIME_FORMAT' %})</td></tr>
 </table>
 
 {% if config.GOOGLE_CALENDAR_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}

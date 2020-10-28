@@ -32,36 +32,24 @@ class UserAdmin(auth_admin.UserAdmin):
     add_form_template = None
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
-        ('Personal info', {'fields': (('first_name', 'last_name'),)}),
+        ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
         ('Permissions', {'fields': ('harbor_auth', ('google_calender_entry_grace_minutes',
                                     'google_calender_exit_grace_minutes'), 'is_active', 'is_staff', 'is_superuser',
                                     'groups')}),
         ('Important dates', {'fields': ('last_login', 'date_joined', 'modified')}),
     )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_list', 'is_staff')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_pretty', 'is_staff')
     list_filter = (HarborAuthListFilter, 'is_superuser', 'is_active', 'groups')
     readonly_fields = ('last_login', 'date_joined', 'modified')
     add_fieldsets = (
         (None, {'fields': ('username', 'email', 'password1', 'password2')}),
-        ('Personal info', {'fields': (('first_name', 'last_name'),)}),
+        ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
         ('Permissions', {'fields': ('harbor_auth', ('google_calender_entry_grace_minutes',
                                     'google_calender_exit_grace_minutes'), 'is_staff', 'is_superuser', 'groups')}),
     )
 
     class Media:
         js = ('common/admin/js/harbor_auth.js',)
-
-    def harbor_auth_list(self, obj):
-        if obj.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
-            if config.GOOGLE_CALENDAR_ENABLED:
-                return (f'{obj.get_harbor_auth_display()} ({obj.google_calender_entry_grace_minutes} mins early entry, '
-                        f'{obj.google_calender_exit_grace_minutes} mins late exit)')
-            else:
-                return User.HarborAuth.ALWAYS.label
-        else:
-            return obj.get_harbor_auth_display()
-    harbor_auth_list.short_description = User._meta.get_field('harbor_auth').verbose_name
-    harbor_auth_list.admin_order_field = 'harbor_auth'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

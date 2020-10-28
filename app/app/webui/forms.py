@@ -52,3 +52,14 @@ class FirstRunForm(UserCreationForm):
         init_services(restart_services=True)
 
         return user
+
+
+class UserProfileForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].disabled = True
+        self.fields['username'].help_text = ''
+
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'first_name', 'last_name', 'timezone')

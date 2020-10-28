@@ -28,10 +28,19 @@ class ServiceBase:
         raise NotImplementedError()
 
     def supervisorctl(self, *args):
-        cmd = ['supervisorctl', '-s', f'http://{self.service_name}:9001']
-        cmd.extend(args)
+        cmd = ['supervisorctl', '-s', f'http://{self.service_name}:9001'] + list(args)
         logger.info(f'running: {" ".join(cmd)}')
-        subprocess.run(cmd)
+        cmd = subprocess.run(cmd, capture_output=True, text=True)
+        if cmd.returncode != 0:
+            logger.warning(f'supervisorctl exited with {cmd.returncode}')
+
+        stdout, stderr = cmd.stdout.strip(), cmd.stderr.strip()
+        if stderr:
+            logger.warning(f'supervisorctl error output: {stderr}')
+        if stdout:
+            logger.info(f'supervisorctl output: {stdout}')
+
+        return stdout
 
     def render_conf_file(self, filename, context=None, conf_filename=None):
         default_context = {'settings': settings, 'config': config}
@@ -121,6 +130,10 @@ class UpstreamService(ServiceBase):
 class ZoomService(ServiceBase):
     service_name = 'zoom'
 
+    def is_zoom_running(self):
+        status = self.supervisorctl('status', 'zoom').split()
+        return len(status) >= 2 and status[1] == 'RUNNING'
+
     def render_conf(self):
         # TODO: run pulse on harbor (don't use docker.for.mac.localhost)
         # TODO: set timezone properly from Django config
@@ -135,6 +148,8 @@ class ZoomService(ServiceBase):
             program_name='x11vnc', command='x11vnc -shared -forever -nopw', **kwargs)
         self.render_supervisor_conf_file(
             program_name='websockify', command='websockify 0.0.0.0:6080 localhost:5900', **kwargs)
+        self.render_supervisor_conf_file(
+            program_name='zoom', command='sh -c "killall -q zoom; zoom"', start=False, **kwargs)
 
 
 SERVICES = {service_cls.service_name: service_cls for service_cls in ServiceBase.__subclasses__()}

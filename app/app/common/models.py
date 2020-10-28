@@ -6,6 +6,9 @@ import math
 import os
 import subprocess
 
+import pytz
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.core.files.uploadedfile import TemporaryUploadedFile
@@ -54,6 +57,8 @@ class User(AbstractUser):
     email = models.EmailField('email address', unique=True)
     harbor_auth = models.CharField('harbor access type', max_length=1,
                                    choices=HarborAuth.choices, default=HarborAuth.ALWAYS)
+    timezone = models.CharField('timezone', choices=[
+        (tz, tz.replace('_', ' ')) for tz in pytz.common_timezones], max_length=60, default=settings.TIME_ZONE)
     google_calender_entry_grace_minutes = models.PositiveIntegerField(
         'harbor entry grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>before</strong> a scheduled show that the user is allowed to enter the harbor.'))
@@ -64,6 +69,18 @@ class User(AbstractUser):
     def get_full_name(self):
         s = ' '.join(filter(None, (self.first_name, self.last_name))).strip()
         return s if s else self.username
+
+    def harbor_auth_pretty(self):
+        if self.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
+            if config.GOOGLE_CALENDAR_ENABLED:
+                return (f'{self.get_harbor_auth_display()} ({self.google_calender_entry_grace_minutes} mins early entry, '
+                        f'{self.google_calender_exit_grace_minutes} mins late exit)')
+            else:
+                return User.HarborAuth.ALWAYS.label
+        else:
+            return self.get_harbor_auth_display()
+    harbor_auth_pretty.short_description = harbor_auth.verbose_name
+    harbor_auth_pretty.admin_order_field = 'harbor_auth'
 
     @cached_property
     def show_times(self):
