@@ -26,6 +26,9 @@ RUN wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases
 
 RUN pip3 install --no-cache-dir youtube-dl
 
+RUN wget -qO /usr/local/bin/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/81b1373f/wait-for-it.sh \
+    && chmod +x /usr/local/bin/wait-for-it
+
 RUN rmdir /etc/supervisor/conf.d
 
 COPY image/ /

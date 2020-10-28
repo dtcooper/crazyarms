@@ -1,6 +1,5 @@
-from collections import UserList
-
 from django.contrib import admin
+from django.conf import settings
 from django.template.response import TemplateResponse
 from django.urls import path, resolve, reverse
 from django.utils.safestring import mark_safe
@@ -22,8 +21,9 @@ class CARBAdminSite(admin.AdminSite):
     empty_value_display = mark_safe('<em>none</em>')
     nginx_proxy_views = (
         ('View server logs', '/logs/', 'common.view_logs'),
-        ('Administer Zoom over VNC', '/vnc/', 'common.view_websockify'),
     )
+    if settings.ZOOM_ENABLED:
+        nginx_proxy_views += (('Administer Zoom over VNC', '/vnc/', 'common.view_websockify'),)
 
     @property
     def site_title(self):
@@ -39,13 +39,13 @@ class CARBAdminSite(admin.AdminSite):
         current_url_name = resolve(request.path_info).url_name
         # Registered views
         extra_urls = [
-            (title, reverse(f'admin:{pattern.name}'), False)
+            (title, reverse(f'admin:{pattern.name}'))
             for title, pattern, permission in self.extra_urls
             if permission is None or request.user.has_perm(permission)
         ]
         for title, url, permission in self.nginx_proxy_views:
             if request.user.has_perm(permission):
-                extra_urls.append((title, url, True))
+                extra_urls.append((title, url))
 
         context.update({
             'current_url_name': current_url_name,

@@ -36,12 +36,36 @@ dj_harbor = audio_to_stereo(
 )
 ignore(output.dummy(dj_harbor, fallible=true))
 
+{% if settings.ZOOM_ENABLED %}
+zoom = input.pulseaudio(id='zoom')
+ignore(output.dummy(zoom))
+
+zoom = strip_blank(
+    max_blank=15.,  # TODO: make a constance
+    id='zoom_strip',
+    start_blank=true,
+    min_noise=0.5,
+    zoom,
+)
+{% endif %}
+
+failsafe = single(id='failsafe', '/hold-music.mp3')
+
+source_hierarchy = [
+    request.equeue(id='prerecorded'),  # TODO switch from equeue to queue? Rename id?
+    dj_harbor,
+{% if settings.ZOOM_ENABLED %}
+    zoom,
+{% endif %}
+    failsafe,
+]
+
 ### BEGIN SECTION 2 OF CUSTOM USER SOURCE CODE ###
 {{ section2 }}
 #### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
 
 failsafe = single('/hold-music.mp3')
-radio = fallback(replay_metadata=false, track_sensitive=false, [request.equeue(id='request'), dj_harbor, failsafe])
+radio = fallback(replay_metadata=false, track_sensitive=false, source_hierarchy)
 
 ### BEGIN SECTION 3 OF CUSTOM USER SOURCE CODE ###
 {{ section3 }}

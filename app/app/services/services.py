@@ -89,7 +89,18 @@ class HarborService(ServiceBase):
             'SECRET_KEY': settings.SECRET_KEY,
         }})
         self.render_conf_file('harbor.liq', context=cache.get('harbor-custom-config'))
-        self.render_supervisor_conf_file(command='liquidsoap /config/harbor/harbor.liq', user='liquidsoap')
+        kwargs = {'environment': 'HOME="/tmp/pulse"', 'user': 'liquidsoap'}
+
+        liq_cmd = 'liquidsoap /config/harbor/harbor.liq'
+        if settings.ZOOM_ENABLED:
+            # Wait for pulse to be up
+            self.render_supervisor_conf_file(command=f'sh -c "wait-for-it -t 0 localhost:4713 && {liq_cmd}"', **kwargs)
+            self.render_supervisor_conf_file(
+                command='pulseaudio -n --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" '
+                        '--load=module-native-protocol-unix --load=module-always-sink --exit-idle-time=-1',
+                program_name='pulseaudio', **kwargs)
+        else:
+            self.render_supervisor_conf_file(command=liq_cmd, **kwargs)
 
 
 class UpstreamService(ServiceBase):
@@ -113,7 +124,7 @@ class ZoomService(ServiceBase):
     def render_conf(self):
         # TODO: run pulse on harbor (don't use docker.for.mac.localhost)
         # TODO: set timezone properly from Django config
-        kwargs = {'environment': 'HOME="/home/user",DISPLAY=":0",PULSE_SERVER="docker.for.mac.localhost"', 'user': 'user'}
+        kwargs = {'environment': f'TZ="{settings.TIME_ZONE}",HOME="/home/user",DISPLAY=":0",PULSE_SERVER="harbor"', 'user': 'user'}
         self.render_supervisor_conf_file(
             program_name='xvfb-icewm',
             command='xvfb-run --auth-file=/home/user/.Xauthority --server-num=0 '

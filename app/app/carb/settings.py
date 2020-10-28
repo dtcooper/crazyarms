@@ -187,9 +187,9 @@ if ICECAST_ENABLED:
     CONSTANCE_CONFIG.update(OrderedDict((
         ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server.')),
         ('ICECAST_ADMIN_EMAIL', (f'admin@{env("DOMAIN_NAME")}', 'The admin email setting for the Icecast server.')),
-        ('ICECAST_ADMIN_PASSWORD', ('hackme', 'Admin password for the Icecast server.')),
-        ('ICECAST_SOURCE_PASSWORD', ('hackme', 'Source password for the Icecast server.')),
-        ('ICECAST_RELAY_PASSWORD', ('hackme', 'Relay password for the Icecast server.')),
+        ('ICECAST_ADMIN_PASSWORD', ('', 'Admin password for the Icecast server.')),
+        ('ICECAST_SOURCE_PASSWORD', ('', 'Source password for the Icecast server.')),
+        ('ICECAST_RELAY_PASSWORD', ('', 'Relay password for the Icecast server.')),
         ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited).')),
         ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited).')),
     )))
