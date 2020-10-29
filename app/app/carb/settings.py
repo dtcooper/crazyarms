@@ -36,6 +36,7 @@ INSTALLED_APPS = [
 
     # Local
     'api',
+    'autodj',
     'broadcast',
     'common',  # users/permissions, Base classes (audio assets, etc), extra Constance code
     'gcal',

@@ -78,7 +78,8 @@ class StatusView(LoginRequiredMixin, TemplateView):
             source_status = json.loads(harbor.source_status())
         except LiquidsoapTelnetException:
             source_status = None
-            messages.error(self.request, 'There was an error connecting to the harbor')
+            if not self.request.GET.get('table_only'):
+                messages.error(self.request, 'There was an error connecting to the harbor')
 
         user = self.request.user
         now_pretty = date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")

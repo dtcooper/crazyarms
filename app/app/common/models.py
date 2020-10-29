@@ -136,11 +136,6 @@ class AudioAssetBase(TimestampedModel):
 
     title = TruncatingCharField('title', max_length=255, blank=True,
                                 help_text="If left empty, a title will be generated from the file's metadata.")
-    # TODO these are for the playout audio assets
-    # artist = TruncatingCharField('artist', max_length=255, blank=True,
-    #                              help_text="If left empty, an artist will be generated from the file's metadata.")
-    # album = TruncatingCharField('album', max_length=255, blank=True,
-    #                             help_text="If left empty, an album will be generated from the file's metadata.")
     uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
     file = models.FileField('audio file', upload_to='prerecord/', blank=True,
                             help_text='You can provide either an uploaded audio file or a URL to an external asset.')
