@@ -8,7 +8,6 @@ from django.core.cache import cache
 from django.template.context import make_context
 from django.template.loader import get_template
 
-
 from constance import config
 
 

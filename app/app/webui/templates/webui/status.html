@@ -1,7 +1,16 @@
 {% extends 'webui/base.html' %}
 
+{% load static %}
+
+{% block extrahead %}
+<script>
+  var statusURL = "{% url 'status' as status_url %}{{ status_url|escapejs }}";
+</script>
+<script src="{% static 'webui/js/status.js' %}"></script>
+{% endblock %}
+
 {% block content %}
-<div id="status_table">
+<div id="status-table">
   {% include 'webui/status_table.html' %}
 </div>
 

@@ -1,19 +1,42 @@
 {% if source_status %}
-<table>
-  <caption>Harbor Source Status</caption>
-  <tr>
-    {% for row in source_status %}
+  <table>
+    <caption>Harbor Sources</caption>
+    <thead>
       <tr>
-      {% for value in row %}
-        <t{{ forloop.parentloop.first|yesno:'h,d' }}>
-          {{ value }}
-        </t{{ forloop.parentloop.first|yesno:'h,d' }}>
-      {% endfor %}
+        <th width="25%">Precedence</th>
+        <th width="30%">Source Name</th>
+        <th width="50%">Active</th>
       </tr>
-    {% endfor %}
-    </tr>
-</table>
+    </thead>
+    <tbody>
+      {% for source in source_status.sources %}
+        <tr{% if source.id == source_status.active_source %} class="active-source"{% endif %}>
+          <td>{{ source.precedence }}</td>
+          <td>{{ source.name }}</td>
+          {% if source.id == source_status.active_source %}
+            <td class="true"><strong>Active &amp; currently streaming</strong></td>
+          {% elif source.active %}
+            <td class="warning">Active, not streaming (precedence too low)</td>
+          {% else %}
+            <td class="false">Inactive</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="error">The harbor appears to be down. Please wait.</p>
 {% endif %}
+
+<table>
+  <caption>Server Info</caption>
+  {% for description, value in server_info %}
+    <tr>
+      <td><strong>{{ description }}</strong></td>
+      <td>{{ value }}</td>
+    </tr>
+  {% endfor %}
+</table>
 
 <table>
   <caption>User</caption>

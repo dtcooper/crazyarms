@@ -1,4 +1,4 @@
-from django import forms
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.cache import cache
@@ -7,15 +7,9 @@ from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 from django.views.generic import FormView
 
-
+from .forms import HarborCustomConfigForm, UpstreamServerForm
+from .models import UpstreamServer
 from .services import init_services, HarborService
-
-
-class HarborCustomConfigForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for section_number in range(1, HarborService.CUSTOM_CONFIG_NUM_SECTIONS + 1):
-            self.fields[f'section{section_number}'] = forms.CharField(widget=forms.Textarea, required=False)
 
 
 @admin.site.register_view(route='harbor-custom-config/', title='Liquidsoap Harbor Source Code')
@@ -50,8 +44,20 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form_with_code'] = render_to_string('services/harbor.liq', context={
+        harbor_liq_context = {'settings': settings}
+        harbor_liq_context.update({
             f'section{section_number}': mark_safe(f"</pre>{context['form'][f'section{section_number}']}<pre>")
             for section_number in range(1, HarborService.CUSTOM_CONFIG_NUM_SECTIONS + 1)
         })
+        context['form_with_code'] = render_to_string('services/harbor.liq', context=harbor_liq_context)
         return context
+
+
+class UpstreamServerAdmin(admin.ModelAdmin):
+    form = UpstreamServerForm
+
+    class Media:
+        js = ('admin/js/server_type.js',)
+
+
+admin.site.register(UpstreamServer, UpstreamServerAdmin)

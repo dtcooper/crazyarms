@@ -1,3 +1,8 @@
+body {
+    max-width: 1000px;
+    padding: 1rem;
+}
+
 .errorlist {
   color: red;
 }
@@ -10,6 +15,10 @@ input[type=text], input[type=password], input[type=email] {
   width: 100%;
 }
 
-.message.warning { color: darkorange; }
-.message.error { color: red; font-weight: bold; }
-.message.success { color: seagreen; }
+.warning { color: darkorange; }
+.error { color: red; font-weight: bold; }
+.success { color: seagreen; }
+
+.true { color: seagreen; }
+.false { color: red; }
+.active-source { background-color: #e5fcbd; }

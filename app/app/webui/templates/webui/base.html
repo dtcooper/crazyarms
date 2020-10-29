@@ -9,8 +9,7 @@
   <link rel="stylesheet" href="{% static 'webui/css/new.min.css' %}">
   <link rel="stylesheet" href="{% static 'webui/css/base.css' %}">
   <script src="{% static 'webui/js/jquery.min.js' %}"></script>
-  <script src="{% static 'webui/js/base.js' %}"></script>
-  {% block extra_head %}{% endblock %}
+  {% block extrahead %}{% endblock %}
 </head>
 <body>
   {% block header %}
@@ -47,7 +46,7 @@
       Notifications:
       <ul>
         {% for message in messages %}
-          <li class="message {{ message.tags }}"><em>{{ message }}</em></li>
+          <li class="{{ message.tags }}"><em>{{ message }}</em></li>
         {% endfor %}
       </ul>
     </blockquote>

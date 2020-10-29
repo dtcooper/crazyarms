@@ -60,7 +60,6 @@ class FirstRunView(SuccessMessageMixin, FormView):
 
 
 class StatusView(LoginRequiredMixin, TemplateView):
-
     def get_template_names(self):
         if self.request.GET.get('table_only'):
             return 'webui/status_table.html'
@@ -76,13 +75,7 @@ class StatusView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         today = timezone.now().date()
         try:
-            source_status_raw = json.loads(harbor.source_status())
-            header = list(source_status_raw[0].keys())
-            source_status = [header]
-            for row in source_status_raw:
-                source_status.append([row[k] for k in header])
-            print(source_status)
-
+            source_status = json.loads(harbor.source_status())
         except LiquidsoapTelnetException:
             source_status = None
             messages.error(self.request, 'There was an error connecting to the harbor')
@@ -100,6 +93,9 @@ class StatusView(LoginRequiredMixin, TemplateView):
                 ('Contact', f'"{user.get_full_name()}" <{user.email}>'),
                 ('Harbor Authorization', user.harbor_auth_pretty()),
                 ('Timezone', f'{user.get_timezone_display()} (currently {now_pretty})'),
+            ),
+            'server_info': (
+                ('Liquidsoap Version', harbor.version),
             ),
         }
 
