@@ -25,6 +25,7 @@ services:
       context: ./app
     volumes:
       - ./.env:/.env:ro
+      # TODO don't mount /app, just mount it in overrides.yml
       - ./app/app:/app
       - static_root:/static_root
       - media_root:/media_root
@@ -43,6 +44,7 @@ services:
       context: ./app
     volumes:
       - ./.env:/.env:ro
+      # TODO don't mount /app, just mount it in overrides.yml
       - ./app/app:/app
       - media_root:/media_root
     depends_on:

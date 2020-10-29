@@ -88,7 +88,7 @@ class StatusView(LoginRequiredMixin, TemplateView):
             messages.error(self.request, 'There was an error connecting to the harbor')
 
         user = self.request.user
-        now_pretty = date_format(timezone.now(), "SHORT_DATETIME_FORMAT")
+        now_pretty = date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")
         return {
             **super().get_context_data(**kwargs),
             'title': 'Server Status',

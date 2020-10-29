@@ -27,6 +27,7 @@ def create_groups(sender, **kwargs):
     group, _ = Group.objects.get_or_create(name='Add prerecorded broadcasts')
     group.permissions.add(*Permission.objects.filter(content_type__in=(broadcast, broadcast_asset)))
 
+    # TODO find a way to hide view_websockify in admin
     create_user_perm_group('view_websockify', 'Can configure and administrate Zoom over VNC')
     create_user_perm_group('view_logs', 'Can view server logs')
     create_user_perm_group('change_liquidsoap', 'Edit Liquidsoap harbor source code')

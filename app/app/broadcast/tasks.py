@@ -2,7 +2,7 @@ import logging
 
 from huey.contrib import djhuey
 
-from services.liquidsoap import Liquidsoap
+from services.liquidsoap import harbor
 
 from .models import Broadcast
 
@@ -16,8 +16,7 @@ def play_prerecorded_broadcast(prerecorded_broadcast):
         file_url = f'file://{prerecorded_broadcast.asset.file.path}'
 
         # TODO: have a thread local / open telnet per worker
-        liquidsoap = Liquidsoap()
-        liquidsoap.request__push(file_url)
+        harbor.prerecorded__push(file_url)
 
         Broadcast.objects.filter(id=prerecorded_broadcast.id).update(
             status=Broadcast.Status.PLAYED)
