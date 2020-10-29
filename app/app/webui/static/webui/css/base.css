@@ -1,10 +1,19 @@
-body {
-    max-width: 1000px;
-    padding: 1rem;
+:root {
+  --nc-tx-1: #ffffff;
+  --nc-tx-2: #eeeeee;
+  --nc-bg-1: #000000;
+  --nc-bg-2: #111111;
+  --nc-bg-3: #222222;
+  --nc-lk-1: #3291FF;
+  --nc-lk-2: #0070F3;
+  --nc-lk-tx: #FFFFFF;
+  --nc-ac-1: #7928CA;
+  --nc-ac-tx: #FFFFFF;
 }
 
-.errorlist {
-  color: red;
+body {
+  max-width: 1000px;
+  padding: 0.5rem;
 }
 
 button[type=reset], button[type=submit].reset-btn {
@@ -15,10 +24,7 @@ input[type=text], input[type=password], input[type=email] {
   width: 100%;
 }
 
-.warning { color: darkorange; }
-.error { color: red; font-weight: bold; }
-.success { color: seagreen; }
-
-.true { color: seagreen; }
-.false { color: red; }
-.active-source { background-color: #e5fcbd; }
+.warning, .orange { color: darkorange; }
+.error, .red, .errorlist { color: red; }
+.error, .bold { font-weight: bold; }
+.success, .green { color: #33e980; }

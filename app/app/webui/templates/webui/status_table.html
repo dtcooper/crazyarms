@@ -10,16 +10,21 @@
     </thead>
     <tbody>
       {% for source in source_status.sources %}
-        <tr{% if source.id == source_status.active_source %} class="active-source"{% endif %}>
+        <tr{% if source.id == source_status.active_source %} class="green bold"{% endif %}>
           <td>{{ source.precedence }}</td>
           <td>{{ source.name }}</td>
           {% if source.id == source_status.active_source %}
-            <td class="true"><strong>Active &amp; currently streaming</strong></td>
-          {% elif source.active %}
-            <td class="warning">Active, not streaming (precedence too low)</td>
+            <td>Active &amp; streaming</td>
           {% else %}
-            <td class="false">Inactive</td>
+            <td class="{{ source.active|yesno:'orange,red' }}">
+              {% if source.active %}
+                Active, not streaming (precedence too low)
+              {% else %}
+                Inactive
+              {% endif %}
+            </td>
           {% endif %}
+          </td>
         </tr>
       {% endfor %}
     </tbody>
