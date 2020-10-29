@@ -23,7 +23,7 @@ class CARBAdminSite(admin.AdminSite):
         ('View server logs', '/logs/', 'common.view_logs'),
     )
     if settings.ZOOM_ENABLED:
-        nginx_proxy_views += (('Administer Zoom over VNC', '/vnc/', 'common.view_websockify'),)
+        nginx_proxy_views += (('Administer Zoom over VNC', '/zoom/vnc/', 'common.view_websockify'),)
 
     @property
     def site_title(self):
@@ -39,13 +39,14 @@ class CARBAdminSite(admin.AdminSite):
         current_url_name = resolve(request.path_info).url_name
         # Registered views
         extra_urls = [
-            (title, reverse(f'admin:{pattern.name}'))
+            # (title, url, is_external)
+            (title, reverse(f'admin:{pattern.name}'), False)
             for title, pattern, permission in self.extra_urls
             if permission is None or request.user.has_perm(permission)
         ]
         for title, url, permission in self.nginx_proxy_views:
             if request.user.has_perm(permission):
-                extra_urls.append((title, url))
+                extra_urls.append((title, url, True))
 
         context.update({
             'current_url_name': current_url_name,

@@ -1,12 +1,10 @@
 {% extends 'webui/base.html' %}
 
 {% block content %}
-<table>
-  <tr><td><strong>Username:</strong></td><td>{{ user.username }}</td></tr>
-  <tr><td><strong>Contact:</strong></td><td>&quot;{{ user.get_full_name }} &lt;{{ user.email }}&gt;&quot;</td></tr>
-  <tr><td><strong>Harbor Authorization:</strong></td><td>{{ user.harbor_auth_pretty }}</td></tr>
-  <tr><td><strong>Timezone:</strong></td><td>{{ user.get_timezone_display }} (currently {% now 'SHORT_DATETIME_FORMAT' %})</td></tr>
-</table>
+<div id="status_table">
+  {% include 'webui/status_table.html' %}
+</div>
+
 
 {% if config.GOOGLE_CALENDAR_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
   <details>

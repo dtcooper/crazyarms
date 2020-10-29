@@ -25,6 +25,7 @@ def dj_auth(username, password)
 end
 
 dj_harbor = audio_to_stereo(
+    id='dj_harbor_to_stereo',
     input.harbor(
         '/stream',
         id='dj_harbor',
@@ -34,11 +35,11 @@ dj_harbor = audio_to_stereo(
         max=10.,
     ),
 )
-ignore(output.dummy(dj_harbor, fallible=true))
+ignore(output.dummy(id='dj_harbor_dummy', dj_harbor, fallible=true))
 
 {% if settings.ZOOM_ENABLED %}
 zoom = input.pulseaudio(id='zoom')
-ignore(output.dummy(zoom))
+ignore(output.dummy(id='zoom_dummy', zoom))
 
 zoom = strip_blank(
     max_blank=15.,  # TODO: make a constance
@@ -52,20 +53,44 @@ zoom = strip_blank(
 failsafe = single(id='failsafe', '/hold-music.mp3')
 
 source_hierarchy = [
-    request.equeue(id='prerecorded'),  # TODO switch from equeue to queue? Rename id?
-    dj_harbor,
+      # TODO switch from equeue to queue? Rename id?
+    ('Prerecorded Broadcast', request.equeue(id='prerecorded')),
+    ('Live DJ', dj_harbor),
 {% if settings.ZOOM_ENABLED %}
-    zoom,
+    ('Zoom Room', zoom),
 {% endif %}
-    failsafe,
+    ('Failsafe Audio', failsafe),
 ]
+
+# To add a source, make sure it's fallible (via strip blank?) add it to `source_hierarchy'
+# list in the format of ("Pretty Name", source)
 
 ### BEGIN SECTION 2 OF CUSTOM USER SOURCE CODE ###
 {{ section2 }}
 #### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
 
-failsafe = single('/hold-music.mp3')
-radio = fallback(replay_metadata=false, track_sensitive=false, source_hierarchy)
+def transition(~source, one, two)
+    log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}')
+    two
+end
+
+server.register(usage='source_status', description='Get status of all sources', 'source_status', fun (_) -> begin
+    json_of(list.mapi(fun(i, src) ->
+        [
+            ('precedence', string_of(i + 1)), ('id', source.id(snd(src))),
+            ('name', fst(src)), ('active', string_of(source.is_ready(snd(src))))
+        ],
+        source_hierarchy,
+    ))
+end)
+
+radio = fallback(
+    id='radio',
+    replay_metadata=false,
+    track_sensitive=false,
+    transitions=list.map(fun(src) -> transition(source=snd(src)), source_hierarchy),
+    list.map(fun(src) -> snd(src), source_hierarchy),
+)
 
 ### BEGIN SECTION 3 OF CUSTOM USER SOURCE CODE ###
 {{ section3 }}

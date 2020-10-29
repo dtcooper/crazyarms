@@ -41,9 +41,9 @@
         <caption>
           <a href="{% url 'admin:app_list_extra' %}" class="section">Additional Settings</a>
         </caption>
-        {% for name, url in extra_urls %}
+        {% for name, url, is_external in extra_urls %}
           <tr{% if request.path == url %} class="current-model"{% endif %}>
-              <th scope="row"><a href="{{ url }}">{{ name }}</a></th>
+              <th scope="row"><a href="{{ url }}"{% if is_external %} target="_blank"{% endif %}>{{ name }}</a></th>
               <td></td>
               <td></td>
           </tr>

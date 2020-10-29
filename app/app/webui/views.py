@@ -1,14 +1,16 @@
 import logging
+import json
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import login, views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html
 from django.views.generic import FormView, TemplateView, UpdateView
 
@@ -17,6 +19,7 @@ from huey.exceptions import TaskLockedException
 
 from common.models import User
 from gcal.models import GoogleCalendarShowTimes
+from services.liquidsoap import harbor, LiquidsoapTelnetException
 from services.services import ZoomService
 
 from .forms import FirstRunForm, UserProfileForm
@@ -57,7 +60,12 @@ class FirstRunView(SuccessMessageMixin, FormView):
 
 
 class StatusView(LoginRequiredMixin, TemplateView):
-    template_name = 'webui/status.html'
+
+    def get_template_names(self):
+        if self.request.GET.get('table_only'):
+            return 'webui/status_table.html'
+        else:
+            return 'webui/status.html'
 
     def dispatch(self, request, *args, **kwargs):
         if not User.objects.exists():
@@ -67,11 +75,32 @@ class StatusView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         today = timezone.now().date()
+        try:
+            source_status_raw = json.loads(harbor.source_status())
+            header = list(source_status_raw[0].keys())
+            source_status = [header]
+            for row in source_status_raw:
+                source_status.append([row[k] for k in header])
+            print(source_status)
+
+        except LiquidsoapTelnetException:
+            source_status = None
+            messages.error(self.request, 'There was an error connecting to the harbor')
+
+        user = self.request.user
+        now_pretty = date_format(timezone.now(), "SHORT_DATETIME_FORMAT")
         return {
             **super().get_context_data(**kwargs),
             'title': 'Server Status',
             'show_times_range_start': today - GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MIN,
             'show_times_range_end': today + GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MAX,
+            'source_status': source_status,
+            'user_info': (
+                ('Username', user.username),
+                ('Contact', f'"{user.get_full_name()}" <{user.email}>'),
+                ('Harbor Authorization', user.harbor_auth_pretty()),
+                ('Timezone', f'{user.get_timezone_display()} (currently {now_pretty})'),
+            ),
         }
 
 

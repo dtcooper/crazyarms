@@ -28,6 +28,8 @@ RUN wget -qO /tmp/zoom.deb https://zoom.us/client/latest/zoom_amd64.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/*.deb \
     && adduser --gecos '' --disabled-password user
 
+COPY --from=msoap/shell2http /app/shell2http /usr/local/bin
+
 RUN rmdir /etc/supervisor/conf.d && ln -s /config/zoom/supervisor /etc/supervisor/conf.d
 
 ADD image/ /
