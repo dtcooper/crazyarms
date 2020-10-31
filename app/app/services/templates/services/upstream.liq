@@ -8,7 +8,7 @@ url = 'http://harbor:2817/stream'
 input = input.http(id='input', max=10., poll_delay=0.5, url)
 output.dummy(input, fallible=true)
 
-failsafe = single(id='failsafe', '/failsafe.mp3')
+failsafe = single(id='failsafe', '/assets/failsafe.mp3')
 broadcast = fallback(track_sensitive=false, [input, failsafe])
 
 output.icecast(

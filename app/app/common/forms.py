@@ -46,9 +46,12 @@ class ConstanceForm(constance_admin.ConstanceForm):
 
     def process_config_changes(self, changes):
         # TODO if we move this in ConstanceAdmin, we can send messages to the request
-        if any(change.startswith('GOOGLE_CALENDAR') for change in changes):
+        if any(change.startswith('GOOGLE_CALENDAR_') for change in changes):
             logger.info("Got GOOGLE_CALENDAR_* config change. Re-sync'ing")
             sync_google_calendar_api()
-        if any(change.startswith('ICECAST') for change in changes):
+        if any(change.startswith('ICECAST_') for change in changes):
             logger.info('Got ICECAST_* config change. Restarting upstream and icecast.')
             init_services(services=('upstream', 'icecast',), restart_services=True)
+        if any(change.startswith('HARBOR_') for change in changes):
+            logger.info('Got HARBOR_* config change. Restarting harbor.')
+            init_services(services=('harbor',), restart_services=True)

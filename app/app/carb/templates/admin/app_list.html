@@ -2,7 +2,7 @@
 
 {% if app_list or extra_urls %}
   {% for app in app_list %}
-    <div class="app-{{ app.app_label }} module{% if app.app_url in request.path %} current-app{% endif %}">
+    <div class="app-{{ app.app_label }} module{% if app.app_url in request.path or extra_url_app_label == app.app_label %} current-app{% endif %}">
       <table>
         <caption>
           <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
@@ -32,25 +32,21 @@
             {% endif %}
           </tr>
         {% endfor %}
-      </table>
-    </div>
-  {% endfor %}
-  {% if extra_urls %}
-    <div class="module{% if is_extra_url %} current-app{% endif %}">
-      <table>
-        <caption>
-          <a href="{% url 'admin:app_list_extra' %}" class="section">Additional Settings</a>
-        </caption>
-        {% for name, url, is_external in extra_urls %}
-          <tr{% if request.path == url %} class="current-model"{% endif %}>
-              <th scope="row"><a href="{{ url }}"{% if is_external %} target="_blank"{% endif %}>{{ name }}</a></th>
-              <td></td>
-              <td></td>
-          </tr>
+        {% for app_label, extra_urls in extra_urls %}
+          {# this is a hack since it loops every time, but the list is small #}
+          {% if app_label == app.app_label %}
+            {% for name, url, is_external in extra_urls %}
+              <tr{% if request.path == url %} class="current-model"{% endif %}>
+                  <th scope="row"><a href="{{ url }}"{% if is_external %} target="_blank"{% endif %}>{{ name }}</a></th>
+                  <td></td>
+                  <td></td>
+              </tr>
+            {% endfor %}
+          {% endif %}
         {% endfor %}
       </table>
     </div>
-  {% endif %}
+  {% endfor %}
 {% else %}
   <p>{% translate 'You don’t have permission to view or edit anything.' %}</p>
 {% endif %}

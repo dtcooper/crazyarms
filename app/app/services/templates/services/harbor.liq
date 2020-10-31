@@ -54,15 +54,7 @@ end
 
 dj_harbor = audio_to_stereo(
     id='dj_harbor_to_stereo',
-    input.harbor(
-        '/stream',
-        id='dj_harbor',
-        port=8001,
-        auth=dj_auth,
-        buffer=BUFFER,
-        max=MAX,
-    ),
-)
+    input.harbor('/stream', id='dj_harbor', port=8001, auth=dj_auth, buffer=BUFFER, max=MAX))
 ignore(output.dummy(id='dj_harbor_dummy', dj_harbor, fallible=true))
 
 {% if settings.ZOOM_ENABLED %}
@@ -81,7 +73,7 @@ zoom = strip_blank(
 prerecord = request.equeue(id='prerecord')
 add_skip_command(prerecord)
 
-failsafe = single(id='failsafe', '/hold-music.mp3')
+failsafe = single(id='failsafe', '/assets/hold-music.mp3')
 
 source_hierarchy = [
       # TODO switch from equeue to queue? Rename id?
@@ -109,9 +101,14 @@ source_hierarchy = [
 {{ section2 }}
 #### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
 
+swoosh = single('/assets/transition.mp3')
 def transition(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}')
-    two
+    add(normalize=false, if TRANSITION_WITH_SWOOSH then
+        [fade.final(duration=2.5, one), once(swoosh),  two]
+    else
+        [fade.final(duration=2.5, one), two]
+    end)
 end
 
 server.register(usage='source_status', description='Get status of all sources', 'source_status', fun (_) -> begin

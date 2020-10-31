@@ -95,6 +95,7 @@ class HarborService(ServiceBase):
     def render_conf(self):
         self.render_conf_file('harbor.vars.liq', context={'vars': {
             'SECRET_KEY': settings.SECRET_KEY,
+            'TRANSITION_WITH_SWOOSH': config.HARBOR_TRANSITION_WITH_SWOOSH,
         }})
         self.render_conf_file('harbor.liq', context=cache.get('harbor-custom-config'))
         kwargs = {'environment': 'HOME="/tmp/pulse"', 'user': 'liquidsoap'}
