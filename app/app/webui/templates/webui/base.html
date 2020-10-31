@@ -4,7 +4,7 @@
   {% load static %}
 
   <meta charset="utf-8">
-  <title>{% block title %}{% if title %}{{ title }} - {% endif %}{{ station_name_override|default:config.STATION_NAME }}{% endblock %}</title>
+  <title>{% block title %}{% if title %}{{ title|title }} - {% endif %}{{ station_name_override|default:config.STATION_NAME|title }}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{% static 'webui/css/new.min.css' %}">
   <link rel="stylesheet" href="{% static 'webui/css/base.css' %}">
@@ -15,9 +15,9 @@
   {% block header %}
     <header>
       <h1>
-        {{ station_name_override|default:config.STATION_NAME }}
+        {{ station_name_override|default:config.STATION_NAME|title }}
         {% if title %}
-          <br><em><small>{{ title }}</small></em>
+          <br><em><small>{{ title|title }}</small></em>
         {% endif %}
       </h1>
       {% if not hide_nav %}
@@ -55,5 +55,17 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+
+  <hr>
+
+  <footer>
+    <p class="center-text">
+      <small>
+        {% now 'Y' as year %}
+        <a href="https://github.com/dtcooper/carb" target="_blank">Crazy Arms Radio Backend</a>
+        &copy; 2020{% if year > '2020' %}-{{ year }}{% endif %} David Cooper
+      </small>
+    </p>
+  </footer>
 </body>
 </html>

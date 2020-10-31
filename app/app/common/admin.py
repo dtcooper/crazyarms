@@ -1,3 +1,5 @@
+from functools import wraps
+
 from django.contrib import admin, messages
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group
@@ -7,6 +9,20 @@ from constance import admin as constance_admin
 
 from .forms import ConstanceForm
 from .models import User
+
+
+def swap_title_fields(method):
+    @wraps(method)
+    def swapped(self, *args, **kwargs):
+        fields = list(method(self, *args, **kwargs))
+        try:
+            title_index = fields.index('title')
+        except ValueError:
+            pass
+        else:
+            fields[title_index:title_index + 1] = self.model.TITLE_FIELDS
+        return fields
+    return swapped
 
 
 class AssetAdminBase(admin.ModelAdmin):
@@ -23,6 +39,7 @@ class AssetAdminBase(admin.ModelAdmin):
     class Media:
         js = ('common/admin/js/asset_source.js',)
 
+    @swap_title_fields
     def get_fields(self, request, obj=None):
         if obj is None:
             return self.add_fields
@@ -34,8 +51,17 @@ class AssetAdminBase(admin.ModelAdmin):
                     fields.remove(field)
             return fields
 
+    @swap_title_fields
     def get_readonly_fields(self, request, obj=None):
         return self.add_readonly_fields if obj is None else self.change_readonly_field
+
+    @swap_title_fields
+    def get_list_display(self, request):
+        return self.list_display
+
+    @swap_title_fields
+    def get_search_fields(self, request):
+        return self.search_fields
 
     def get_form(self, request, obj=None, **kwargs):
         if obj is None:

@@ -1,7 +1,10 @@
 {% extends 'webui/form.html' %}
 
 {% block content %}
+<p>Enter your username and password to log into {{ config.STATION_NAME }}'s backend.</p>
+
 {{ block.super }}
+
 {% if settings.EMAIL_ENABLED %}
   <p>If you have forgotten your password, <a href="{% url 'admin_password_reset' %}">click here</a> to reset it.</p>
 {% endif %}

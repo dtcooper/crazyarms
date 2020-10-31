@@ -127,6 +127,8 @@ class User(AbstractUser):
 
 
 class AudioAssetBase(TimestampedModel):
+    TITLE_FIELDS = ('title',)
+
     class Status(models.TextChoices):
         PENDING = '-', 'upload pending'
         UPLOADED = 'u', 'uploaded'
@@ -161,17 +163,22 @@ class AudioAssetBase(TimestampedModel):
         else:
             return self.file.path
 
-    def set_title_from_exiftool(self):
-        title = None
+    def set_fields_from_exiftool(self):
         cmd = subprocess.run(['exiftool', '-json', self.file_path], capture_output=True)
+
         if cmd.returncode == 0:
-            exif = json.loads(cmd.stdout)[0]
-            title = ' - '.join(filter(None, (exif.get('Artist'), exif.get('Title'))))
+            exif_data = json.loads(cmd.stdout)[0]
+            fields = {field_name: exif_data.get(field_name.title(), '') for field_name in self.TITLE_FIELDS}
+            # Special case if there's no artist field, update title to be "artist - title"
+            if not fields['title'] and 'artist' not in self.TITLE_FIELDS:
+                fields['title'] = ' - '.join(filter(None, (exif_data.get('Artist'), self.title)))
 
-        if not title:
-            title = os.path.splitext(os.path.basename(self.file.name))[0].replace('_', ' ')
+            for field_name, value in fields.items():
+                if not getattr(self, field_name):
+                    setattr(self, field_name, value)
 
-        self.title = title
+        if not self.title:
+            self.title = os.path.splitext(os.path.basename(self.file.name))[0].replace('_', ' ')
 
     def set_duration_from_ffprobe(self):
         cmd = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of',
@@ -181,10 +188,10 @@ class AudioAssetBase(TimestampedModel):
 
     def save(self, *args, **kwargs):
         if self.file:
-            if not self.title:
-                self.set_title_from_exiftool()
+            self.set_fields_from_exiftool()
             if self.duration == datetime.timedelta(0):
                 self.set_duration_from_ffprobe()
+            self.status = self.Status.UPLOADED
         super().save(*args, **kwargs)
 
     @after_db_commit
@@ -197,9 +204,7 @@ class AudioAssetBase(TimestampedModel):
         model_cls.objects.filter(id=self.id, status=model_cls.Status.PENDING).update(status=model_cls.Status.QUEUED)
 
     def __str__(self):
-        # TODO: work with album + artist
-        # ' - '.join(filter(None, (getattr(self, 'artist', None), getattr(self, 'album', None), self.title)))
-        title = self.title
+        s = ' - '.join(filter(None, (getattr(self, field_name, None) for field_name in self.TITLE_FIELDS)))
         if self.duration != datetime.timedelta(0):
-            title = f'{title} [{self.duration}]'
-        return title
+            s = f'{s} [{self.duration}]'
+        return s

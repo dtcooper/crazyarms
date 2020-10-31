@@ -1,20 +1,20 @@
 {% extends 'webui/base.html' %}
 
 {% block content %}
+{% if form %}
+  {% if form_description %}
+    <p>{{ form_description }}</p>
+  {% endif %}
 
-{% if form_description %}
-  <p>{{ form_description }}</p>
+  <form method="post">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+    </table>
+    <p>
+      <button type="submit">{{ submit_text|default:'Submit' }}</button>
+      <button type="reset">Reset Form</button>
+    </p>
+  </form>
 {% endif %}
-
-<form method="post">
-  {% csrf_token %}
-  <table>
-    {{ form.as_table }}
-  </table>
-  <p>
-    <button type="submit">{{ submit_text|default:'Submit' }}</button>
-    <button type="reset">Reset Form</button>
-  </p>
-</form>
-</form>
 {% endblock %}

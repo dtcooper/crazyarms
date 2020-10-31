@@ -28,3 +28,5 @@ input[type=text], input[type=password], input[type=email] {
 .error, .red, .errorlist { color: red; }
 .error, .bold { font-weight: bold; }
 .success, .green { color: #33e980; }
+
+.center-text { text-align: center; }

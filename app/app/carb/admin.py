@@ -50,7 +50,6 @@ class CARBAdminSite(admin.AdminSite):
         for _, app_label, pattern, _ in self.extra_urls:
             if current_url_name == pattern.name:
                 extra_url_app_label = app_label
-        print(extra_url_app_label)
 
         context.update({
             'current_url_name': current_url_name,

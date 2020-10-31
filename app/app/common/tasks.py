@@ -1,5 +1,6 @@
 import logging
 import os
+import shlex
 import shutil
 import subprocess
 import time
@@ -15,6 +16,8 @@ from huey.contrib import djhuey
 
 
 logger = logging.getLogger(f'carb.{__name__}')
+YDL_PKG = 'https://github.com/blackjack4494/yt-dlc/archive/master.zip'
+YDL_CMD = 'youtube-dlc'
 
 
 @djhuey.db_task(context=True, retries=3, retry_delay=5)
@@ -24,20 +27,21 @@ def asset_download_external_url(asset, url, title='', task=None):
 
     try:
         # Upgrade / install youtube-dl once per day
-        if not cache.get('ydl:up2date') or not shutil.which('youtube-dl'):
-            logger.info('youtube-dl not updated in last 24 hours. Updating.')
-            subprocess.run(['pip', 'install', '--upgrade', 'youtube-dl'], check=True,
+        if not cache.get('ydl:up2date') or not shutil.which(YDL_CMD):
+            logger.info('youtube-dl: not updated in last 24 hours. Updating.')
+            subprocess.run(['pip', 'install', '--upgrade', YDL_PKG], check=True,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             cache.set('ydl:up2date', True, timeout=60 * 60 * 24)
 
-        logger.info(f'Running youtube-dl for {url}')
-        args = ['youtube-dl', '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
+        args = [YDL_CMD, '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
                 config.EXTERNAL_ASSET_ENCODING, '--output', f'{settings.MEDIA_ROOT}/external/%(title)s.%(ext)s',
-                '--no-continue', '--exec', 'echo {}']
+                '--no-continue', '--add-metadata', '--exec', 'echo {}']
         if config.EXTERNAL_ASSET_ENCODING != 'flac':
             args += ['--audio-quality', config.EXTERNAL_ASSET_BITRATE]
 
-        cmd = subprocess.Popen(args + ['--', url], stdout=subprocess.PIPE, text=True)
+        args += ['--', url]
+        logger.info(f'youtube-dl: running: {shlex.join(args)}')
+        cmd = subprocess.Popen(args, stdout=subprocess.PIPE, text=True)
 
         # log progress to cache for UI + logger
         last_dl_log_time = 0.0
@@ -57,7 +61,7 @@ def asset_download_external_url(asset, url, title='', task=None):
             asset.file = line.removeprefix(f'{settings.MEDIA_ROOT}/')
             asset.status = asset_cls.Status.UPLOADED
             asset.save()
-            logger.info(f'{url} successfully downloaded to {line}')
+            logger.info(f'youtube-dl: {url} successfully downloaded to {line}')
 
         else:
             raise Exception(f'youtube-dl reported downloaded file {line!r}, but it does not exist!')

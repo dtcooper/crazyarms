@@ -158,7 +158,7 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
     success_url = reverse_lazy('status')
     template_name = 'webui/form.html'
-    title = 'Change Password'
+    title = 'Change Your Password'
     success_message = 'Your password was successfully changed'
 
     def __init__(self):

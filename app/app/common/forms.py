@@ -32,7 +32,9 @@ class AudioAssetCreateFormBase(forms.ModelForm):
         if cleaned_data['source'] == 'url':
             if not cleaned_data['url']:
                 self.add_error('url', 'This field is required.')
-                return
+        else:
+            if not cleaned_data['file']:
+                self.add_error('file', 'This field is required.')
 
 
 class ConstanceForm(constance_admin.ConstanceForm):
