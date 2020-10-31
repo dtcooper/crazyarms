@@ -23,6 +23,9 @@ class CARBAdminSite(admin.AdminSite):
     nginx_proxy_views = (('View server logs', 'constance', '/logs/', 'common.view_logs'),)
     if settings.ZOOM_ENABLED:
         nginx_proxy_views += (('Administer Zoom over VNC', 'constance', '/zoom/vnc/', 'common.view_websockify'),)
+    if settings.HARBOR_TELNET_ENABLED:
+        nginx_proxy_views += (('Liquidsoap harbor telnet (experimental)', 'constance',
+                               '/sshwifty#+Telnet:harbor:1234%7Cutf-8', 'common.view_sshwifty'),)
 
     @property
     def site_title(self):

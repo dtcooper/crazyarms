@@ -212,8 +212,8 @@ if [ "$1" = '--force-all-services' ]; then
 fi
 
 # Enable compose files for services
-for CONF in https icecast zoom email; do
-    CONF_VAR="$(echo "$CONF" | awk '{ print toupper($0) }')_ENABLED"
+for CONF in https icecast zoom email harbor-telnet; do
+    CONF_VAR="$(echo "$CONF" | LC_CTYPE=C tr '[:lower:]-' '[:upper:]_')_ENABLED"
     CONF_VAL="${!CONF_VAR}"
     if [ "$CONF_VAL" -a "$CONF_VAL" != '0' -o "$ALL_SERVICES" ]; then
         COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/$CONF.yml"

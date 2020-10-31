@@ -15,6 +15,7 @@ DEBUG = env.bool('DEBUG', default=False)
 ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
 ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
+HARBOR_TELNET_ENABLED = env.bool('HARBOR_TELNET_ENABLED', default=False)
 DOMAIN_NAME = env('DOMAIN_NAME')
 
 ALLOWED_HOSTS = ['app']
