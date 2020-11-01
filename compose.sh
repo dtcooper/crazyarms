@@ -153,7 +153,7 @@ FIRST_RUN=
 if [ ! -f .env ]; then
     FIRST_RUN=1
     cp .default.env .env
-elif [ "$1" = '--force-first-run' ]; then
+elif [ "$1" = '--first-run' ]; then
     FIRST_RUN=1
     shift 1
 fi
@@ -206,7 +206,7 @@ source .env
 
 COMPOSE_ARGS='--env-file .env --project-directory . -f docker-compose/base.yml'
 ALL_SERVICES=
-if [ "$1" = '--force-all-services' ]; then
+if [ "$1" = '--all-services' ]; then
     ALL_SERVICES=1
     shift 1
 fi
