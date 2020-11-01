@@ -10,6 +10,8 @@ from django.template.loader import get_template
 
 from constance import config
 
+from carb import constants
+
 
 logger = logging.getLogger(f'carb.{__name__}')
 
@@ -33,7 +35,7 @@ class ServiceBase:
         if cmd.returncode != 0:
             logger.warning(f'supervisorctl exited with {cmd.returncode}')
 
-        stdout, stderr = cmd.stdout.strip(), cmd.stderr.strip()
+        stdout, stderr = (' / '.join(s.strip().splitlines()) for s in (cmd.stdout, cmd.stderr))
         if stderr:
             logger.warning(f'supervisorctl error output: {stderr}')
         if stdout:
@@ -97,7 +99,7 @@ class HarborService(ServiceBase):
             'SECRET_KEY': settings.SECRET_KEY,
             'TRANSITION_WITH_SWOOSH': config.HARBOR_TRANSITION_WITH_SWOOSH,
         }})
-        self.render_conf_file('harbor.liq', context=cache.get('harbor-custom-config'))
+        self.render_conf_file('harbor.liq', context=cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT))
         kwargs = {'environment': 'HOME="/tmp/pulse"', 'user': 'liquidsoap'}
 
         liq_cmd = 'liquidsoap /config/harbor/harbor.liq'

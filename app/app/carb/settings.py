@@ -129,7 +129,8 @@ CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': 'redis://redis',
-        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient'},
+        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                    'CONNECTION_POOL_KWARGS': {'max_connections': 10}},
         'KEY_PREFIX': 'cache'
     }
 }
@@ -157,7 +158,8 @@ MEDIA_ROOT = '/media_root'
 HUEY = {
     'name': 'carb',
     'immediate': False,
-    'connection_pool': ConnectionPool(host='redis', max_connections=10),
+    'connection': {'host': 'redis'},
+    # 'connection_pool': ConnectionPool(host='redis', max_connections=5),
 }
 
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'

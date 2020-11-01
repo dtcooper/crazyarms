@@ -1,3 +1,4 @@
+# Django + Huey app
 argh
 dateutils
 django-cleanup
@@ -16,3 +17,8 @@ python-dotenv
 pyyaml
 supervisor
 watchdog
+
+# sse server
+aiohttp
+aiohttp-sse
+aioredis

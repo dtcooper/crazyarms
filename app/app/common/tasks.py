@@ -14,6 +14,8 @@ from django.utils import timezone
 from constance import config
 from huey.contrib import djhuey
 
+from carb import constants
+
 
 logger = logging.getLogger(f'carb.{__name__}')
 YDL_PKG = 'https://github.com/blackjack4494/yt-dlc/archive/master.zip'
@@ -27,11 +29,11 @@ def asset_download_external_url(asset, url, title='', task=None):
 
     try:
         # Upgrade / install youtube-dl once per day
-        if not cache.get('ydl:up2date') or not shutil.which(YDL_CMD):
+        if not cache.get(constants.CACHE_KEY_YTDL_UP2DATE) or not shutil.which(YDL_CMD):
             logger.info('youtube-dl: not updated in last 24 hours. Updating.')
             subprocess.run(['pip', 'install', '--upgrade', YDL_PKG], check=True,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            cache.set('ydl:up2date', True, timeout=60 * 60 * 24)
+            cache.set(constants.CACHE_KEY_YTDL_UP2DATE, True, timeout=60 * 60 * 24)
 
         args = [YDL_CMD, '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
                 config.EXTERNAL_ASSET_ENCODING, '--output', f'{settings.MEDIA_ROOT}/external/%(title)s.%(ext)s',
@@ -49,7 +51,7 @@ def asset_download_external_url(asset, url, title='', task=None):
             line = line.removesuffix('\n')
             if not line.startswith('[download]') or (time.time() - last_dl_log_time >= 2.5):
                 logger.info(f'youtube-dl: {line}')
-                cache.set(f'ydl-log:{task.id}', line)
+                cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG}:{task.id}', line)
                 last_dl_log_time = time.time()
 
         return_code = cmd.wait()

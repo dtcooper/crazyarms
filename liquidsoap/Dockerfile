@@ -13,6 +13,7 @@ RUN apt-get update \
         pulseaudio \
         python3 \
         python3-pip \
+        redis-tools \
         sox \
         supervisor \
         wget \

@@ -1,0 +1,14 @@
+services:
+  nginx:
+    depends_on:
+      - harbor-telnet
+
+  harbor-telnet:
+    container_name: harbor-telnet
+    image: niruix/sshwifty:latest
+    restart: always
+    environment:
+      SSHWIFTY_ONLYALLOWPRESETREMOTES: "true"
+      SSHWIFTY_PRESETS: '[{"Title": "Harbor Telnet", "Type": "Telnet", "Host": "harbor:1234"}]'
+    ports:
+      - "8182:8182"

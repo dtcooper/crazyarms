@@ -47,32 +47,40 @@ a DJ is authorized to play. Simple as that.
 This is implemented with Zoom for Linux using a Docker container, so it's
 inherently a bit brittle, but can be troubleshooted in a web browser by an admin.
 
-1. _Idiot tolerant DJing._
-   * If a live DJ is broadcasting silence, Crazy Arms picks
+###. _Idiot tolerant DJing._
 
-1. Completely [Docker](https://www.docker.com/)-ized for easy development and
-   easy deployment.
+If a live DJ is broadcasting silence, Crazy Arms picks another input to stream
+from.
 
-1. Precedence-based streaming.
+### Completely [Docker](https://www.docker.com/)-ized
 
-1. Useful and informative station administration and status tools.
+Easy development and easy deployment.
 
-1. Uploading of audio files from sources like [SoundCloud](https://soundcloud.com/),
-   [Mixcloud](https://www.mixcloud.com/), and [YouTube](https://www.youtube.com/).
-   Just enter a URL and the Crazy Arms downloads and processes your audio file.
-   * This utilizes the wonderful [youtube-dlc](https://github.com/blackjack4494/yt-dlc)
-     tool and supports literally [_thousands of sites_](
-        https://github.com/blackjack4494/yt-dlc/blob/master/docs/supportedsites.md)!
+### Precedence-based streaming
 
-1. An AutoDJ that plays blocks of advertisements and station IDs.
+### Useful and informative station administration and status tools.
 
-1. Fine-grained user permission structure.
+### Uploading audio from varied sources
 
-1. Ability for less technical users to see server logs without `ssh` or
-   command-line knowledge.
+Uploading of audio files from sources like [SoundCloud](https://soundcloud.com/),
+[Mixcloud](https://www.mixcloud.com/), or [YouTube](https://www.youtube.com/) are
+supported. Just enter a URL and the Crazy Arms downloads and processes your audio file.
 
-1. Customization of [Liquidsoap](https://www.liquidsoap.info/) broadcasting
-   scripts.
+This utilizes the wonderful [youtube-dlc](https://github.com/blackjack4494/yt-dlc)
+tool and supports literally
+[_thousands of sites_](https://github.com/blackjack4494/yt-dlc/blob/master/docs/supportedsites.md)!
+
+### An AutoDJ that plays blocks of advertisements and station IDs.
+
+### Fine-grained user permission structure.
+
+### Accessible Logs
+
+Less technical users can see server logs without `ssh` or command-line knowledge.
+
+### Streaming Customization
+At your own risk, you can modify [Liquidsoap](https://www.liquidsoap.info/)
+broadcasting scripts.
 
 
 ## TODOs

@@ -2,6 +2,7 @@ set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
+set('scheduler.fast_queues', 1)
 
 # Safely rendered environment variables based on configuration.
 %include "harbor.vars.liq"
@@ -10,6 +11,9 @@ BUFFER = 5.
 MAX = 10.
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://app:8000/api/'
+SSE_MESSAGE_URL = 'http://sse:8000/message'
+REDIS_KEY = 'liquidsoap:source-status'
+
 
 def json_of_mixed(~strs=[], ~bools=[], ~ints=[])
     json = [json_of(strs), json_of(bools), json_of(ints)]
@@ -101,26 +105,48 @@ source_hierarchy = [
 {{ section2 }}
 #### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
 
+# Server status stuff
+def status_json()
+    active_sources = list.filter(fun(src) -> source.is_ready(snd(src)), source_hierarchy)
+    streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(snd(src)), active_sources))
+    '[' ^ string.concat(separator=', ', list.mapi(fun(i, src) -> begin
+        source = snd(src)
+        source_id = source.id(source)
+        json_of_mixed(strs=[('id', source_id), ('name', fst(src))], ints=[('precedence', i + 1)],
+                      bools=[('active', source.is_ready(source)), ('current_stream', streaming_source_id == source_id)])
+    end, source_hierarchy)) ^ ']'
+end
+server.register(usage='status', description='Get status of sources', 'status', fun(_) -> status_json())
+
+def update_status()
+    add_timeout(0.25, fun() -> begin
+        status = status_json()
+        cmd = "redis-cli -h redis set 'liquidsoap:status' #{string.quote(status)}"
+        log('update_status(): updating redis key: #{REDIS_KEY} (step 1/2)')
+        if not test_process(cmd) then
+            log('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd})')
+        end
+        log('update_status(): hitting sse service (step 2/2)')
+        let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=status)
+        if status_code != 204 then
+            log('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
+        end
+        -1.
+    end)
+end
+update_status()
+
+# Radio playout
 swoosh = single('/assets/transition.mp3')
 def transition(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}')
+    update_status()
     add(normalize=false, if TRANSITION_WITH_SWOOSH then
         [fade.final(duration=2.5, one), once(swoosh),  two]
     else
         [fade.final(duration=2.5, one), two]
     end)
 end
-
-server.register(usage='source_status', description='Get status of all sources', 'source_status', fun (_) -> begin
-    active_sources = list.filter(fun(src) -> source.is_ready(snd(src)), source_hierarchy)
-    current_source = list.hd(default='unknown', list.map(fun(src) -> source.id(snd(src)), active_sources))
-    sources_json = '[' ^ string.concat(separator=', ', list.mapi(fun(i, src) -> json_of_mixed(
-        strs=[('id', source.id(snd(src))), ('name', fst(src))],
-        ints=[('precedence', i + 1)],
-        bools=[('active', source.is_ready(snd(src)))]),
-    source_hierarchy)) ^ ']'
-    '{"sources": #{sources_json}, "active_source": #{json_of(current_source)}}'
-end)
 
 radio = fallback(
     id='radio',

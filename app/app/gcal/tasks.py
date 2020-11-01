@@ -8,6 +8,8 @@ from django.utils import timezone
 from constance import config
 from huey.contrib import djhuey
 
+from carb import constants
+
 from .models import GoogleCalendarShowTimes
 
 
@@ -37,9 +39,9 @@ def sync_google_calendar_api():
         try:
             GoogleCalendarShowTimes.sync_api()
         except Exception:
-            cache.set('gcal:last-sync', "failed, please check your settings and try again.", timeout=None)
+            cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, "failed, please check your settings and try again.", timeout=None)
             raise
         else:
-            cache.set('gcal:last-sync', timezone.now(), timeout=None)
+            cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, timezone.now(), timeout=None)
     else:
         logger.info('Synchronization with Google Calendar API disabled by config')

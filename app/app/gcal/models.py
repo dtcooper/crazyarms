@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from constance import config
 
+from carb import constants
 from common.models import TimestampedModel, User
 
 
@@ -37,7 +38,7 @@ class GoogleCalendarShowTimes(TimestampedModel):
 
     @classmethod
     def get_last_sync(self):
-        return cache.get('gcal:last-sync')
+        return cache.get(constants.CACHE_KEY_GCAL_LAST_SYNC)
 
     @classmethod
     def sync_api(cls):

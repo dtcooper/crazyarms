@@ -4,6 +4,10 @@ if [ "$RUN_HUEY" ]; then
     __RUN_HUEY=1
 fi
 
+if [ "$RUN_SSE" ]; then
+    __RUN_SSE=1
+fi
+
 source /.env
 
 if [ "$#" = 0 ]; then
@@ -13,10 +17,12 @@ if [ "$#" = 0 ]; then
         fi
         CMD="./manage.py run_huey --workers $HUEY_WORKERS --flush-locks"
         if [ "$DEBUG" -a "$DEBUG" != '0' ]; then
-            watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- $CMD
+            exec watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- $CMD
         else
-            $CMD
+            exec $CMD
         fi
+    elif [ "${__RUN_SSE}" ]; then
+        exec gunicorn --worker-class aiohttp.GunicornWebWorker -b 0.0.0.0:8000 --graceful-timeout 2 --capture-output --access-logfile - sse_server
     else
         wait-for-it -t 0 db:5432
         ./manage.py migrate
@@ -31,7 +37,7 @@ if [ "$#" = 0 ]; then
                 GUNICORN_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() * 2 + 1, 3))')"
             fi
 
-            exec gunicorn $GUNICORN_ARGS -b 0.0.0.0:8000 -w $GUNICORN_WORKERS --access-logfile - carb.wsgi
+            exec gunicorn $GUNICORN_ARGS -b 0.0.0.0:8000 -w $GUNICORN_WORKERS --capture-output --access-logfile - carb.wsgi
         fi
     fi
 else

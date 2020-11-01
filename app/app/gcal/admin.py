@@ -14,6 +14,8 @@ from django.utils.safestring import mark_safe
 
 from constance import config
 
+from carb import constants
+
 from .models import GoogleCalendarShowTimes
 from .tasks import sync_google_calendar_api
 
@@ -77,7 +79,7 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
         if not self.has_view_permission(request):
             raise PermissionDenied
 
-        cache.set('gcal:last-sync', 'currently running', timeout=None)
+        cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, 'currently running', timeout=None)
         sync_google_calendar_api()
         messages.add_message(request, messages.INFO,
                              "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")

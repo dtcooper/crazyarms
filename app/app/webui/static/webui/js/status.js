@@ -1,9 +1,14 @@
-function refreshStatus() {
-    $.get(statusURL + '?table_only=1', function(html) {
-        $('#status-table').html((new Date()) + '<br>' + html)
-    })
-}
-
 $(function() {
-    setInterval(refreshStatus, 2500)
-});
+    var template =  Handlebars.compile($('#liquidsoap-status-template').html())
+    var $status = $('#liquidsoap-status')
+
+    function updateTemplate(data) {
+        $status.html(template(JSON.parse(data)))
+    }
+    updateTemplate($('#liquidsoap-status-json').text())
+
+    var eventSource = new EventSource('sse')
+    eventSource.onmessage = function(e) {
+        updateTemplate(e.data)
+    }
+})

@@ -22,6 +22,10 @@ upstream logs {
     server logs:8080;
 }
 
+upstream sse {
+    server sse:8000;
+}
+
 {% if ZOOM_ENABLED|int %}
     upstream zoom {
         server zoom:6080;
@@ -71,6 +75,15 @@ server {
     location /protected/logs/ {
         internal;
         proxy_pass http://logs/logs/;
+        proxy_buffering off;
+        proxy_cache off;
+    }
+
+    # Use = sign here to ONLY allow base URL to be accessed by X-Accel-Redirect,
+    # which means a logged in user can't send a message.
+    location = /protected/sse {
+        internal;
+        proxy_pass http://sse/;
         proxy_buffering off;
         proxy_cache off;
     }

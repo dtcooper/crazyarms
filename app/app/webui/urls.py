@@ -13,5 +13,5 @@ urlpatterns = [
         template_name='webui/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('change-password/', views.PasswordChangeView.as_view(), name='password_change'),
-    re_path('^(?P<module>logs|websockify|sshwifty)', views.nginx_protected, name='nginx_protected'),
+    re_path('^(?P<module>logs|websockify|sshwifty|sse)', views.nginx_protected, name='nginx_protected'),
 ]

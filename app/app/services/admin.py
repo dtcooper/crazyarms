@@ -7,6 +7,8 @@ from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 from django.views.generic import FormView
 
+from carb import constants
+
 from .forms import HarborCustomConfigForm, UpstreamServerForm
 from .models import UpstreamServer
 from .services import init_services, HarborService
@@ -21,13 +23,13 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
 
     def get_initial(self):
         initial = super().get_initial()
-        custom_config = cache.get('harbor-custom-config')
+        custom_config = cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT)
         if isinstance(custom_config, dict):
             initial.update(custom_config)
         return initial
 
     def form_valid(self, form):
-        previous_custom_config = cache.get('harbor-custom-config')
+        previous_custom_config = cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT)
         custom_config = form.cleaned_data
         if (
             previous_custom_config == custom_config
@@ -36,7 +38,7 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
             messages.warning(self.request, 'No change in Liquidsoap source code detected. Doing nothing.')
 
         else:
-            cache.set('harbor-custom-config', custom_config, timeout=None)
+            cache.set(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT, custom_config, timeout=None)
             init_services(services=('harbor',), restart_services=True)
             messages.success(self.request, 'Liquidsoap source code changed. Harbor was restarted.')
 

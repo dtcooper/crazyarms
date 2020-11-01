@@ -20,6 +20,8 @@ from django.utils import timezone
 
 from constance import config
 
+from carb import constants
+
 
 logger = logging.getLogger(f'carb.{__name__}')
 
@@ -154,7 +156,7 @@ class AudioAssetBase(TimestampedModel):
         # This is cached for the lifetime of the object so it isn't read twice with different values
         # by admin
         if self.status == self.Status.RUNNING:
-            return cache.get(f'ydl-log:{self.task_id}')
+            return cache.get(f'{constants.CACHE_KEY_YTDL_TASK_LOG}:{self.task_id}')
 
     @property
     def file_path(self):

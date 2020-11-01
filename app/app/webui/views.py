@@ -12,14 +12,16 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import format_html
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, TemplateView, UpdateView
 
+from django_redis import get_redis_connection
 from huey.contrib.djhuey import lock_task
 from huey.exceptions import TaskLockedException
 
 from common.models import User
 from gcal.models import GoogleCalendarShowTimes
-from services.liquidsoap import harbor, LiquidsoapTelnetException
+from services.liquidsoap import harbor
 from services.services import ZoomService
 
 from .forms import FirstRunForm, UserProfileForm
@@ -60,11 +62,7 @@ class FirstRunView(SuccessMessageMixin, FormView):
 
 
 class StatusView(LoginRequiredMixin, TemplateView):
-    def get_template_names(self):
-        if self.request.GET.get('table_only'):
-            return 'webui/status_table.html'
-        else:
-            return 'webui/status.html'
+    template_name = 'webui/status.html'
 
     def dispatch(self, request, *args, **kwargs):
         if not User.objects.exists():
@@ -74,21 +72,17 @@ class StatusView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         today = timezone.now().date()
-        try:
-            source_status = json.loads(harbor.source_status())
-        except LiquidsoapTelnetException:
-            source_status = None
-            if not self.request.GET.get('table_only'):
-                messages.error(self.request, 'There was an error connecting to the harbor')
-
         user = self.request.user
         now_pretty = date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")
+
+        redis = get_redis_connection()
+        liquidsoap_status = redis.get('liquidsoap:status')
         return {
             **super().get_context_data(**kwargs),
             'title': 'Server Status',
             'show_times_range_start': today - GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MIN,
             'show_times_range_end': today + GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MAX,
-            'source_status': source_status,
+            'liquidsoap_status': json.loads(liquidsoap_status) if liquidsoap_status else False,
             'user_info': (
                 ('Username', user.username),
                 ('Contact', f'"{user.get_full_name()}" <{user.email}>'),
@@ -165,8 +159,14 @@ class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
         super().__init__(extra_context={'submit_text': 'Change Password'})
 
 
+@csrf_exempt
 def nginx_protected(request, module):
-    if request.user.has_perm(f'common.view_{module}'):
+    if module == 'sse':
+        has_perm = request.user.is_authenticated
+    else:
+        has_perm = request.user.has_perm(f'common.view_{module}')
+
+    if has_perm:
         logger.info(f'allowing {request.user} access to module: {module}')
         response = HttpResponse()
         response['X-Accel-Redirect'] = f'/protected{request.get_full_path()}'
