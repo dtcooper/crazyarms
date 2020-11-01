@@ -1,5 +1,6 @@
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group
@@ -127,13 +128,19 @@ class UserAdmin(auth_admin.UserAdmin):
     class Media:
         js = ('common/admin/js/harbor_auth.js',)
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        if not config.GOOGLE_CALENDAR_ENABLED:
-            harbor_auth_field = form.base_fields['harbor_auth']
-            harbor_auth_field.choices = list(filter(lambda c: c[0] != User.HarborAuth.GOOGLE_CALENDAR,
-                                                    harbor_auth_field.choices))
-        return form
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if not config.GOOGLE_CALENDAR_ENABLED and db_field.name == 'harbor_auth':
+            kwargs['choices'] = list(filter(lambda c: c[0] != User.HarborAuth.GOOGLE_CALENDAR, User.HarborAuth.choices))
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        queryset = Group.objects.order_by('name')
+        if not settings.ZOOM_ENABLED and db_field.name == 'groups':
+            queryset = queryset.exclude(permissions__codename='view_websockify')
+        if not settings.HARBOR_TELNET_ENABLED and db_field.name == 'groups':
+            queryset = queryset.exclude(permissions__codename='view_sshwifty')
+        kwargs['queryset'] = queryset
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 class ConstanceAdmin(constance_admin.ConstanceAdmin):
