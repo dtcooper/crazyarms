@@ -14,7 +14,7 @@ from .models import UpstreamServer
 from .services import init_services, HarborService
 
 
-@admin.site.register_view(route='harbor-custom-config/', app_label='services', title='Liquidsoap Harbor Source Code')
+@admin.site.register_view(route='harbor-custom-config/', title='Liquidsoap harbor source code')
 class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRequiredMixin, FormView):
     form_class = HarborCustomConfigForm
     template_name = 'admin/services/harbor_custom_config.html'

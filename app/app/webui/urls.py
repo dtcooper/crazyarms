@@ -4,7 +4,9 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
-    path('', views.StatusView.as_view(), name='status'),
+    re_path('^(?:|status/)$', views.StatusView.as_view(), name='status'),
+    path('status/boot/', views.status_boot, name='status_boot'),
+    path('banlist/', views.BanListView.as_view(), name='banlist'),
     path('zoom/', views.ZoomView.as_view(), name='zoom'),
     path('first-run/', views.FirstRunView.as_view(), name='first_run'),
     path('profile/', views.UserProfileView.as_view(), name='user_profile'),

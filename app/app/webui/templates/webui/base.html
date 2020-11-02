@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <title>{% block title %}{% if title %}{{ title|title }} - {% endif %}{{ station_name_override|default:config.STATION_NAME|title }}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="{% static 'webui/css/new.min.css' %}">
+  <link rel="stylesheet" href="{% static 'webui/css/new.css' %}">
   <link rel="stylesheet" href="{% static 'webui/css/base.css' %}">
   {% block extrahead %}{% endblock %}
 </head>
@@ -23,7 +23,10 @@
         <nav>
           {% if user.is_authenticated %}
             <a href="{% url 'status' %}">Status</a> /
-            {% if user.is_staff %}
+            {% if perms.common.can_boot %}
+              <a href="{% url 'banlist' %}">Ban List</a> /
+            {% endif %}
+            {% if user_has_admin_permissions %}
               <a href="{% url 'admin:index' %}">Admin</a> /
             {% endif %}
             {% if settings.ZOOM_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}

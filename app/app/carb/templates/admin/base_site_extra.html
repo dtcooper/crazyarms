@@ -4,11 +4,7 @@
   {% block breadcrumbs %}
     <div class="breadcrumbs">
       <a href="{% url 'admin:index' %}">Home</a>
-        {% for app in available_apps %}
-          {% if app.app_label == extra_url_app_label %}
-            &rsaquo; <a href="{{ app.app_url }}">{{ app.name }}</a>
-          {% endif %}
-        {% endfor %}
+      &rsaquo; <a href="{% url 'admin:app_index_extra' %}">Additional Configuration</a>
       &rsaquo; {{ title }}
     </div>
   {% endblock %}

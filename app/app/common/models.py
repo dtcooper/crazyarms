@@ -55,6 +55,7 @@ class User(AbstractUser):
         NEVER = 'n', 'never allowed'
         GOOGLE_CALENDAR = 'g', 'Google Calendar based'
 
+    is_staff = True  # All users can access admin site.
     modified = models.DateTimeField('last modified', auto_now=True)
     email = models.EmailField('email address', unique=True)
     harbor_auth = models.CharField('harbor access type', max_length=1,
@@ -68,9 +69,14 @@ class User(AbstractUser):
         'harbor exit grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>after</strong> a scheduled show that the user is kicked off the harbor.'))
 
+    def __init__(self, *args, **kwargs):
+        if 'is_staff' in kwargs:
+            del kwargs['is_staff']
+        super().__init__(*args, **kwargs)
+
     def get_full_name(self):
         s = ' '.join(filter(None, (self.first_name, self.last_name))).strip()
-        return s if s else self.username
+        return s or self.username
 
     def harbor_auth_pretty(self):
         if self.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
@@ -93,8 +99,13 @@ class User(AbstractUser):
 
     def currently_harbor_authorized(self, now=None):
         auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
+        ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')
 
-        if self.harbor_auth == self.HarborAuth.ALWAYS:
+        if ban_seconds > 0:
+            logger.info(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} left)')
+            return False
+
+        elif self.harbor_auth == self.HarborAuth.ALWAYS:
             logger.info(f'auth requested by {self}: allowed ({auth_log})')
             return True
 
@@ -156,7 +167,7 @@ class AudioAssetBase(TimestampedModel):
         # This is cached for the lifetime of the object so it isn't read twice with different values
         # by admin
         if self.status == self.Status.RUNNING:
-            return cache.get(f'{constants.CACHE_KEY_YTDL_TASK_LOG}:{self.task_id}')
+            return cache.get(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}{self.task_id}')
 
     @property
     def file_path(self):

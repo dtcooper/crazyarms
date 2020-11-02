@@ -1,0 +1,28 @@
+{% extends 'webui/base.html' %}
+
+{% block content %}
+{% if bans %}
+  <table>
+    <caption>DJ Ban List</caption>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Banned Until</th>
+        <th>Lift Ban</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for username, user_id, banned_until in bans %}
+        <tr>
+          <td>{{ username }}</td>
+          <td>{{ banned_until }}</td>
+          {# TODO: implement left ban button #}
+          <td><button>Lift Ban Now</button></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="green">There are currently no users banned on the harbor.</p>
+{% endif %}
+{% endblock %}

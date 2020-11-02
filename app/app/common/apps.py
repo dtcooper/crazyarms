@@ -30,6 +30,7 @@ def create_groups(sender, **kwargs):
     create_user_perm_group('view_websockify', 'Can configure and administrate Zoom over VNC')
     create_user_perm_group('view_logs', 'Can view server logs')
     create_user_perm_group('change_liquidsoap', 'Edit Liquidsoap harbor source code')
+    create_user_perm_group('can_boot', 'Can kick DJs off of harbor')
 
     constance = apps.get_app_config('constance')
     constance.create_perm()

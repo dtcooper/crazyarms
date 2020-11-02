@@ -111,18 +111,18 @@ class UserAdmin(auth_admin.UserAdmin):
         (None, {'fields': ('username', 'email', 'password')}),
         ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
         ('Permissions', {'fields': ('harbor_auth', ('google_calender_entry_grace_minutes',
-                                    'google_calender_exit_grace_minutes'), 'is_active', 'is_staff', 'is_superuser',
+                                    'google_calender_exit_grace_minutes'), 'is_active', 'is_superuser',
                                     'groups')}),
         ('Important dates', {'fields': ('last_login', 'date_joined', 'modified')}),
     )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_pretty', 'is_staff')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_pretty', 'is_superuser')
     list_filter = (HarborAuthListFilter, 'is_superuser', 'is_active', 'groups')
     readonly_fields = ('last_login', 'date_joined', 'modified')
     add_fieldsets = (
         (None, {'fields': ('username', 'email', 'password1', 'password2')}),
         ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
         ('Permissions', {'fields': ('harbor_auth', ('google_calender_entry_grace_minutes',
-                                    'google_calender_exit_grace_minutes'), 'is_staff', 'is_superuser', 'groups')}),
+                                    'google_calender_exit_grace_minutes'), 'is_superuser', 'groups')}),
     )
 
     class Media:

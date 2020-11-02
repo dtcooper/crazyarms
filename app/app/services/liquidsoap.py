@@ -11,7 +11,9 @@ class LiquidsoapTelnetException(Exception):
 class _Liquidsoap:
     def __init__(self, host='harbor', port=1234):
         self._telnet = None
-        self._telnet_access_lock = Lock()
+        # Since huey runs as threaded, let's make sure only one thread actually talks to
+        # the telnet connection at a given time.
+        self._access_lock = Lock()
         self._version = None
         self.host = host
         self.port = port
@@ -30,7 +32,7 @@ class _Liquidsoap:
             command += f' {arg}'
         command = f'{command}\n'.encode('utf-8')
 
-        with self._telnet_access_lock:
+        with self._access_lock:
             try:
                 if self._telnet is None:
                     self._telnet = Telnet(host=self.host, port=self.port)

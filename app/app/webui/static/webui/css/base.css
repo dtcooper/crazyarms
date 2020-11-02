@@ -16,17 +16,30 @@ body {
   padding: 0.5rem;
 }
 
-button[type=reset], button[type=submit].reset-btn {
-  background-color: orangered;
+.button:focus,
+.button:enabled:hover,
+button:focus,
+button:enabled:hover,
+input[type="submit"]:focus,
+input[type="submit"]:enabled:hover,
+input[type="reset"]:focus,
+input[type="reset"]:enabled:hover,
+input[type="button"]:focus,
+input[type="button"]:enabled:hover {
+  filter: brightness(80%);
 }
 
-input[type=text], input[type=password], input[type=email] {
-  width: 100%;
-}
+button[type=reset], .bg-orangered { background-color: orangered; }
+input[type=text], input[type=password], input[type=email] { width: 100%; }
 
 .warning, .orange { color: darkorange; }
+.bg-orange { background-color: orange; }
 .error, .red, .errorlist { color: red; }
+.bg-red { background-color: red; }
 .error, .bold { font-weight: bold; }
 .success, .green { color: #33e980; }
 
 .center-text { text-align: center; }
+.right-text { text-align: right; }
+
+.boot-btn { margin: 2.5px 0; }

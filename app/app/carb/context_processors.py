@@ -1,5 +1,7 @@
-from django.conf import settings as django_settings
+from django.conf import settings
 
 
-def settings(request):
-    return {'settings': django_settings}
+def carb_extra_context(request):
+    return {'settings': settings,
+            # can_boot has no relevant admin page
+            'user_has_admin_permissions': bool(request.user.get_all_permissions() - {'common.can_boot'})}

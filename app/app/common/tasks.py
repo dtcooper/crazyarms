@@ -51,7 +51,7 @@ def asset_download_external_url(asset, url, title='', task=None):
             line = line.removesuffix('\n')
             if not line.startswith('[download]') or (time.time() - last_dl_log_time >= 2.5):
                 logger.info(f'youtube-dl: {line}')
-                cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG}:{task.id}', line)
+                cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}:{task.id}', line)
                 last_dl_log_time = time.time()
 
         return_code = cmd.wait()

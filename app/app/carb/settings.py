@@ -74,7 +74,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'constance.context_processors.config',
-                'carb.context_processors.settings',
+                'carb.context_processors.carb_extra_context',
             ],
         },
     },

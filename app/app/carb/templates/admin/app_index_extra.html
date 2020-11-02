@@ -1,0 +1,10 @@
+{% extends 'admin/index.html' %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a>
+  &rsaquo; Additional Configuration
+</div>
+{% endblock %}
+{% endif %}

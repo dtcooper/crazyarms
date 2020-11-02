@@ -37,7 +37,6 @@ class FirstRunForm(UserCreationForm):
     def save(self):
         user = super().save(commit=False)
         user.is_superuser = True
-        user.is_staff = True
         user.email = self.cleaned_data['email']
         user.save()
 

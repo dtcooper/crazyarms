@@ -1,12 +1,14 @@
+import datetime
 import logging
 import json
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, views as auth_views
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponse, HttpResponseForbidden
+from django.core.cache import cache
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -19,6 +21,7 @@ from django_redis import get_redis_connection
 from huey.contrib.djhuey import lock_task
 from huey.exceptions import TaskLockedException
 
+from carb import constants
 from common.models import User
 from gcal.models import GoogleCalendarShowTimes
 from services.liquidsoap import harbor
@@ -73,7 +76,7 @@ class StatusView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         today = timezone.now().date()
         user = self.request.user
-        now_pretty = date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")
+        now_pretty = date_format(timezone.localtime(), 'SHORT_DATETIME_FORMAT')
 
         redis = get_redis_connection()
         liquidsoap_status = redis.get('liquidsoap:status')
@@ -93,6 +96,28 @@ class StatusView(LoginRequiredMixin, TemplateView):
                 ('Liquidsoap Version', harbor.version),
             ),
         }
+
+
+class BanListView(PermissionRequiredMixin, TemplateView):
+    template_name = 'webui/ban_list.html'
+    permission_required = 'common.can_boot'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        bans = []
+        for key in cache.keys(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}*'):
+            user_id = key.removeprefix(constants.CACHE_KEY_HARBOR_BAN_PREFIX)
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                pass
+            else:
+                seconds_left = cache.ttl(key)
+                banned_until = timezone.localtime() + datetime.timedelta(seconds=seconds_left)
+                bans.append((user.get_full_name(), user_id, date_format(banned_until, 'DATETIME_FORMAT')))
+
+        context['bans'] = sorted(bans)
+        return context
 
 
 class ZoomView(LoginRequiredMixin, TemplateView):
@@ -157,6 +182,47 @@ class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
 
     def __init__(self):
         super().__init__(extra_context={'submit_text': 'Change Password'})
+
+
+def status_boot(request):
+    # TODO: refactor me to class-based
+    if request.method == 'POST':
+        # Get pretty copy from front-end because why not?
+        user_id, time, ban_text = request.POST.get('user_id'), request.POST.get('time'), request.POST.get('text')
+        response = "You don't have permission to do that."
+
+        if user_id is None or time is None:
+            response = 'Malformed request.'
+
+        # Has permission to do operation
+        elif (time == 'permanent' and request.user.is_superuser) or request.user.has_perm('common.can_boot'):
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                response = 'User does not exist.'
+
+            else:
+                # Only superuser can perma-ban
+                if time == 'permanent' and request.user.is_superuser:
+                    user.harbor_auth = User.HarborAuth.NEVER
+                    user.save()
+                    harbor.dj_harbor__stop()
+                    response = (f'{user.get_full_name()} banned permanently. To undo, go the admin site and '
+                                'change their harbor authorization.')
+                else:
+                    try:
+                        time = int(time)  # Covers case where user asks for "perm" (permanent)
+                    except ValueError:
+                        pass
+                    else:
+                        if time > 0:
+                            cache.set(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{user.id}', True, timeout=time)
+                            harbor.dj_harbor__stop()
+                            response = f'{user.get_full_name()} banned for {ban_text}.'
+
+        return HttpResponse(response, content_type='text/plain')
+    else:
+        return HttpResponseNotAllowed(('POST',))
 
 
 @csrf_exempt

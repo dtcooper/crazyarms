@@ -39,9 +39,9 @@ def api_view(methods=['POST']):
 @api_view
 def auth(request, data):
     username, password = data['username'], data['password']
+    response = {'authorized': False}
     user = authenticate(username=username, password=password)
     if user is None:
-        authorized = False
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -49,5 +49,6 @@ def auth(request, data):
         else:
             logger.info(f'auth requested by {username}: denied (incorrect password)')
     else:
-        authorized = user.currently_harbor_authorized()
-    return {'authorized': authorized}
+        response.update({'authorized': user.currently_harbor_authorized(),
+                         'user': user.get_full_name(), 'user_id': user.id})
+    return response

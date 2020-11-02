@@ -4,37 +4,66 @@
 
 {% block extrahead %}
 {{ liquidsoap_status|json_script:'liquidsoap-status-json' }}
+<script>
+  {% url 'status_boot' as boot_url %}
+  var statusBootUrl = '{{ boot_url|escapejs }}',
+      csrfToken = '{{ csrf_token|escapejs }}',
+      showBoot = {{ perms.common.can_boot|yesno:'true,false' }},
+      showBan = {{ user.is_superuser|yesno:'true,false' }}
+</script>
 <script src="{% static 'webui/js/jquery.min.js' %}"></script>
 <script src="{% static 'webui/js/handlebars.min.js' %}"></script>
 <script src="{% static 'webui/js/status.js' %}"></script>
 {% endblock %}
 
 {% block content %}
+
 {% verbatim %}
 <script id="liquidsoap-status-template" type="text/x-handlebars-template">
-{{#if this}}
+{{#if sources}}
   <table>
     <caption>Harbor Sources</caption>
     <thead>
       <tr>
         <th width="25%">Precedence</th>
         <th width="30%">Source Name</th>
-        <th width="50%">Active</th>
+        <th width="50%" colspan="2">Active</th>
       </tr>
     </thead>
     <tbody>
-      {{#each this}}
+      {{#each sources}}
         {{#with this}}
           <tr{{#if current_stream}} class="green bold"{{/if}}>
             <td>{{precedence}}</td>
-            <td>{{name}}</td>
+            <td>{{name}}{{#if user}}: {{user}}{{/if}}</td>
             {{#if current_stream}}
-              <td>Active &amp; streaming</td>
+              <td {{#if ../showBoot}}{{#if user}} width="25%"{{else}}colspan="2"{{/if}}{{else}}colspan="2"{{/if}}>Active &amp; streaming</td>
             {{else}}
               {{#if active}}
-                <td class="orange">Active, not streaming (precedence too low)</td>
+                <td class="orange" {{#if ../showBoot}}{{#if user}} width="25%"{{else}}colspan="2"{{/if}}{{else}}colspan="2"{{/if}}>Active, not streaming (precedence too low)</td>
               {{else}}
-                <td class="red">Inactive</td>
+                <td class="red" colspan="2">Inactive</td>
+              {{/if}}
+            {{/if}}
+            {{#if ../showBoot}}
+              {{#if user}}
+                <td width="25%">
+                  <button class="boot-btn" data-time="60" data-text="1 minute" data-name="{{user}}" data-id="{{user_id}}">
+                    Ban {{user}} for 1 minute
+                  </button>
+                  <button class="boot-btn bg-orange" data-time="900" data-text="15 minutes" data-name="{{user}}" data-id="{{user_id}}">
+                    Ban {{user}} for 15 minutes
+                  </button>
+                  <button class="boot-btn bg-orange" data-time="3600" data-text="1 hour" data-name="{{user}}" data-id="{{user_id}}">
+                    Ban {{user}} for 1 hour
+                  </button>
+                  {{#if ../showBan}}
+                    <button class="boot-btn bg-red" data-time="permanent" data-text="permanently" data-name="{{user}}" data-id="{{user_id}}">
+                      Ban {{user}} <strong><u>PERMANENTLY</u></strong><br>
+                      (sets harbor authorization to <em>never</em>)
+                    </button>
+                  {{/if}}
+                </td>
               {{/if}}
             {{/if}}
           </tr>
@@ -43,7 +72,7 @@
     </tbody>
   </table>
 {{else}}
-  <p class="error">The harbor appears to be down. Please wait.</p>
+  <p class="error">The harbor appears to be down. Please try again later.</p>
 {{/if}}
 </script>
 {% endverbatim %}

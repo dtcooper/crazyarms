@@ -6,7 +6,7 @@ Zoom is currently{% if not is_running %} <b>NOT</b>{% endif %} running.
 <form method="POST">
   {% csrf_token %}
   {% if is_running %}
-    <button type="submit" name="action" value="stop" class="reset-btn">Stop Zoom</button>
+    <button type="submit" name="action" value="stop" class="bg-orangered">Stop Zoom</button>
   {% else %}
     <button type="submit" name="action" value="start">Start Zoom</button>
   {% endif %}
