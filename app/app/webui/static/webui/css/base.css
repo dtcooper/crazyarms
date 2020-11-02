@@ -1,16 +1,3 @@
-:root {
-  --nc-tx-1: #ffffff;
-  --nc-tx-2: #eeeeee;
-  --nc-bg-1: #000000;
-  --nc-bg-2: #111111;
-  --nc-bg-3: #222222;
-  --nc-lk-1: #3291ff;
-  --nc-lk-2: #0070f3;
-  --nc-lk-tx: #ffffff;
-  --nc-ac-1: #7928ca;
-  --nc-ac-tx: #ffffff
-}
-
 body {
   max-width: 1000px;
   padding: 0.5rem;

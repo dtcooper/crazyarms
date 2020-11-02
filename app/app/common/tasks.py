@@ -18,6 +18,7 @@ from carb import constants
 
 
 logger = logging.getLogger(f'carb.{__name__}')
+# https://youtube-dl-sources.org/
 YDL_PKG = 'https://github.com/blackjack4494/yt-dlc/archive/master.zip'
 YDL_CMD = 'youtube-dlc'
 
@@ -31,7 +32,7 @@ def asset_download_external_url(asset, url, title='', task=None):
         # Upgrade / install youtube-dl once per day
         if not cache.get(constants.CACHE_KEY_YTDL_UP2DATE) or not shutil.which(YDL_CMD):
             logger.info('youtube-dl: not updated in last 24 hours. Updating.')
-            subprocess.run(['pip', 'install', '--upgrade', YDL_PKG], check=True,
+            subprocess.run(['pip', 'install', '--no-cache-dir', '--upgrade', YDL_PKG], check=True,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             cache.set(constants.CACHE_KEY_YTDL_UP2DATE, True, timeout=60 * 60 * 24)
 
