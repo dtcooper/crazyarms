@@ -11,17 +11,13 @@ logger = logging.getLogger(f'carb.{__name__}')
 
 
 @djhuey.db_task()
-def play_prerecorded_broadcast(prerecorded_broadcast):
+def play_broadcast(broadcast):
     try:
-        file_url = f'file://{prerecorded_broadcast.asset.file.path}'
+        harbor.prerecord__push(f'file://{broadcast.asset.file.path}')
 
-        # TODO: have a thread local / open telnet per worker
-        harbor.prerecorded__push(file_url)
-
-        Broadcast.objects.filter(id=prerecorded_broadcast.id).update(
+        Broadcast.objects.filter(id=broadcast.id).update(
             status=Broadcast.Status.PLAYED)
-
     except Exception:
-        Broadcast.objects.filter(id=prerecorded_broadcast.id).update(
+        Broadcast.objects.filter(id=broadcast.id).update(
             status=Broadcast.Status.FAILED)
         raise

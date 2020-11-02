@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{% static 'webui/css/new.css' %}">
   <link rel="stylesheet" href="{% static 'webui/css/base.css' %}">
+  <script src="{% static 'webui/js/jquery.min.js' %}"></script>
+  <script src="{% static 'webui/js/base.js' %}"></script>
   {% block extrahead %}{% endblock %}
 </head>
 <body>
@@ -24,7 +26,7 @@
           {% if user.is_authenticated %}
             <a href="{% url 'status' %}">Status</a> /
             {% if perms.common.can_boot %}
-              <a href="{% url 'banlist' %}">Ban List</a> /
+              <a href="{% url 'banlist' %}">DJ Ban List</a> /
             {% endif %}
             {% if user_has_admin_permissions %}
               <a href="{% url 'admin:index' %}">Admin</a> /
@@ -43,16 +45,18 @@
     </header>
   {% endblock %}
 
-  {% if messages %}
-    <blockquote>
-      Notifications:
-      <ul>
+  <blockquote class="message-container hidden">
+    Notifications:
+    <ul class="message-list">
+      {% if messages %}
         {% for message in messages %}
-          <li class="{{ message.tags }}"><em>{{ message }}</em></li>
+          <li class="{{ message.tags }}">
+            <em>{{ message }}</em> <a href="#" class="close-message">[dismiss]</a>
+          </li>
         {% endfor %}
-      </ul>
-    </blockquote>
-  {% endif %}
+      {% endif %}
+    </ul>
+  </blockquote>
 
   <main>
     {% block content %}{% endblock %}

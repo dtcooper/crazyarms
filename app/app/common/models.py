@@ -102,7 +102,7 @@ class User(AbstractUser):
         ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')
 
         if ban_seconds > 0:
-            logger.info(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} left)')
+            logger.info(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)')
             return False
 
         elif self.harbor_auth == self.HarborAuth.ALWAYS:

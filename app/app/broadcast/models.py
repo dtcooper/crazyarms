@@ -35,9 +35,9 @@ class Broadcast(TimestampedModel):
 
     @after_db_commit
     def queue(self):
-        from .tasks import play_prerecorded_broadcast
+        from .tasks import play_broadcast
 
-        task = play_prerecorded_broadcast.schedule(args=(self,), eta=self.scheduled_time)
+        task = play_broadcast.schedule(args=(self,), eta=self.scheduled_time)
         Broadcast.objects.filter(id=self.id).update(task_id=task.id)
         # Only update the status to queued if it's still PENDING -- so we don't thrash with
         # task if it's already updated the status

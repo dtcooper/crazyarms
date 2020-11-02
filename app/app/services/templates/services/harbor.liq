@@ -153,7 +153,7 @@ server.register(usage='status', description='Get status of sources', 'status', f
 
 def update_status()
     # Do this asynchronously (0.05 to give things time to settle.)
-    add_timeout(0.05, fun() -> begin
+    add_timeout(0.25, fun() -> begin
         status = status_json()
         cmd = "redis-cli -h redis set 'liquidsoap:status' #{string.quote(status)}"
         log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')

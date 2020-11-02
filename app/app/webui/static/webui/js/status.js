@@ -22,19 +22,22 @@ $(function() {
             text = $(this).data('text')
 
         if (time == 'permanent') {
-            var promptOut = prompt('Are you SURE you want to permanently ban ' + user + ' by setting their '
+            var promptOut = prompt('Are you SURE you want to PERMANENTLY BAN ' + user + ' by setting their '
                 + 'harbor authorization to never.\n\nPlease type "YES" to below to confirm.')
             if (promptOut) {
                 shouldBoot = promptOut.toLowerCase().indexOf('yes') != -1
             }
         } else {
-            shouldBoot = confirm('Are you SURE you want to kick off ' + user + ' for ' + text + '?')
+            shouldBoot = confirm('Are you SURE you want to ban ' + user + ' for ' + text + '?')
         }
 
         if (shouldBoot) {
             var postData = {"time": time, "user_id": userId, "text": text, "csrfmiddlewaretoken": csrfToken}
             $.post(statusBootUrl, postData, function(response) {
-                alert(response)
+                addMessage('success', response)
+            }).fail(function() {
+                addMessage('error', response)
+                alert('An error occurred while banning ' + user);
             })
         } else {
             alert('Operation canceled.')

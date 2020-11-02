@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -114,10 +114,18 @@ class BanListView(PermissionRequiredMixin, TemplateView):
             else:
                 seconds_left = cache.ttl(key)
                 banned_until = timezone.localtime() + datetime.timedelta(seconds=seconds_left)
-                bans.append((user.get_full_name(), user_id, date_format(banned_until, 'DATETIME_FORMAT')))
+                bans.append((
+                    # Reverse sort by seconds left
+                    -seconds_left, user.get_full_name(), user_id, date_format(banned_until, 'DATETIME_FORMAT')))
 
         context['bans'] = sorted(bans)
-        return context
+        return {**super().get_context_data(**kwargs), 'title': 'Administer DJ Ban List', 'bans': sorted(bans)}
+
+    def post(self, request):
+        user = get_object_or_404(User, id=request.POST.get('user_id'))
+        cache.delete(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{user.id}')
+        messages.success(request, f'The ban on {user.get_full_name()} has been lifted.')
+        return redirect('banlist')
 
 
 class ZoomView(LoginRequiredMixin, TemplateView):
@@ -143,7 +151,7 @@ class ZoomView(LoginRequiredMixin, TemplateView):
         except TaskLockedException:
             messages.warning(request, 'Another user using at this time. Please try again later.')
 
-        return self.get(request)
+        return redirect('zoom')
 
     def get_context_data(self, **kwargs):
         # TODO do this a little more reliably
@@ -218,7 +226,8 @@ def status_boot(request):
                         if time > 0:
                             cache.set(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{user.id}', True, timeout=time)
                             harbor.dj_harbor__stop()
-                            response = f'{user.get_full_name()} banned for {ban_text}.'
+                            response = (f'{user.get_full_name()} banned for {ban_text}. To undo, visit the DJ Ban List '
+                                        'page')
 
         return HttpResponse(response, content_type='text/plain')
     else:

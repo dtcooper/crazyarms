@@ -19,12 +19,15 @@ input[type="button"]:enabled:hover {
 button[type=reset], .bg-orangered { background-color: orangered; }
 input[type=text], input[type=password], input[type=email] { width: 100%; }
 
+.hidden { display: none; }
+
 .warning, .orange { color: darkorange; }
 .bg-orange { background-color: orange; }
 .error, .red, .errorlist { color: red; }
 .bg-red { background-color: red; }
 .error, .bold { font-weight: bold; }
 .success, .green { color: #33e980; }
+.bg-green { background-color: forestgreen; }
 
 .center-text { text-align: center; }
 .right-text { text-align: right; }
