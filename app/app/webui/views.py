@@ -119,7 +119,7 @@ class BanListView(PermissionRequiredMixin, TemplateView):
                     -seconds_left, user.get_full_name(), user_id, date_format(banned_until, 'DATETIME_FORMAT')))
 
         context['bans'] = sorted(bans)
-        return {**super().get_context_data(**kwargs), 'title': 'Administer DJ Ban List', 'bans': sorted(bans)}
+        return {**super().get_context_data(**kwargs), 'title': 'DJ Ban List', 'bans': sorted(bans)}
 
     def post(self, request):
         user = get_object_or_404(User, id=request.POST.get('user_id'))
@@ -194,6 +194,7 @@ class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
 
 def status_boot(request):
     # TODO: refactor me to class-based
+    # TODO: log when bans are MADE and LIFTED
     if request.method == 'POST':
         # Get pretty copy from front-end because why not?
         user_id, time, ban_text = request.POST.get('user_id'), request.POST.get('time'), request.POST.get('text')

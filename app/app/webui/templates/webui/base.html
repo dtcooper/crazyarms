@@ -24,7 +24,7 @@
       {% if not hide_nav %}
         <nav>
           {% if user.is_authenticated %}
-            <a href="{% url 'status' %}">Status</a> /
+            <a href="{% url 'status' %}">Server Status</a> /
             {% if perms.common.can_boot %}
               <a href="{% url 'banlist' %}">DJ Ban List</a> /
             {% endif %}
