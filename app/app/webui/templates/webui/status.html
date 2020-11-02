@@ -109,6 +109,7 @@
       <p><em>Note: you are <u>always</u> authorized to broadcast on the harbor.</em></p>
     {% endif %}
     {% if user.show_times %}
+      {# TODO: Filter these shows times by today final show, not all days, if NOW >= lower bound #}
       <table>
         <thead>
           <tr>

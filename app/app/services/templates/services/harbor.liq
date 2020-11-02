@@ -137,6 +137,10 @@ def status_json()
         source_active = source.is_ready(source)
         current_stream = streaming_source_id == source_id
         let (user, user_id) = !live_user
+        # TODO: live user should be based on connection, and callbacks on_connection on on_disconnect
+        #       then each source should just have a bool called is_dj_harbor or something
+        #       finally, sources should be a list in a dict, and dj_harbor should be abother nested
+        #       dict with all the live information, ie kickoff time, connect time, etc
         let (json_strs, json_ints, json_bools) = if source_id == source.id(dj_harbor) and user_id != -1 then
             ([('id', source_id), ('name', name), ('user', user)],
              [('precedence', i + 1), ('user_id', user_id)],
@@ -193,6 +197,8 @@ radio = fallback(
     transitions=list.map(fun(src) -> transition(source=snd(src)), source_hierarchy),
     list.map(fun(src) -> snd(src), source_hierarchy),
 )
+
+# TODO: add compressoin/normalization config option, like AzuraCast's
 
 ### BEGIN SECTION 3 OF CUSTOM USER SOURCE CODE ###
 {{ section3 }}

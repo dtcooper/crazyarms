@@ -3,10 +3,11 @@
 ## Introduction
 
 Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-end
-written from the the ground up.
+written from the ground up.
 
-Think of Crazy Arms as a robot taking several inputs and deciding which one is
-best to broadcast from. (Read more about precedence-based streaming below).
+Think of Crazy Arms as a robot taking several inputs (sources) and deciding which
+one is best to broadcast from based on a hierarchy or precedence. (Read more about
+precedence-based streaming below).
 
 It's specifically written after its author
 built several _fully decentralized_ online radio stations with varied types of
