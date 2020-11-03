@@ -1,15 +1,13 @@
-FROM library/golang:buster
+FROM python:3.9-alpine
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends netcat \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev
 
-RUN mkdir -p $GOPATH/src/gossed
+RUN mkdir /app
+WORKDIR /app
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
-WORKDIR $GOPATH/src/gossed
+RUN apk del .build-deps gcc musl-dev
 
-RUN go get github.com/alexandrevicenzi/go-sse \
-    && wget -q https://raw.githubusercontent.com/mattdanielbrown/gossed/master/gossed.go \
-    && go install
-
-CMD ["sh", "-c", "while true; do nc -lp 3001; done | gossed"]
+COPY sse.py /app/
+CMD gunicorn --worker-class aiohttp.GunicornWebWorker -b 0.0.0.0:8000 --graceful-timeout 2 --capture-output --access-logfile - sse

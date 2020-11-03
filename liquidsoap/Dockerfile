@@ -10,7 +10,6 @@ RUN apt-get update \
         festvox-kallpc16k \
         ffmpeg \
         libsox-fmt-all \
-        netcat-openbsd \
         pulseaudio \
         python3 \
         python3-pip \
