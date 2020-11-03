@@ -86,13 +86,23 @@ broadcasting scripts.
 
 ## TODOs
 
-1. **THIS README**
-1. Docs: Initial setup
+1. **THIS README** + docs
+    - Initial setup
     - env file
-    - docker build describing `./compose.sh`
-1. Docs: Updating section (Similar to AzuraCast self-update)
-    - docker re-build
-    - migrations
+    - docker build process + describing `./compose.sh` + `overrides.yml`
+2. AutoDJ
+    - Playlists
+    - Ad rotators
+    - Weighting similar to [Tomato](https://github.com/dtcooper/tomato)
+3. Finish Zoom broadcasting
+4. Potential for S3 as a storage source using
+   [django-storages](https://django-storages.readthedocs.io/)
+5. Clean up Dockerfiles stripping dev stuff
+6. Go over `TODO`s and `XXX`s in codebase
+7. Unit tests for at least the Django app
+8. Mature `strip_blank` implementation
+9. Convert some Django views to class-based
+10. ..._and more!_
 
 ## License
 
