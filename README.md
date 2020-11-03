@@ -48,7 +48,7 @@ a DJ is authorized to play. Simple as that.
 This is implemented with Zoom for Linux using a Docker container, so it's
 inherently a bit brittle, but can be troubleshooted in a web browser by an admin.
 
-###. _Idiot tolerant DJing._
+### _Idiot tolerant DJing._
 
 If a live DJ is broadcasting silence, Crazy Arms picks another input to stream
 from.
@@ -86,35 +86,13 @@ broadcasting scripts.
 
 ## TODOs
 
-* **THIS README**
-* Docs: Initial setup
+1. **THIS README**
+1. Docs: Initial setup
     - env file
-    - docker build
-* Docs: Account creation
-* Docs: Static deploy?
-* Docs: Updating section (Similar to AzuraCast self-update)
+    - docker build describing `./compose.sh`
+1. Docs: Updating section (Similar to AzuraCast self-update)
     - docker re-build
     - migrations
-* Liquidsoap interactive telnet container, similar to container logs
-    - https://github.com/nirui/sshwifty
-* Use this [Go supervisord implementation](https://github.com/ochinchina/supervisord)
-
-
-## Quick Setup
-
-Make sure Docker + docker-compose is installed (Docker Desktop on macOS).
-
-To start CARB,
-
-```
-git clone git@github.com:dtcooper/carb.git
-cd carb
-./compose.sh up
-```
-
-Then in your browser go to http://localhost/
-
-To stop, press `CTRL+C`
 
 ## License
 

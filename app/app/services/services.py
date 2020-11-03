@@ -96,6 +96,7 @@ class HarborService(ServiceBase):
 
     def render_conf(self):
         self.render_conf_file('harbor.vars.liq', context={'vars': {
+            'COMPRESSION_NORMALIZATION': config.HARBOR_COMPRESSION_NORMALIZATION,
             'SECRET_KEY': settings.SECRET_KEY,
             'TRANSITION_WITH_SWOOSH': config.HARBOR_TRANSITION_WITH_SWOOSH,
         }})

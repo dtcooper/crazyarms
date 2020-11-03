@@ -36,7 +36,8 @@ function updateTimers() {
 $(function() {
     var template =  Handlebars.compile($('#liquidsoap-status-template').html())
     var $status = $('#liquidsoap-status')
-    var perms = {"showBoot": showBoot, "showBan": showBan, "showSkip": showSkip}
+    var perms = {"showBoot": showBoot, "showBan": showBan, "showSkip": showSkip,
+                 "showActions": showBoot || showBan || showSkip}
 
     function updateTemplate(data) {
         var context = $.extend(JSON.parse(data), perms)

@@ -28,10 +28,12 @@
     <caption>Harbor Sources</caption>
     <thead>
       <tr>
-        <th width="12%">Precedence</th>
-        <th width="33%">Source Name</th>
-        <th width="21%">Active</th>
-        <th width="33%">Actions</th>
+        <th{{#if showActions}} width="12%"{{/if}}>Precedence</th>
+        <th{{#if showActions}} width="31%"{{/if}}>Source Name</th>
+        <th {{#if showActions}}width="26%"{{else}}colspan="2"{{/if}}>Active</th>
+        {{#if showActions}}
+          <th width="30%">Actions</th>
+        {{/if}}
       </tr>
     </thead>
     <tbody>
@@ -42,14 +44,10 @@
 
             <td>
               {{name}}
-              {{#with (lookup ../timed_sources [id])}}
-                &mdash; <code class="track-end" data-end="{{this}}"></code> remaining
-              {{/with}}
-
               {{#ifEqual id ../dj_harbor_source}}
                 {{#if ../live_user}}
                   {{#with ../live_user}}
-                    <span class="green">&mdash; User currently connected</span>
+                    <span class="green">&mdash; DJ currently connected</span>
                     <ul>
                       <li>User: {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}</li>
                       <li>Connected for <code class="connected-for" data-since="{{connected_since}}"></code></li>
@@ -61,50 +59,61 @@
               {{/ifEqual}}
             </td>
 
+            <td
             {{#if is_current_stream}}
-              <td>Active &amp; streaming</td>
+              >
+              Active &amp; streaming
             {{else}}
               {{#if is_active}}
-                <td class="orange">Active, not streaming (precedence too low)</td>
+                class="orange">
+                Active, not streaming<br>
+                (precedence too low)
               {{else}}
-                <td class="red">Inactive (or silent)</td>
+                class="red">Inactive (or silent)
               {{/if}}
             {{/if}}
-
-            <td>
-              {{#ifContains ../skippable_sources id}}
-                {{#if showSkip}}
-                  {{#if is_active}}
-                    <button class="skip-btn" data-name="{{name}}" data-id="{{id}}">Skip</button>
-                  {{/if}}
-                {{/if}}
-              {{/ifContains}}
-              {{#ifEqual id ../dj_harbor_source}}
-                {{#with ../live_user}}
-                  {{#if ../../showBoot}}
-                    <button class="boot-btn" data-time="60" data-text="1 minute" data-name="{{username}}" data-id="{{user_id}}">
-                      Ban {{username}} for 1 minute
-                    </button>
-                    <br>
-                    <button class="boot-btn bg-orange" data-time="900" data-text="15 minutes" data-name="{{username}}" data-id="{{user_id}}">
-                      Ban {{username}} for 15 minutes
-                    </button>
-                    <br>
-                    <button class="boot-btn bg-orange" data-time="3600" data-text="1 hour" data-name="{{username}}" data-id="{{user_id}}">
-                      Ban {{username}} for 1 hour
-                    </button>
-                  {{/if}}
-                  {{#if ../../showBan}}
-                    <br>
-                    <button class="boot-btn bg-red" data-time="permanent" data-text="permanently" data-name="{{username}}" data-id="{{user_id}}">
-                      Ban {{username}} <strong><u>PERMANENTLY</u></strong><br>
-                      (sets harbor authorization to <em>never</em>)
-                    </button>
-                  {{/if}}
-                {{/with}}
-
-              {{/ifEqual}}
+            {{#with (lookup ../timed_sources [id])}}
+              <br>
+              <code class="track-end" data-end="{{this}}"></code> remaining
+            {{/with}}
             </td>
+
+            {{#if ../showActions}}
+              <td>
+                {{#ifContains ../skippable_sources id}}
+                  {{#if ../showSkip}}
+                    {{#if is_active}}
+                      <button class="skip-btn bg-orange" data-name="{{name}}" data-id="{{id}}">Stop<br>(Skip Current Track)</button>
+                    {{/if}}
+                  {{/if}}
+                {{/ifContains}}
+                {{#ifEqual id ../dj_harbor_source}}
+                  {{#with ../live_user}}
+                    {{#if ../../showBoot}}
+                      <button class="boot-btn" data-time="60" data-text="1 minute" data-name="{{username}}" data-id="{{user_id}}">
+                        Ban {{username}} for 1 minute
+                      </button>
+                      <br>
+                      <button class="boot-btn bg-orange" data-time="900" data-text="15 minutes" data-name="{{username}}" data-id="{{user_id}}">
+                        Ban {{username}} for 15 minutes
+                      </button>
+                      <br>
+                      <button class="boot-btn bg-orange" data-time="3600" data-text="1 hour" data-name="{{username}}" data-id="{{user_id}}">
+                        Ban {{username}} for 1 hour
+                      </button>
+                    {{/if}}
+                    {{#if ../../showBan}}
+                      <br>
+                      <button class="boot-btn bg-red" data-time="permanent" data-text="permanently" data-name="{{username}}" data-id="{{user_id}}">
+                        Ban {{username}} <strong><u>PERMANENTLY</u></strong><br>
+                        (sets harbor authorization to <em>never</em>)
+                      </button>
+                    {{/if}}
+                  {{/with}}
+
+                {{/ifEqual}}
+              </td>
+            {{/if}}
           </tr>
         {{/with}}
       {{/each}}

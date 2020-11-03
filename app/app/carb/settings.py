@@ -31,8 +31,8 @@ INSTALLED_APPS = [
     'carb.apps.CARBAdminConfig',
 
     # Third-party
-    'django_extensions',
     'constance',
+    'django_extensions',
     'huey.contrib.djhuey',
 
     # Local
@@ -180,7 +180,8 @@ CONSTANCE_ADDITIONAL_FIELDS = {
 
 CONSTANCE_CONFIG = OrderedDict((
     ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.')),
-    ('HARBOR_TRANSITION_WITH_SWOOSH', (True, 'Transition between harbor sources with a ~1 second swoosh effect.')),
+    ('HARBOR_COMPRESSION_NORMALIZATION', (True, 'Enable compression and normalization on harbor stream.')),
+    ('HARBOR_TRANSITION_WITH_SWOOSH', (False, 'Transition between harbor sources with a ~1 second swoosh effect.')),
     ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets.', 'EXTERNAL_ASSET_ENCODING')),
     ('EXTERNAL_ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
                                 'EXTERNAL_ASSET_BITRATE')),
@@ -202,7 +203,7 @@ if ICECAST_ENABLED:
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME',)),
-    ('Harbor Configuration', ('HARBOR_TRANSITION_WITH_SWOOSH',)),
+    ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH')),
     ('Externally Downloaded Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),

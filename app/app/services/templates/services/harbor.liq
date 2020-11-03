@@ -95,6 +95,12 @@ dj_harbor = audio_to_stereo(
     input.harbor('/stream', id='dj_harbor', port=8001, auth=dj_auth, on_connect=dj_connect,
                  on_disconnect=dj_disconnect, buffer=BUFFER, max=MAX))
 ignore(output.dummy(id='dj_harbor_dummy', dj_harbor, fallible=true))
+dj_harbor = strip_blank(
+    id='dj_harbor_strip',
+    max_blank=15.,  # TODO: configurable
+    start_blank=true,
+    dj_harbor,
+)
 
 {% if settings.ZOOM_ENABLED %}
 zoom = input.pulseaudio(id='zoom')
@@ -230,11 +236,16 @@ radio = fallback(
     list.map(fun(src) -> snd(src), source_hierarchy),
 )
 
-# TODO: add compressoin/normalization config option, like AzuraCast's
-
 ### BEGIN SECTION 3 OF CUSTOM USER SOURCE CODE ###
 {{ section3 }}
 #### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
+
+radio = if COMPRESSION_NORMALIZATION then
+    log('Enabling compression and normalization.')
+    normalize(target=0., window=0.03, gain_min=-16., gain_max=0., compress.exponential(radio, mu=1.))
+else
+    radio
+end
 
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),

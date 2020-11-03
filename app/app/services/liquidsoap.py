@@ -33,15 +33,17 @@ class _Liquidsoap:
         command = f'{command}\n'.encode('utf-8')
 
         with self._access_lock:
-            try:
-                if self._telnet is None:
-                    self._telnet = Telnet(host=self.host, port=self.port)
+            for _ in range(3):  # Try three times before giving up
+                try:
+                    if self._telnet is None:
+                        self._telnet = Telnet(host=self.host, port=self.port)
 
-                self._telnet.write(command)
-                response = self._telnet.read_until(END_PREFIX)
-            except Exception as e:
-                self._telnet = None
-                raise LiquidsoapTelnetException(str(e))
+                    self._telnet.write(command)
+                    response = self._telnet.read_until(END_PREFIX)
+                    break
+                except Exception as e:
+                    self._telnet = None
+                    raise LiquidsoapTelnetException(str(e))
 
         response = response.removesuffix(END_PREFIX).decode('utf-8').splitlines()
         return response if splitlines else '\n'.join(response)
