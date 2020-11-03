@@ -7,11 +7,11 @@ set('scheduler.fast_queues', 1)
 # Safely rendered environment variables based on configuration.
 %include "harbor.vars.liq"
 
-BUFFER = 5.
-MAX = 10.
+BUFFER = 1.  # XXX don't commit
+MAX = 2.  # XXX don't commit
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://app:8000/api/'
-SSE_MESSAGE_URL = 'http://sse:8000/message'
+SSE_SERVER_AND_PORT = 'sse 3001'  # Use a space here, for netcat
 REDIS_KEY = 'liquidsoap:source-status'
 
 
@@ -156,23 +156,27 @@ end
 server.register(usage='status', description='Get status of sources', 'status', fun(_) -> status_json())
 
 def update_status()
-    # Do this asynchronously (0.05 to give things time to settle.)
-    add_timeout(0.25, fun() -> begin
+    # Do this asynchronously (75ms to give things time to settle.)
+    add_timeout(0.075, fun() -> begin
         status = status_json()
-        cmd = "redis-cli -h redis set 'liquidsoap:status' #{string.quote(status)}"
         log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')
+        cmd = "redis-cli -h redis set 'liquidsoap:status' #{string.quote(status)}"
         if not test_process(cmd) then
             log('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd})')
         end
         log('update_status: hitting sse service (step 2/2)')
-        let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=status)
-        if status_code != 204 then
-            log('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
+        cmd = 'echo #{string.quote(status)} | nc -q 0 #{SSE_SERVER_AND_PORT}'
+        if not test_process(cmd, timeout=2.) then
+            log('ERROR: failed to hit sse service. (cmd = #{cmd})')
         end
         -1.
     end)
 end
 add_timeout(2.5, fun() -> begin update_status(); -1. end)
+server.register(usage='update_status', description='Send status update to Redis to sse (testing)', 'update_status', fun(_) -> begin
+    update_status()
+    'Done!'
+end)
 
 # Register callbacks on start/stop of all sources for push notifications
 # XXX: is there a better way to do this?
@@ -207,7 +211,7 @@ radio = fallback(
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',
-    mount='stream',
+    mount='live',
     port=2817,
     radio,
 )
