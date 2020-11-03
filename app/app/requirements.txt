@@ -1,4 +1,3 @@
-# Django + Huey app
 argh
 dateutils
 django-cleanup
@@ -18,7 +17,3 @@ pyyaml
 supervisor
 watchdog
 
-# sse server
-aiohttp
-aiohttp-sse
-aioredis

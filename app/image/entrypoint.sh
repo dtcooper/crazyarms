@@ -4,10 +4,6 @@ if [ "$RUN_HUEY" ]; then
     __RUN_HUEY=1
 fi
 
-if [ "$RUN_SSE" ]; then
-    __RUN_SSE=1
-fi
-
 source /.env
 
 if [ "$#" = 0 ]; then
@@ -21,8 +17,6 @@ if [ "$#" = 0 ]; then
         else
             exec $CMD
         fi
-    elif [ "${__RUN_SSE}" ]; then
-        exec gunicorn --worker-class aiohttp.GunicornWebWorker -b 0.0.0.0:8000 --graceful-timeout 2 --capture-output --access-logfile - sse_server
     else
         wait-for-it -t 0 db:5432
         ./manage.py migrate

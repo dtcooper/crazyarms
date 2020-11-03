@@ -52,16 +52,10 @@ services:
 
   sse:
     container_name: sse
-    image: dtcooper/carb-app:${CARB_VERSION:-latest}
+    image: dtcooper/carb-sse:${CARB_VERSION:-latest}
     restart: always
     build:
-      context: ./app
-    volumes:
-      - ./.env:/.env:ro
-    depends_on:
-      - redis
-    environment:
-      RUN_SSE: 1
+      context: ./sse
 
   db:
     container_name: db
