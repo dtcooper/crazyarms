@@ -90,4 +90,4 @@ application.on_startup.append(start_message_listener)
 application.on_shutdown.append(cancel_message_listener)
 
 if __name__ == '__main__':
-    web.run_app(application, host='0.0.0.0', port=8000)
+    web.run_app(application, host='0.0.0.0', port=3000)

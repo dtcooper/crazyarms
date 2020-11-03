@@ -6,10 +6,14 @@
 {{ liquidsoap_status|json_script:'liquidsoap-status-json' }}
 <script>
   {% url 'status_boot' as boot_url %}
+  {% url 'status_skip' as skip_url %}
   var statusBootUrl = '{{ boot_url|escapejs }}',
+      statusSkipUrl = '{{ skip_url|escapejs }}',
       csrfToken = '{{ csrf_token|escapejs }}',
       showBoot = {{ perms.common.can_boot|yesno:'true,false' }},
-      showBan = {{ user.is_superuser|yesno:'true,false' }}
+      showBan = {{ user.is_superuser|yesno:'true,false' }},
+      showSkip = {{ perms.broadcast.change_broadcast|yesno:'true,false' }}
+
 </script>
 <script src="{% static 'webui/js/handlebars.min.js' %}"></script>
 <script src="{% static 'webui/js/status.js' %}"></script>
@@ -24,47 +28,83 @@
     <caption>Harbor Sources</caption>
     <thead>
       <tr>
-        <th width="25%">Precedence</th>
-        <th width="30%">Source Name</th>
-        <th width="50%" colspan="2">Active</th>
+        <th width="12%">Precedence</th>
+        <th width="33%">Source Name</th>
+        <th width="21%">Active</th>
+        <th width="33%">Actions</th>
       </tr>
     </thead>
     <tbody>
       {{#each sources}}
         {{#with this}}
-          <tr{{#if current_stream}} class="green bold"{{/if}}>
+          <tr{{#if is_current_stream}} class="green bold"{{/if}}>
             <td>{{precedence}}</td>
-            <td>{{name}}{{#if user}}: {{user}}{{/if}}</td>
-            {{#if current_stream}}
-              <td {{#if ../showBoot}}{{#if user}} width="25%"{{else}}colspan="2"{{/if}}{{else}}colspan="2"{{/if}}>Active &amp; streaming</td>
+
+            <td>
+              {{name}}
+              {{#with (lookup ../timed_sources [id])}}
+                &mdash; <code class="track-end" data-end="{{this}}"></code> remaining
+              {{/with}}
+
+              {{#ifEqual id ../dj_harbor_source}}
+                {{#if ../live_user}}
+                  {{#with ../live_user}}
+                    <span class="green">&mdash; User currently connected</span>
+                    <ul>
+                      <li>User: {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}</li>
+                      <li>Connected for <code class="connected-for" data-since="{{connected_since}}"></code></li>
+                    <ul>
+                  {{/with}}
+                {{else}}
+                  &mdash; No user connected
+                {{/if}}
+              {{/ifEqual}}
+            </td>
+
+            {{#if is_current_stream}}
+              <td>Active &amp; streaming</td>
             {{else}}
-              {{#if active}}
-                <td class="orange" {{#if ../showBoot}}{{#if user}} width="25%"{{else}}colspan="2"{{/if}}{{else}}colspan="2"{{/if}}>Active, not streaming (precedence too low)</td>
+              {{#if is_active}}
+                <td class="orange">Active, not streaming (precedence too low)</td>
               {{else}}
-                <td class="red" colspan="2">Inactive</td>
+                <td class="red">Inactive (or silent)</td>
               {{/if}}
             {{/if}}
-            {{#if ../showBoot}}
-              {{#if user}}
-                <td width="25%">
-                  <button class="boot-btn" data-time="60" data-text="1 minute" data-name="{{user}}" data-id="{{user_id}}">
-                    Ban {{user}} for 1 minute
-                  </button>
-                  <button class="boot-btn bg-orange" data-time="900" data-text="15 minutes" data-name="{{user}}" data-id="{{user_id}}">
-                    Ban {{user}} for 15 minutes
-                  </button>
-                  <button class="boot-btn bg-orange" data-time="3600" data-text="1 hour" data-name="{{user}}" data-id="{{user_id}}">
-                    Ban {{user}} for 1 hour
-                  </button>
-                  {{#if ../showBan}}
-                    <button class="boot-btn bg-red" data-time="permanent" data-text="permanently" data-name="{{user}}" data-id="{{user_id}}">
-                      Ban {{user}} <strong><u>PERMANENTLY</u></strong><br>
+
+            <td>
+              {{#ifContains ../skippable_sources id}}
+                {{#if showSkip}}
+                  {{#if is_active}}
+                    <button class="skip-btn" data-name="{{name}}" data-id="{{id}}">Skip</button>
+                  {{/if}}
+                {{/if}}
+              {{/ifContains}}
+              {{#ifEqual id ../dj_harbor_source}}
+                {{#with ../live_user}}
+                  {{#if ../../showBoot}}
+                    <button class="boot-btn" data-time="60" data-text="1 minute" data-name="{{username}}" data-id="{{user_id}}">
+                      Ban {{username}} for 1 minute
+                    </button>
+                    <br>
+                    <button class="boot-btn bg-orange" data-time="900" data-text="15 minutes" data-name="{{username}}" data-id="{{user_id}}">
+                      Ban {{username}} for 15 minutes
+                    </button>
+                    <br>
+                    <button class="boot-btn bg-orange" data-time="3600" data-text="1 hour" data-name="{{username}}" data-id="{{user_id}}">
+                      Ban {{username}} for 1 hour
+                    </button>
+                  {{/if}}
+                  {{#if ../../showBan}}
+                    <br>
+                    <button class="boot-btn bg-red" data-time="permanent" data-text="permanently" data-name="{{username}}" data-id="{{user_id}}">
+                      Ban {{username}} <strong><u>PERMANENTLY</u></strong><br>
                       (sets harbor authorization to <em>never</em>)
                     </button>
                   {{/if}}
-                </td>
-              {{/if}}
-            {{/if}}
+                {{/with}}
+
+              {{/ifEqual}}
+            </td>
           </tr>
         {{/with}}
       {{/each}}

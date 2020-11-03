@@ -49,6 +49,6 @@ def auth(request, data):
         else:
             logger.info(f'auth requested by {username}: denied (incorrect password)')
     else:
-        response.update({'authorized': user.currently_harbor_authorized(),
-                         'user': user.get_full_name(), 'user_id': user.id})
+        if user.currently_harbor_authorized():
+            response.update({'authorized': True, 'full_name': user.get_full_name(), 'user_id': user.id})
     return response

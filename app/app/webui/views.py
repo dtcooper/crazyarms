@@ -8,7 +8,7 @@ from django.contrib.auth import login, views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import HttpResponse, Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -220,7 +220,8 @@ def status_boot(request):
                                 'change their harbor authorization.')
                 else:
                     try:
-                        time = int(time)  # Covers case where user asks for "perm" (permanent)
+                        # XXX Covers case where user asks for "perm" (permanent), since ValueError is thrown
+                        time = int(time)
                     except ValueError:
                         pass
                     else:
@@ -230,6 +231,27 @@ def status_boot(request):
                             response = (f'{user.get_full_name()} banned for {ban_text}. To undo, visit the DJ Ban List '
                                         'page')
 
+        return HttpResponse(response, content_type='text/plain')
+    else:
+        return HttpResponseNotAllowed(('POST',))
+
+
+ALLOWED_SKIP_SOURCES = ('prerecord_to_stereo',)  # Hacky
+
+
+def status_skip(request):
+    if request.method == 'POST':
+        response = "You don't have permission to do that."
+        if request.user.has_perm('broadcast.change_broadcast'):
+            source_id = request.POST.get('id')
+            if source_id is None:
+                response = 'Malformed request.'
+            elif source_id not in ALLOWED_SKIP_SOURCES:
+                response = f'{source_id} not a skippable source.'
+            else:
+                source_name = request.POST.get('name', 'Unknown')
+                getattr(harbor, f'{source_id}.skip')()
+                response = f'You successfully skipped the current track on {source_name}.'
         return HttpResponse(response, content_type='text/plain')
     else:
         return HttpResponseNotAllowed(('POST',))

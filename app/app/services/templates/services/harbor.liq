@@ -11,16 +11,18 @@ BUFFER = 5.
 MAX = 10.
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://app:8000/api/'
-SSE_MESSAGE_URL = 'http://sse:8000/message'
+SSE_MESSAGE_URL = 'http://sse:3000/message'
 REDIS_KEY = 'liquidsoap:source-status'
 
 
-def json_of_mixed(~strs=[], ~bools=[], ~ints=[])
-    json = [json_of(strs), json_of(bools), json_of(ints)]
-    json = list.filter(fun(j) -> not string.match(pattern='^\\s*\\[\\s+\\]\\s*$', j), json)
-    json = list.map(fun(j) -> list.assoc(default='"invalid": true', "1",
-                                         string.extract(pattern='^\\s*\\{\\s*(.+?)\\s*\\}\\s*', j)), json)
-    json = string.concat(separator=', ', json)
+def json_of_mixed_types(~strs=[], ~bools=[], ~ints=[], ~floats=[], ~nulls=[])
+    json = [json_of(compact=true, strs), json_of(compact=true, bools),
+            json_of(compact=true, ints), json_of(compact=true, floats)]
+    json = list.filter(fun(j) -> j != '[]' and j != '{}', json)
+    json = list.map(fun(j) -> list.assoc(default='!INVALID REGEX!', '1',
+                                         string.extract(pattern='^\\{(.+?)\\}', j)), json)
+    json = list.append(json, list.map(fun(s) -> '#{json_of(s)}:null', nulls))
+    json = string.concat(separator=',', json)
     '{#{json}}'
 end
 
@@ -43,7 +45,8 @@ def list.insert(index, new_element, l) =
 end
 
 # DJ Authentication
-last_authorized_user = ref ('unknown', -1)
+# (username, full_name, user_id)
+last_authorized_user = ref ('', '', 0)
 def dj_auth(username, password)
     data = json_of([('username', username), ('password', password)])
     url = '#{API_PREFIX}auth/'
@@ -52,25 +55,35 @@ def dj_auth(username, password)
         log('ERROR: got non-200 status got API (#{status_code}) for user #{username}')
         false
     else
-        authorized =  list.assoc(default=false, 'authorized', of_json(default=[('authorized', false)], response))
+        authorized =  list.assoc(default=false, 'authorized', of_json(default=[('_', false)], response))
         log('dj_auth: authorize with API for user #{username} returned: #{string_of(authorized)}')
         if authorized then
-            user = list.assoc(default='unknown', 'user', of_json(default=[('user', 'unknown')], response))
-            user_id = list.assoc(default=-1, 'user_id', of_json(default=[('user_id', -1)], response))
-            last_authorized_user := (user, user_id)
+            user_id = list.assoc(default=0, 'user_id', of_json(default=[('_', 0)], response))
+            full_name = list.assoc(default='', 'full_name', of_json(default=[('_', '')], response))
+            last_authorized_user := (username, full_name, user_id)
         end
         authorized
     end
 end
 
-live_user = ref ('unknown', -1)
+# (username, full_name, user_id, connection_time)
+live_user_connected = ref false
+live_user = ref ('', '', 0, -1.)
+dj_status_update_callback = ref fun() -> ()  # requires dj_harbor to be defined
 def dj_connect(headers)
-    live_user := !last_authorized_user
+    live_user_connected := true
+    let (username, full_name, user_id) = !last_authorized_user
+    live_user := (username, full_name, user_id, time())
+    status_update = !dj_status_update_callback
+    status_update()
 end
 
 def dj_disconnect()
-    last_authorized_user := ('unknown', -1)
-    live_user := ('unknown', -1)
+    last_authorized_user := ('', '', 0)
+    live_user_connected := false
+    live_user := ('', '', 0, -1.)
+    status_update = !dj_status_update_callback
+    status_update()
 end
 
 ### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
@@ -96,13 +109,14 @@ zoom = strip_blank(
 )
 {% endif %}
 
-prerecord = request.equeue(id='prerecord')
+prerecord = request.queue(id='prerecord')
+prerecord = audio_to_stereo(id='prerecord_to_stereo', prerecord)
 add_skip_command(prerecord)
 
 failsafe = single(id='failsafe', '/assets/hold-music.mp3')
 
+# You can add to these using custom code, see below
 source_hierarchy = [
-      # TODO switch from equeue to queue? Rename id?
     ('Prerecorded Broadcast', prerecord),
     ('Live DJ', dj_harbor),
 {% if settings.ZOOM_ENABLED %}
@@ -110,6 +124,10 @@ source_hierarchy = [
 {% endif %}
     ('Failsafe Audio', failsafe)
 ]
+
+# Add to these as well if needed to the status page UI
+skippable_sources = [prerecord]
+timed_sources = [prerecord]
 
 #
 # To add a source,
@@ -131,27 +149,36 @@ source_hierarchy = [
 def status_json()
     active_sources = list.filter(fun(src) -> source.is_ready(snd(src)), source_hierarchy)
     streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(snd(src)), active_sources))
-    '[' ^ string.concat(separator=', ', list.mapi(fun(i, src) -> begin
+    sources = '[' ^ string.concat(separator=',', list.mapi(fun(n, src) -> begin
         let (name, source) = src
-        source_id = source.id(source)
-        source_active = source.is_ready(source)
-        current_stream = streaming_source_id == source_id
-        let (user, user_id) = !live_user
-        # TODO: live user should be based on connection, and callbacks on_connection on on_disconnect
-        #       then each source should just have a bool called is_dj_harbor or something
-        #       finally, sources should be a list in a dict, and dj_harbor should be abother nested
-        #       dict with all the live information, ie kickoff time, connect time, etc
-        let (json_strs, json_ints, json_bools) = if source_id == source.id(dj_harbor) and user_id != -1 then
-            ([('id', source_id), ('name', name), ('user', user)],
-             [('precedence', i + 1), ('user_id', user_id)],
-             [('active', source_active), ('current_stream', current_stream)])
-        else
-            ([('id', source_id), ('name', name)],
-             [('precedence', i + 1)],
-             [('active', source_active), ('current_stream', current_stream), ('user', false), ('user_id', false)])
-        end
-        json_of_mixed(strs=json_strs, ints=json_ints, bools=json_bools)
+        id = source.id(source)
+        json_of_mixed_types(
+            strs=[('id', id), ('name', name)], ints=[('precedence', n + 1)],
+            bools=[('is_active', source.is_ready(source)), ('is_current_stream', id == streaming_source_id)])
     end, source_hierarchy)) ^ ']'
+
+    live_user = if !live_user_connected then
+        let (username, full_name, user_id, connected_since) = !live_user
+        json_of_mixed_types(strs=[('username', username), ('full_name', full_name)],
+                            ints=[('user_id', user_id)], floats=[('connected_since', connected_since)])
+    else
+        'null'
+    end
+
+    now = time()
+    timed = list.map(fun(s) -> begin
+        remaining = source.remaining(s)
+        remaining = if remaining > 0. then now + remaining else -1. end
+        (source.id(s), remaining)
+    end, timed_sources)
+    timed = json_of(compact=true, list.filter(fun(s) -> snd(s) > -1., timed))
+
+    skippable = json_of(compact=true, list.map(fun(s) -> source.id(s), skippable_sources))
+
+    dj_harbor_source = json_of(compact=true, source.id(dj_harbor))
+
+    '{"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
+        ^ '"skippable_sources":#{skippable},"timed_sources":#{timed}}'
 end
 server.register(usage='status', description='Get status of sources', 'status', fun(_) -> status_json())
 
@@ -172,12 +199,17 @@ def update_status()
         -1.
     end)
 end
+dj_status_update_callback := update_status
 add_timeout(2.5, fun() -> begin update_status(); -1. end)
+server.register('status_update', description='Force a status update to sse + redis', fun(_) -> begin
+    update_status()
+    'Done!'
+end)
 
 # Register callbacks on start/stop of all sources for push notifications
 # XXX: is there a better way to do this?
-list.map(fun(src) -> output.dummy(fallible=true, on_start=update_status, on_stop=update_status, snd(src)),
-         source_hierarchy)
+ignore(list.map(fun(src) -> output.dummy(fallible=true, on_start=update_status, on_stop=update_status, snd(src)),
+                source_hierarchy))
 
 # Radio playout
 swoosh = single('/assets/transition.mp3')
@@ -207,7 +239,7 @@ radio = fallback(
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',
-    mount='stream',
-    port=2817,
+    mount='live',
+    port=4000,
     radio,
 )

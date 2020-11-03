@@ -10,4 +10,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN apk del .build-deps gcc musl-dev
 
 COPY sse.py /app/
-CMD gunicorn --worker-class aiohttp.GunicornWebWorker -b 0.0.0.0:8000 --graceful-timeout 2 --capture-output --access-logfile - sse
+CMD gunicorn --worker-class aiohttp.GunicornWebWorker -b 0.0.0.0:3000 --graceful-timeout 2 --capture-output --access-logfile - sse

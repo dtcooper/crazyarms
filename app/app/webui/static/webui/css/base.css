@@ -3,6 +3,10 @@ body {
   padding: 0.5rem;
 }
 
+* {
+  hyphens: auto;
+}
+
 .button:focus,
 .button:enabled:hover,
 button:focus,
@@ -32,4 +36,9 @@ input[type=text], input[type=password], input[type=email] { width: 100%; }
 .center-text { text-align: center; }
 .right-text { text-align: right; }
 
-.boot-btn { margin: 2.5px 0; }
+.boot-btn {
+  margin: 2px 0;
+  white-space: normal;
+}
+
+th { text-align: center; text-decoration: underline; }

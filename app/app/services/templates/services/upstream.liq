@@ -3,7 +3,7 @@ set('server.telnet.port', {{ TELNET_PORT }})
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 
-url = 'http://harbor:2817/stream'
+url = 'http://harbor:4000/live'
 
 input = input.http(id='input', max=10., poll_delay=0.5, url)
 output.dummy(input, fallible=true)
