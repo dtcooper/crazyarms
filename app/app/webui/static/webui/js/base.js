@@ -15,11 +15,15 @@ function addMessage(level, message) {
 }
 
 $(function() {
-    $('body').on('click', '.close-message', function (e) {
+    $('body').on('click', '.close-message', function(e) {
         e.preventDefault()
         $(this).closest('li').remove()
         updateMessageContainer()
     })
+
+    $('nav a[href="' + window.location.pathname + '"]').each(function(i, elem) {
+       $(elem).addClass('current-page');
+    });
 
     updateMessageContainer()
 })

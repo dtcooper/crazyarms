@@ -16,12 +16,12 @@ from django.utils.html import format_html
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, TemplateView, UpdateView
 
+from constance import config
 from huey.contrib.djhuey import lock_task
 from huey.exceptions import TaskLockedException
 
 from carb import constants
 from common.models import User
-from gcal.models import GoogleCalendarShowTimes
 from services.liquidsoap import harbor
 from services.services import ZoomService
 
@@ -72,25 +72,10 @@ class StatusView(LoginRequiredMixin, TemplateView):
             return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        today = timezone.now().date()
-        user = self.request.user
-        now_pretty = date_format(timezone.localtime(), 'SHORT_DATETIME_FORMAT')
-
         return {
             **super().get_context_data(**kwargs),
             'title': 'Server Status',
-            'show_times_range_start': today - GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MIN,
-            'show_times_range_end': today + GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MAX,
             'liquidsoap_status': harbor.status(),
-            'user_info': (
-                ('Username', user.username),
-                ('Contact', f'"{user.get_full_name()}" <{user.email}>'),
-                ('Harbor Authorization', user.harbor_auth_pretty()),
-                ('Timezone', f'{user.get_timezone_display()} (currently {now_pretty})'),
-            ),
-            'server_info': (
-                ('Liquidsoap Version', harbor.version),
-            ),
         }
 
 
@@ -175,6 +160,21 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
             'form_description': format_html(
                 'Update your user profile below. <a href="{}">Click here</a> to change your password.',
                 reverse('password_change'))
+        }
+
+
+class GCalView(LoginRequiredMixin, TemplateView):
+    template_name = 'webui/gcal.html'
+
+    def dispatch(self, *args, **kwargs):
+        if not config.GOOGLE_CALENDAR_ENABLED:
+            return redirect('status')
+        return super().dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        return {
+            **super().get_context_data(**kwargs),
+            'title': 'My Scheduled Shows'
         }
 
 

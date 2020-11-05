@@ -97,6 +97,11 @@ class User(AbstractUser):
         except User._show_times.RelatedObjectDoesNotExist:
             return []
 
+    @cached_property
+    def upcoming_show_times(self):
+        earliest_entry = timezone.now() - datetime.timedelta(self.google_calender_entry_grace_minutes)
+        return list(filter(lambda show_time: show_time.lower >= earliest_entry, self.show_times))
+
     def currently_harbor_authorized(self, now=None):
         auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
         ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')

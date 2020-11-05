@@ -7,6 +7,7 @@ urlpatterns = [
     re_path('^(?:|status/)$', views.StatusView.as_view(), name='status'),
     path('status/boot/', views.status_boot, name='status_boot'),
     path('status/skip/', views.status_skip, name='status_skip'),
+    path('scheduled-shows/', views.GCalView.as_view(), name='gcal'),
     path('banlist/', views.BanListView.as_view(), name='banlist'),
     path('zoom/', views.ZoomView.as_view(), name='zoom'),
     path('first-run/', views.FirstRunView.as_view(), name='first_run'),

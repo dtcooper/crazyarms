@@ -98,7 +98,12 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
     },
+
 }
 
 WSGI_APPLICATION = 'carb.wsgi.application'

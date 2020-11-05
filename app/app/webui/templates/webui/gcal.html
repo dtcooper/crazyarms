@@ -1,0 +1,56 @@
+{% extends 'webui/base.html' %}
+
+{% block content %}
+{% if user.harbor_auth == user.HarborAuth.NEVER %}
+  <p class="red bold">
+    You are currently <u>NOT</u> authorized on the harbor. Please contact the station administration.
+  </p>
+{% else %}
+  {% if user.harbor_auth == user.HarborAuth.ALWAYS %}
+    <p><em>Note: you are <strong><u>ALWAYS</u></strong> authorized to broadcast on the harbor.</em></p>
+  {% endif %}
+  {% if user.harbor_auth == user.HarborAuth.GOOGLE_CALENDAR %}
+    {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
+      Your login grace period:
+      <ul>
+        {% if user.google_calender_entry_grace_minutes > 0 %}
+          <li>You can start broadcasting up to
+            <strong><u>{{ user.google_calender_entry_grace_minutes }} minutes early</u></strong>.</li>
+        {% endif %}
+        {% if user.google_calender_exit_grace_minutes > 0 %}
+          <li>You can <em>keep</em> broadcasting up to
+              <strong><u>{{ user.google_calender_exit_grace_minutes }} minutes <em>after</em> your scheduled time</u></strong>.</li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  {% endif %}
+  {% if user.upcoming_show_times %}
+    <table>
+      <caption>
+        My Upcoming Scheduled Shows
+        {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
+          <em>(Not Including Grace Period)</em>
+        {% endif %}
+      </caption>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Start Time ({{ user.timezone }})</th>
+          <th>End Time ({{ user.timezone }})</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for show_time in user.upcoming_show_times %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ show_time.lower }}</td>
+            <td>{{ show_time.upper }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No show times scheduled.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

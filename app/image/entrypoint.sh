@@ -9,7 +9,7 @@ source /.env
 if [ "$#" = 0 ]; then
     if [ "${__RUN_HUEY}" ]; then
         if [ -z "$HUEY_WORKERS" ]; then
-            HUEY_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() * 4, 12))')"
+            HUEY_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() * 3, 6))')"
         fi
         CMD="./manage.py run_huey --workers $HUEY_WORKERS --flush-locks"
         if [ "$DEBUG" -a "$DEBUG" != '0' ]; then
@@ -28,7 +28,7 @@ if [ "$#" = 0 ]; then
             ./manage.py collectstatic --noinput
 
             if [ -z "$GUNICORN_WORKERS" ]; then
-                GUNICORN_WORKERS="$(python -c 'import multiprocessing as m; print(max(m.cpu_count() * 2 + 1, 3))')"
+                GUNICORN_WORKERS="$(python -c 'import multiprocessing as m; print(max(round(m.cpu_count() * 1.5 + 1), 3))')"
             fi
 
             exec gunicorn $GUNICORN_ARGS -b 0.0.0.0:8000 -w $GUNICORN_WORKERS --capture-output --access-logfile - carb.wsgi

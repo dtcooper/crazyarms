@@ -11,8 +11,9 @@ RUN apt-get update \
         ffmpeg \
         libsox-fmt-all \
         pulseaudio \
-        python3 \
-        python3-pip \
+        # Do we need youtube-dl?
+#        python3 \
+#        python3-pip \
         redis-tools \
         sox \
         supervisor \
@@ -25,7 +26,8 @@ RUN wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases
         /tmp/liquidsoap.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/*.deb
 
-RUN pip3 install --no-cache-dir youtube-dl
+# TODO: nice-to-have but do we need youtube-dl?
+#RUN pip3 install --no-cache-dir youtube-dl
 
 RUN wget -qO /usr/local/bin/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/81b1373f/wait-for-it.sh \
     && chmod +x /usr/local/bin/wait-for-it

@@ -42,3 +42,10 @@ input[type=text], input[type=password], input[type=email] { width: 100%; }
 }
 
 th { text-align: center; text-decoration: underline; }
+
+.current-page {
+  cursor: default;
+  text-decoration: none;
+  color: #aaaaaa;
+}
+.current-page:hover { text-decoration: underline; }

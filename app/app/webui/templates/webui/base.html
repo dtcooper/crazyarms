@@ -4,7 +4,7 @@
   {% load static %}
 
   <meta charset="utf-8">
-  <title>{% block title %}{% if title %}{{ title|title }} - {% endif %}{{ station_name_override|default:config.STATION_NAME|title }}{% endblock %}</title>
+  <title>{% block title %}{% if title %}{{ title }} - {% endif %}{{ station_name_override|default:config.STATION_NAME }}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{% static 'webui/css/new.css' %}">
   <link rel="stylesheet" href="{% static 'webui/css/base.css' %}">
@@ -16,27 +16,36 @@
   {% block header %}
     <header>
       <h1>
-        {{ station_name_override|default:config.STATION_NAME|title }}
+        {{ station_name_override|default:config.STATION_NAME }}
         {% if title %}
-          <br><em><small>{{ title|title }}</small></em>
+          <br><em><small>{{ title }}</small></em>
         {% endif %}
       </h1>
       {% if not hide_nav %}
         <nav>
           {% if user.is_authenticated %}
             <a href="{% url 'status' %}">Server Status</a> /
-            {% if perms.common.can_boot %}
-              <a href="{% url 'banlist' %}">DJ Ban List</a> /
-            {% endif %}
-            {% if user_has_admin_permissions %}
-              <a href="{% url 'admin:index' %}">Admin</a> /
+            {% if config.GOOGLE_CALENDAR_ENABLED %}
+              <a href="{% url 'gcal' %}">My Scheduled Shows</a> /
             {% endif %}
             {% if settings.ZOOM_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
               <a href="{% url 'zoom' %}">Zoom</a> /
             {% endif %}
             <a href="{% url 'user_profile' %}">Profile</a> /
             <a href="{% url 'logout' %}">Logout</a> /
-            Welcome, {{ user.username }}.
+            Welcome, {{ user.get_full_name }}.
+            {% if perms.common.can_boot or user_has_admin_permissions %}
+              <strong>
+                <br>Administration:
+                  {% if user_has_admin_permissions %}
+                    <a href="{% url 'admin:index' %}">Station Admin Site</a>
+                    {% if perms.common.can_boot %} / {% endif %}
+                  {% endif %}
+                  {% if perms.common.can_boot %}
+                    <a href="{% url 'banlist' %}">DJ Ban List</a>
+                  {% endif %}
+              </strong>
+            {% endif %}
           {% else %}
             <a href="{% url 'login' %}">Login</a>
           {% endif %}

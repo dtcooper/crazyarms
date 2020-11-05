@@ -168,49 +168,22 @@
 
 <table>
   <caption>Current User</caption>
-  {% for description, value in user_info %}
-    <tr>
-      <td><strong>{{ description }}</strong></td>
-      <td>{{ value }}</td>
-    </tr>
-  {% endfor %}
+  <tr>
+    <td>Username</td>
+    <td>{{ user.username }}</td>
+  </tr>
+  <tr>
+    <td>Contact</td>
+    <td>"{{ user.get_full_name }}" &lt;{{ user.email }}&gt;</td>
+  </tr>
+  <tr>
+    <td>Harbor Authorization</td>
+    <td>{{ user.harbor_auth_pretty }}</td>
+  </tr>
+  <tr>
+    <td>Timezone</td>
+    <td>{{ user.get_timezone_display }} (currently {% now 'SHORT_DATETIME_FORMAT' %})</td>
+  </tr>
 </table>
-</div>
 
-{# TODO: make this a separate view #}
-{% comment %}
-{% if config.GOOGLE_CALENDAR_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
-  <details>
-    <summary>
-      {{ user.show_times|length }} Google Calendar show time{{ user.show_times|pluralize }}
-      from {{ show_times_range_start }} to {{ show_times_range_end }}
-    </summary>
-    {% if user.harbor_auth == user.HarborAuth.ALWAYS %}
-      <p><em>Note: you are <u>always</u> authorized to broadcast on the harbor.</em></p>
-    {% endif %}
-    {% if user.show_times %}
-      {# TODO: Filter these shows times by today final show, not all days, if NOW >= lower bound #}
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Start Time</th>
-            <th>End Time</th></tr>
-        </thead>
-        <tbody>
-          {% for show_time in user.show_times %}
-            <tr>
-              <td>{{ forloop.counter }}</td>
-              <td>{{ show_time.lower }}</td>
-              <td>{{ show_time.upper }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p>No show times scheduled.</p>
-    {% endif %}
-  </details>
-{% endif %}
-{% endcomment %}
 {% endblock %}
