@@ -6,6 +6,8 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path
 
+from constance import config
+
 from common.admin import AssetAdminBase
 
 from .forms import AudioAssetCreateForm, AudioAssetUploadForm
@@ -18,6 +20,18 @@ class AudioAssetAdmin(AssetAdminBase):
     def get_urls(self):
         return [path('upload/', self.admin_site.admin_view(self.upload_view),
                 name='autodj_audioasset_upload')] + super().get_urls()
+
+    def has_add_permission(self, request):
+        return config.AUTODJ_ENABLED and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return config.AUTODJ_ENABLED and super().has_change_permission(request, obj=obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return config.AUTODJ_ENABLED and super().has_delete_permission(request, obj=obj)
+
+    def has_view_permission(self, request, obj=None):
+        return config.AUTODJ_ENABLED and super().has_view_permission(request, obj=obj)
 
     def upload_view(self, request):
         if not self.has_add_permission(request):

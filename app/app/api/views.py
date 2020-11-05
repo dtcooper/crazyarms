@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 
+from constance import config
+
 from autodj.models import AudioAsset
 from common.models import User
 
@@ -61,8 +63,9 @@ def auth(request, data):
 
 @api_view(methods=('GET',))
 def next_track(request):
-    audio_asset = AudioAsset.get_next_for_autodj()
-    if audio_asset:
-        return {'has_track': True, 'track_uri': f'file://{audio_asset.file.path}'}
-    else:
-        return {'has_track': False}
+    response = {'has_track': False}
+    if config.AUTODJ_ENABLED:
+        audio_asset = AudioAsset.get_next_for_autodj()
+        if audio_asset:
+            response.update({'has_track': True, 'track_uri': f'file://{audio_asset.file.path}'})
+    return response

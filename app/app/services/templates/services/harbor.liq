@@ -16,6 +16,9 @@ SSE_MESSAGE_URL = 'http://sse:3000/message'
 REDIS_KEY = 'liquidsoap:source-status'
 
 
+start_time = time()
+
+
 def json_of_mixed_types(~strs=[], ~bools=[], ~ints=[], ~floats=[], ~nulls=[])
     json = [json_of(compact=true, strs), json_of(compact=true, bools),
             json_of(compact=true, ints), json_of(compact=true, floats)]
@@ -118,7 +121,7 @@ zoom = strip_blank(
 
 prerecord = request.queue(id='prerecord')
 prerecord = audio_to_stereo(id='prerecord_to_stereo', prerecord)
-prerecord = on_end(id='prerecord_to_stereo_onend', delay=0., fun(_, _) -> begin
+prerecord = on_end(id='prerecord_onend', delay=0., fun(_, _) -> begin
     status_update = !status_update_ref
     status_update()
 end, prerecord)
@@ -143,10 +146,14 @@ autodj = request.dynamic.list(id='autodj', length=REQUEST_QUEUE_LENGTH, retry_de
 end)
 
 autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
-autodj = on_end(id='autodj_to_stereo_onend', delay=0., fun(_, _) -> begin
+autodj = on_end(id='autodj_onend', delay=0., fun(_, _) -> begin
     status_update = !status_update_ref
     status_update()
 end, autodj)
+
+# Having autodj safe for up to 5 seconds means resolution loading files won't
+# transition to failsafe and just have a few ms of silence
+autodj = strip_blank(id='autodj_strip', max_blank=5., start_blank=true, mksafe(id='autodj_safe', autodj))
 add_skip_command(autodj)
 
 
@@ -184,6 +191,7 @@ timed_sources = [prerecord, autodj]
 #### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
 
 # Server status stuff
+current_metadata = ref []
 def status_json()
     active_sources = list.filter(fun(src) -> source.is_ready(snd(src)), source_hierarchy)
     streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(snd(src)), active_sources))
@@ -214,9 +222,12 @@ def status_json()
     skippable = json_of(compact=true, list.map(fun(s) -> source.id(s), skippable_sources))
 
     dj_harbor_source = json_of(compact=true, source.id(dj_harbor))
+    metadata = json_of(compact=true, !current_metadata)
+    server_info = json_of_mixed_types(floats=[('start_time', start_time)], strs=[('version', liquidsoap.version)])
 
     '{"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
-        ^ '"skippable_sources":#{skippable},"timed_sources":#{timed}}'
+        ^ '"skippable_sources":#{skippable},"timed_sources":#{timed},"metadata":#{metadata},'
+        ^ '"server_info": #{server_info}}'
 end
 server.register(usage='status', description='Get status of sources', 'status', fun(_) -> status_json())
 
@@ -251,7 +262,13 @@ ignore(list.map(fun(src) -> output.dummy(fallible=true, on_start=update_status, 
 # Radio playout
 swoosh = single('/assets/transition.mp3')
 def transition(~source, one, two)
-    log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}')
+    log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
+
+    # AutoDJ skip when we transition to it
+    if source.id(source) == source.id(autodj) then
+        source.skip(autodj)
+    end
+
     # TODO maybe this should just be a jinja conditional
     add(normalize=false, if TRANSITION_WITH_SWOOSH then
         [fade.final(duration=2.5, one), once(swoosh),  two]
@@ -272,6 +289,10 @@ radio = fallback(
 {{ section3 }}
 #### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
 
+radio = on_metadata(fun(m) -> begin
+    current_metadata := metadata.export(m)
+    update_status()
+end, radio)
 
 # TODO: maybe this should just be jinja?
 radio = if COMPRESSION_NORMALIZATION then

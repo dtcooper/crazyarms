@@ -26,7 +26,7 @@ function updateTimers() {
         var secondsLeft = Math.max((endTime.getTime() - new Date()) / 1000, 0)
         $(elem).text(prettyInterval(secondsLeft))
     });
-    $('body .connected-for').each(function(i, elem) {
+    $('body .since-timer').each(function(i, elem) {
         var startTime = new Date($(elem).data('since') * 1000)
         var seconds = Math.max((new Date() - startTime.getTime()) / 1000, 0)
         $(elem).text(prettyInterval(seconds))

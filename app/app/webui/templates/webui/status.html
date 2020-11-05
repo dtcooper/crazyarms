@@ -23,6 +23,46 @@
 
 {% verbatim %}
 <script id="liquidsoap-status-template" type="text/x-handlebars-template">
+<table>
+  <caption>Harbor Information</caption>
+  <tr>
+    <td width="25%"><strong>Current Stream:</strong></td>
+    <td width="75%">
+      {{#each sources}}
+        {{#if this.is_current_stream}}
+          <strong class="green">{{this.name}}</strong>
+        {{/if}}
+      {{/each}}
+      <em>(see below)</em>
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Current Metadata:</strong></td>
+    <td>
+      {{#with metadata}}
+        {{#if artist}}{{artist}}{{#if album}} - {{else}}{{#if title}} - {{/if}}{{/if}}{{/if}}
+        {{#if album}}{{album}}{{#if title}} - {{/if}}{{/if}}
+        {{#if title}}{{title}}{{/if}}
+        {{#unless artist}}
+          {{#unless album}}
+            {{#unless title}}
+              <em>none</em>
+            {{/unless}}
+          {{/unless}}
+        {{/unless}}
+      {{/with}}
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Server Uptime:</strong></td>
+    <td><code class="since-timer" data-since="{{server_info.start_time}}"></code></td>
+  </tr>
+  <tr>
+    <td><strong>Liquidsoap Version:</strong></td>
+    <td><code>v{{server_info.version}}</code></td>
+  </tr>
+</table>
+
 {{#if sources}}
   <table>
     <caption>Harbor Sources</caption>
@@ -50,7 +90,7 @@
                     <span class="green">&mdash; DJ currently connected</span>
                     <ul>
                       <li>User: {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}</li>
-                      <li>Connected for <code class="connected-for" data-since="{{connected_since}}"></code></li>
+                      <li>Connected for <code class="since-timer" data-since="{{connected_since}}"></code></li>
                     <ul>
                   {{/with}}
                 {{else}}
@@ -127,17 +167,7 @@
 <div id="liquidsoap-status"></div>
 
 <table>
-  <caption>Server Info</caption>
-  {% for description, value in server_info %}
-    <tr>
-      <td><strong>{{ description }}</strong></td>
-      <td>{{ value }}</td>
-    </tr>
-  {% endfor %}
-</table>
-
-<table>
-  <caption>User</caption>
+  <caption>Current User</caption>
   {% for description, value in user_info %}
     <tr>
       <td><strong>{{ description }}</strong></td>
@@ -147,7 +177,8 @@
 </table>
 </div>
 
-
+{# TODO: make this a separate view #}
+{% comment %}
 {% if config.GOOGLE_CALENDAR_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
   <details>
     <summary>
@@ -181,4 +212,5 @@
     {% endif %}
   </details>
 {% endif %}
+{% endcomment %}
 {% endblock %}
