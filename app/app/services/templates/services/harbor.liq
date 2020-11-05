@@ -214,7 +214,8 @@ def status_json()
     now = time()
     timed = list.map(fun(s) -> begin
         remaining = source.remaining(s)
-        remaining = if remaining > 0. then now + remaining else -1. end
+        # int_of_float covers weird infinity case, truncating it to zero
+        remaining = if int_of_float(remaining + 0.001) > 0 then now + remaining else 0. end
         (source.id(s), remaining)
     end, timed_sources)
     timed = json_of(compact=true, list.filter(fun(s) -> snd(s) > -1., timed))
