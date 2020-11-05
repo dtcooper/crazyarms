@@ -9,6 +9,7 @@ set('scheduler.fast_queues', 1)
 
 BUFFER = 5.
 MAX = 10.
+REQUEST_QUEUE_LENGTH = 15.
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://app:8000/api/'
 SSE_MESSAGE_URL = 'http://sse:3000/message'
@@ -51,11 +52,8 @@ def dj_auth(username, password)
     data = json_of([('username', username), ('password', password)])
     url = '#{API_PREFIX}auth/'
     let ((_, status_code, _), _, response) = http.post(url, headers=API_HEADERS, data=data)
-    if status_code != 200 then
-        log('ERROR: got non-200 status got API (#{status_code}) for user #{username}')
-        false
-    else
-        authorized =  list.assoc(default=false, 'authorized', of_json(default=[('_', false)], response))
+    if status_code == 200 then
+        authorized = list.assoc(default=false, 'authorized', of_json(default=[('_', false)], response))
         log('dj_auth: authorize with API for user #{username} returned: #{string_of(authorized)}')
         if authorized then
             user_id = list.assoc(default=0, 'user_id', of_json(default=[('_', 0)], response))
@@ -63,18 +61,21 @@ def dj_auth(username, password)
             last_authorized_user := (username, full_name, user_id)
         end
         authorized
+    else
+        log('ERROR: dj_auth: got non-200 status got API (#{status_code}) for user #{username}')
+        false
     end
 end
 
 # (username, full_name, user_id, connection_time)
 live_user_connected = ref false
 live_user = ref ('', '', 0, -1.)
-dj_status_update_callback = ref fun() -> ()  # requires dj_harbor to be defined
+status_update_ref = ref fun() -> ()  # requires dj_harbor to be defined
 def dj_connect(headers)
     live_user_connected := true
     let (username, full_name, user_id) = !last_authorized_user
     live_user := (username, full_name, user_id, time())
-    status_update = !dj_status_update_callback
+    status_update = !status_update_ref
     status_update()
 end
 
@@ -82,7 +83,7 @@ def dj_disconnect()
     last_authorized_user := ('', '', 0)
     live_user_connected := false
     live_user := ('', '', 0, -1.)
-    status_update = !dj_status_update_callback
+    status_update = !status_update_ref
     status_update()
 end
 
@@ -117,7 +118,37 @@ zoom = strip_blank(
 
 prerecord = request.queue(id='prerecord')
 prerecord = audio_to_stereo(id='prerecord_to_stereo', prerecord)
+prerecord = on_end(id='prerecord_to_stereo_onend', delay=0., fun(_, _) -> begin
+    status_update = !status_update_ref
+    status_update()
+end, prerecord)
 add_skip_command(prerecord)
+
+autodj = request.dynamic.list(id='autodj', length=REQUEST_QUEUE_LENGTH, retry_delay=30., fun() -> begin
+    url = '#{API_PREFIX}next-track/'
+    let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
+    if status_code == 200 then
+        if list.assoc(default=false, 'has_track', of_json(default=[('_', false)], response)) then
+            track_uri = list.assoc(default='', 'track_uri', of_json(default=[('_', '')], response))
+            log('autodj: selected URI #{track_uri}')
+            [request.create(track_uri)]
+        else
+            log('ERROR: autodj returned no track')
+            []
+        end
+    else
+        log('ERROR: autodj: got non-200 status got API (#{status_code}) for next track')
+        []
+    end
+end)
+
+autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
+autodj = on_end(id='autodj_to_stereo_onend', delay=0., fun(_, _) -> begin
+    status_update = !status_update_ref
+    status_update()
+end, autodj)
+add_skip_command(autodj)
+
 
 failsafe = single(id='failsafe', '/assets/hold-music.mp3')
 
@@ -128,12 +159,13 @@ source_hierarchy = [
 {% if settings.ZOOM_ENABLED %}
     ('Zoom Room', zoom),
 {% endif %}
+    ('AutoDJ', autodj),
     ('Failsafe Audio', failsafe)
 ]
 
 # Add to these as well if needed to the status page UI
-skippable_sources = [prerecord]
-timed_sources = [prerecord]
+skippable_sources = [prerecord, autodj]
+timed_sources = [prerecord, autodj]
 
 #
 # To add a source,
@@ -195,17 +227,17 @@ def update_status()
         cmd = "redis-cli -h redis set 'liquidsoap:status' #{string.quote(status)}"
         log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')
         if not test_process(cmd) then
-            log('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd})')
+            log.severe('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd})')
         end
         log('update_status: hitting sse service (step 2/2)')
         let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=status)
         if status_code != 204 then
-            log('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
+            log.severe('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
         end
         -1.
     end)
 end
-dj_status_update_callback := update_status
+status_update_ref := update_status
 add_timeout(2.5, fun() -> begin update_status(); -1. end)
 server.register('status_update', description='Force a status update to sse + redis', fun(_) -> begin
     update_status()
@@ -213,7 +245,6 @@ server.register('status_update', description='Force a status update to sse + red
 end)
 
 # Register callbacks on start/stop of all sources for push notifications
-# XXX: is there a better way to do this?
 ignore(list.map(fun(src) -> output.dummy(fallible=true, on_start=update_status, on_stop=update_status, snd(src)),
                 source_hierarchy))
 
@@ -221,6 +252,7 @@ ignore(list.map(fun(src) -> output.dummy(fallible=true, on_start=update_status, 
 swoosh = single('/assets/transition.mp3')
 def transition(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}')
+    # TODO maybe this should just be a jinja conditional
     add(normalize=false, if TRANSITION_WITH_SWOOSH then
         [fade.final(duration=2.5, one), once(swoosh),  two]
     else
@@ -240,6 +272,8 @@ radio = fallback(
 {{ section3 }}
 #### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
 
+
+# TODO: maybe this should just be jinja?
 radio = if COMPRESSION_NORMALIZATION then
     log('Enabling compression and normalization.')
     normalize(target=0., window=0.03, gain_min=-16., gain_max=0., compress.exponential(radio, mu=1.))

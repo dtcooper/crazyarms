@@ -155,7 +155,8 @@ class AudioAssetBase(TimestampedModel):
     file = models.FileField('audio file', upload_to='prerecord/', blank=True,
                             help_text='You can provide either an uploaded audio file or a URL to an external asset.')
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
-    status = models.CharField('Upload status', max_length=1, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField('upload status', max_length=1, choices=Status.choices, default=Status.PENDING,
+                              db_index=True)
     task_id = models.UUIDField(null=True)
 
     class Meta:
@@ -216,8 +217,11 @@ class AudioAssetBase(TimestampedModel):
         model_cls.objects.filter(id=self.id).update(task_id=task.id)
         model_cls.objects.filter(id=self.id, status=model_cls.Status.PENDING).update(status=model_cls.Status.QUEUED)
 
-    def __str__(self):
-        s = ' - '.join(filter(None, (getattr(self, field_name, None) for field_name in self.TITLE_FIELDS)))
+    def __str__(self, s=None):
+        if s is None:
+            s = self.title
+        if not s:
+            s = 'unnamed'
         if self.duration != datetime.timedelta(0):
             s = f'{s} [{self.duration}]'
         return s

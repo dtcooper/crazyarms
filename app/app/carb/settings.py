@@ -2,7 +2,6 @@ from collections import OrderedDict
 import os
 
 import environ
-from redis import ConnectionPool
 
 
 env = environ.Env()
@@ -182,6 +181,13 @@ CONSTANCE_CONFIG = OrderedDict((
     ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.')),
     ('HARBOR_COMPRESSION_NORMALIZATION', (True, 'Enable compression and normalization on harbor stream.')),
     ('HARBOR_TRANSITION_WITH_SWOOSH', (False, 'Transition between harbor sources with a ~1 second swoosh effect.')),
+    ('AUTODJ', (True, 'Whether or not to run an AutoDJ on the harbor.')),
+    ('AUTODJ_ANTI_REPEAT', (True, 'Whether or not the AutoDJ should attempt its anti-repeat algorithm. Note if you '
+                            "have too few tracks, this won't work.")),
+    ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
+        (50, 'Number of tracks to avoid to avoid repeating (if possible). Set to 0 to disable.')),
+    ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST',
+        (15, 'Number of tracks to avoid playing the same artist (if possible). Set to 0 to disable.')),
     ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets.', 'EXTERNAL_ASSET_ENCODING')),
     ('EXTERNAL_ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
                                 'EXTERNAL_ASSET_BITRATE')),
@@ -204,6 +210,8 @@ if ICECAST_ENABLED:
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME',)),
     ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH')),
+    ('AutoDJ Configuration', ('AUTODJ', 'AUTODJ_ANTI_REPEAT', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
+                              'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST')),
     ('Externally Downloaded Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),

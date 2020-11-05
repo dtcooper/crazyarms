@@ -1,6 +1,5 @@
 import datetime
 import logging
-import json
 
 from django.conf import settings
 from django.contrib import messages
@@ -8,7 +7,7 @@ from django.contrib.auth import login, views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
-from django.http import HttpResponse, Http404, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -17,7 +16,6 @@ from django.utils.html import format_html
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, TemplateView, UpdateView
 
-from django_redis import get_redis_connection
 from huey.contrib.djhuey import lock_task
 from huey.exceptions import TaskLockedException
 
@@ -78,14 +76,12 @@ class StatusView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         now_pretty = date_format(timezone.localtime(), 'SHORT_DATETIME_FORMAT')
 
-        redis = get_redis_connection()
-        liquidsoap_status = redis.get('liquidsoap:status')
         return {
             **super().get_context_data(**kwargs),
             'title': 'Server Status',
             'show_times_range_start': today - GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MIN,
             'show_times_range_end': today + GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MAX,
-            'liquidsoap_status': json.loads(liquidsoap_status) if liquidsoap_status else False,
+            'liquidsoap_status': harbor.status(),
             'user_info': (
                 ('Username', user.username),
                 ('Contact', f'"{user.get_full_name()}" <{user.email}>'),
@@ -236,22 +232,24 @@ def status_boot(request):
         return HttpResponseNotAllowed(('POST',))
 
 
-ALLOWED_SKIP_SOURCES = ('prerecord_to_stereo',)  # Hacky
-
-
 def status_skip(request):
     if request.method == 'POST':
-        response = "You don't have permission to do that."
-        if request.user.has_perm('broadcast.change_broadcast'):
-            source_id = request.POST.get('id')
-            if source_id is None:
-                response = 'Malformed request.'
-            elif source_id not in ALLOWED_SKIP_SOURCES:
-                response = f'{source_id} not a skippable source.'
-            else:
-                source_name = request.POST.get('name', 'Unknown')
-                getattr(harbor, f'{source_id}.skip')()
-                response = f'You successfully skipped the current track on {source_name}.'
+        status = harbor.status()
+        if status is None:
+            response = 'Invalid response from harbor'
+        else:
+            response = "You don't have permission to do that."
+            skippable_sources = status['skippable_sources']
+            if request.user.has_perm('broadcast.change_broadcast'):
+                source_id = request.POST.get('id')
+                if source_id is None:
+                    response = 'Malformed request.'
+                elif source_id not in skippable_sources:
+                    response = f'{source_id} not a skippable source.'
+                else:
+                    source_name = request.POST.get('name', 'Unknown')
+                    getattr(harbor, f'{source_id}.skip')()
+                    response = f'You successfully skipped the current track on {source_name}.'
         return HttpResponse(response, content_type='text/plain')
     else:
         return HttpResponseNotAllowed(('POST',))

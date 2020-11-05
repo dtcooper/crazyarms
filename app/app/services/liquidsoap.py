@@ -1,5 +1,8 @@
+import json
 from telnetlib import Telnet
 from threading import Lock
+
+from django_redis import get_redis_connection
 
 END_PREFIX = b'\r\nEND\r\n'
 
@@ -9,6 +12,8 @@ class LiquidsoapTelnetException(Exception):
 
 
 class _Liquidsoap:
+    MAX_TRIES = 3
+
     def __init__(self, host='harbor', port=1234):
         self._telnet = None
         # Since huey runs as threaded, let's make sure only one thread actually talks to
@@ -27,13 +32,20 @@ class _Liquidsoap:
                 return 'unknown'
         return self._version
 
+    def status(self):
+        redis = get_redis_connection()
+        status = redis.get('liquidsoap:status')
+        if status is None:
+            status = self.execute('status')
+        return json.loads(status) if status is not None else None
+
     def execute(self, command, arg=None, splitlines=None):
         if arg is not None:
             command += f' {arg}'
         command = f'{command}\n'.encode('utf-8')
 
         with self._access_lock:
-            for _ in range(3):  # Try three times before giving up
+            for try_number in range(self.MAX_TRIES):  # Try three times before giving up
                 try:
                     if self._telnet is None:
                         self._telnet = Telnet(host=self.host, port=self.port)
@@ -43,7 +55,8 @@ class _Liquidsoap:
                     break
                 except Exception as e:
                     self._telnet = None
-                    raise LiquidsoapTelnetException(str(e))
+                    if try_number >= self.MAX_TRIES - 1:
+                        raise LiquidsoapTelnetException(str(e))
 
         response = response.removesuffix(END_PREFIX).decode('utf-8').splitlines()
         return response if splitlines else '\n'.join(response)

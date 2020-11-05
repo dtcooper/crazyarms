@@ -1,3 +1,5 @@
+from django import forms
+
 from common.forms import AudioAssetCreateFormBase
 
 from .models import AudioAsset
@@ -13,3 +15,9 @@ class AudioAssetCreateForm(AudioAssetCreateFormBase):
     class Meta:
         model = AudioAsset
         fields = '__all__'
+
+
+class AudioAssetUploadForm(forms.Form):
+    audios = forms.FileField(
+        widget=forms.FileInput(attrs={'multiple': True}), required=True, label='Audio files',
+        help_text='Select multiple audio files to upload using Shift, CMD, and/or Alt in the dialog.')

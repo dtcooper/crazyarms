@@ -7,20 +7,25 @@ from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 
+from autodj.models import AudioAsset
 from common.models import User
 
 
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-def api_view(methods=['POST']):
+def api_view(methods=('POST',)):
     def wrapped(view_func):
         @wraps(view_func)
         @csrf_exempt
         def view(request):
             if request.method in methods and request.headers.get('X-CARB-Secret-Key') == settings.SECRET_KEY:
-                data = json.loads(request.body.decode('utf-8')) if request.method == 'POST' else None
-                response = view_func(request, data)
+                if request.method == 'POST':
+                    data = json.loads(request.body.decode('utf-8'))
+                    response = view_func(request, data)
+                else:
+                    response = view_func(request)
+
                 if isinstance(response, dict):
                     return JsonResponse(response)
                 else:
@@ -52,3 +57,12 @@ def auth(request, data):
         if user.currently_harbor_authorized():
             response.update({'authorized': True, 'full_name': user.get_full_name(), 'user_id': user.id})
     return response
+
+
+@api_view(methods=('GET',))
+def next_track(request):
+    audio_asset = AudioAsset.get_next_for_autodj()
+    if audio_asset:
+        return {'has_track': True, 'track_uri': f'file://{audio_asset.file.path}'}
+    else:
+        return {'has_track': False}

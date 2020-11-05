@@ -2,7 +2,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import include, path, reverse_lazy
+from django.urls import include, path, re_path, reverse_lazy
+from django.views.static import serve
 
 from constance import config
 
@@ -50,3 +51,7 @@ if settings.EMAIL_ENABLED:
         path('password-reset/', PasswordResetView.as_view(), name='admin_password_reset'),
         path('password-reset/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     ]
+
+if settings.DEBUG:
+    # Serve media in debug mode
+    urlpatterns += [re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT})]

@@ -90,7 +90,7 @@ broadcasting scripts.
     - Initial setup
     - env file
     - docker build process + describing `./compose.sh` + `overrides.yml`
-2. AutoDJ
+2. ~~AutoDJ~~ - done!
     - Playlists
     - Ad rotators
     - Weighting similar to [Tomato](https://github.com/dtcooper/tomato)
