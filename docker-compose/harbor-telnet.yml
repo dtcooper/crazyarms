@@ -2,13 +2,8 @@ services:
   nginx:
     depends_on:
       - harbor-telnet
-
   harbor-telnet:
     container_name: harbor-telnet
-    image: niruix/sshwifty:latest
+    image: tsl0922/ttyd:alpine
     restart: always
-    environment:
-      SSHWIFTY_ONLYALLOWPRESETREMOTES: "true"
-      SSHWIFTY_PRESETS: '[{"Title": "Harbor Telnet", "Type": "Telnet", "Host": "harbor:1234"}]'
-    ports:
-      - "8182:8182"
+    command: ['ttyd', 'sh', '-c', 'echo "# Welcome to the Harbor telnet. Enter "help" + [ENTER] for more info." && exec nc harbor 1234']

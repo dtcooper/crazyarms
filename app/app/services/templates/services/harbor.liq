@@ -230,7 +230,9 @@ def status_json()
         ^ '"skippable_sources":#{skippable},"timed_sources":#{timed},"metadata":#{metadata},'
         ^ '"server_info": #{server_info}}'
 end
-server.register(usage='status', description='Get status of sources', 'status', fun(_) -> status_json())
+server.register(usage='status', description='Get status of sources in JSON', 'status', fun(_) -> status_json())
+server.register(usage='status_pretty', description='Get status of sources in JSON (pretty-printed)', 'status_pretty',
+                fun(_) -> get_process_output('echo #{string.quote(status_json())} | python3 -m json.tool --sort-keys'))
 
 def update_status()
     # Do this asynchronously (0.05 to give things time to settle.)
@@ -251,7 +253,7 @@ def update_status()
 end
 status_update_ref := update_status
 add_timeout(2.5, fun() -> begin update_status(); -1. end)
-server.register('status_update', description='Force a status update to sse + redis', fun(_) -> begin
+server.register(usage='status_update', description='Force a status update push to web clients', 'status_update', fun(_) -> begin
     update_status()
     'Done!'
 end)

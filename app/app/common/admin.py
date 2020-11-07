@@ -138,7 +138,7 @@ class UserAdmin(auth_admin.UserAdmin):
         if not settings.ZOOM_ENABLED and db_field.name == 'groups':
             queryset = queryset.exclude(permissions__codename='view_websockify')
         if not settings.HARBOR_TELNET_ENABLED and db_field.name == 'groups':
-            queryset = queryset.exclude(permissions__codename='view_sshwifty')
+            queryset = queryset.exclude(permissions__codename='view_telnet')
         kwargs['queryset'] = queryset
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
