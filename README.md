@@ -102,7 +102,8 @@ broadcasting scripts.
 7. Unit tests for at least the Django app
 8. Mature `strip_blank` implementation
 9. Convert some Django views to class-based
-10. ..._and more!_
+10. ~~Player for local icecast on status page~~ - done!
+11. ..._and more!_
 
 ## License
 

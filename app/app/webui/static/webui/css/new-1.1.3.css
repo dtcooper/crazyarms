@@ -238,7 +238,7 @@ input[type="button"]:enabled:hover {
     /* CARB: Changed to dim
     background: var(--nc-lk-2);
     */
-    filter: brightness(70%);
+    filter: brightness(80%);
 }
 
 code,

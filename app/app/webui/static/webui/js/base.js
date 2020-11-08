@@ -14,6 +14,8 @@ function addMessage(level, message) {
     updateMessageContainer()
 }
 
+var audio = new Audio
+
 $(function() {
     $('body').on('click', '.close-message', function(e) {
         e.preventDefault()
@@ -26,4 +28,22 @@ $(function() {
     });
 
     updateMessageContainer()
+
+    var stream = new Audio
+    var isPlaying = false
+    var playText = $('#play-btn').text()
+
+    $('#play-btn').click(function() {
+        $(this).toggleClass(['bg-green', 'bg-red'])
+        if (isPlaying) {
+            stream.pause()
+            stream.src = ''
+            $(this).text(playText)
+        } else {
+            stream.src = '/live'
+            stream.play()
+            $(this).text('\u25A0 Stop Playing Stream')
+        }
+        isPlaying = !isPlaying
+    })
 })

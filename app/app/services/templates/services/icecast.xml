@@ -32,6 +32,8 @@
     </listen-socket>
     <fileserve>1</fileserve>
     <paths>
+        <!-- Docker internal IPs -->
+        <x-forwarded-for>172.*</x-forwarded-for>
         <basedir>/usr/share/icecast</basedir>
         <logdir>/var/log/icecast</logdir>
         <webroot>/usr/share/icecast/web</webroot>

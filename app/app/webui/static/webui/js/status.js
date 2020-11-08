@@ -6,7 +6,7 @@ Handlebars.registerHelper('ifNotEqual', function(arg1, arg2, options) {
     return (arg1 != arg2) ? options.fn(this) : options.inverse(this)
 });
 Handlebars.registerHelper('ifContains', function(arg1, arg2, options) {
-    return arg1.includes(arg2) ? options.fn(this) : options.inverse(this)
+    return (Array.isArray(arg1) && arg1.includes(arg2)) ? options.fn(this) : options.inverse(this)
 });
 
 function prettyInterval(seconds) {
@@ -36,8 +36,6 @@ function updateTimers() {
 $(function() {
     var template =  Handlebars.compile($('#liquidsoap-status-template').html())
     var $status = $('#liquidsoap-status')
-    var perms = {"showBoot": showBoot, "showBan": showBan, "showSkip": showSkip,
-                 "showActions": showBoot || showBan || showSkip}
 
     function updateTemplate(data) {
         var context = $.extend(JSON.parse(data), perms)

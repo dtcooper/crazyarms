@@ -48,6 +48,17 @@ def list.insert(index, new_element, l) =
   end
 end
 
+def is_infinity(f)
+    int_of_float(f) == 0 and abs(f) > 1.
+end
+
+skippable_sources = ref []
+def add_skip_command_carb(source)
+    skippable_sources := list.add(source.id(source), !skippable_sources)
+    add_skip_command(source)
+end
+
+
 # DJ Authentication
 # (username, full_name, user_id)
 last_authorized_user = ref ('', '', 0)
@@ -125,9 +136,9 @@ prerecord = on_end(id='prerecord_onend', delay=0., fun(_, _) -> begin
     status_update = !status_update_ref
     status_update()
 end, prerecord)
-add_skip_command(prerecord)
+add_skip_command_carb(prerecord)
 
-autodj = request.dynamic.list(id='autodj', length=REQUEST_QUEUE_LENGTH, retry_delay=30., fun() -> begin
+autodj = request.dynamic.list(id='autodj', length=REQUEST_QUEUE_LENGTH, retry_delay=5., fun() -> begin
     url = '#{API_PREFIX}next-track/'
     let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
     if status_code == 200 then
@@ -154,10 +165,12 @@ end, autodj)
 # Having autodj safe for up to 5 seconds means resolution loading files won't
 # transition to failsafe and just have a few ms of silence
 autodj = strip_blank(id='autodj_strip', max_blank=5., start_blank=true, mksafe(id='autodj_safe', autodj))
-add_skip_command(autodj)
-
+add_skip_command_carb(autodj)
 
 failsafe = single(id='failsafe', '/assets/hold-music.mp3')
+
+# If you add a source that has timed tracks, they should be added to this list
+timed_sources = [prerecord, autodj]
 
 # You can add to these using custom code, see below
 source_hierarchy = [
@@ -169,10 +182,6 @@ source_hierarchy = [
     ('AutoDJ', autodj),
     ('Failsafe Audio', failsafe)
 ]
-
-# Add to these as well if needed to the status page UI
-skippable_sources = [prerecord, autodj]
-timed_sources = [prerecord, autodj]
 
 #
 # To add a source,
@@ -215,13 +224,12 @@ def status_json()
     timed = list.map(fun(s) -> begin
         remaining = source.remaining(s)
         # int_of_float covers weird infinity case, truncating it to zero
-        remaining = if int_of_float(remaining + 0.001) > 0 then now + remaining else 0. end
+        remaining = if remaining > 0. and not is_infinity(remaining) then now + remaining else -1. end
         (source.id(s), remaining)
     end, timed_sources)
     timed = json_of(compact=true, list.filter(fun(s) -> snd(s) > -1., timed))
 
-    skippable = json_of(compact=true, list.map(fun(s) -> source.id(s), skippable_sources))
-
+    skippable = json_of(compact=true, !skippable_sources)
     dj_harbor_source = json_of(compact=true, source.id(dj_harbor))
     metadata = json_of(compact=true, !current_metadata)
     server_info = json_of_mixed_types(floats=[('start_time', start_time)], strs=[('version', liquidsoap.version)])
@@ -259,8 +267,11 @@ server.register(usage='status_update', description='Force a status update push t
 end)
 
 # Register callbacks on start/stop of all sources for push notifications
-ignore(list.map(fun(src) -> output.dummy(fallible=true, on_start=update_status, on_stop=update_status, snd(src)),
-                source_hierarchy))
+ignore(list.map(fun(src) -> begin
+    source = snd(src)
+    output.dummy(id='#{source.id(source)}_callback_dummy', fallible=true,
+                 on_start=update_status, on_stop=update_status, source)
+    end, source_hierarchy))
 
 # Radio playout
 swoosh = single('/assets/transition.mp3')

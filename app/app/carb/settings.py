@@ -17,9 +17,8 @@ EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
 HARBOR_TELNET_ENABLED = env.bool('HARBOR_TELNET_ENABLED', default=False)
 DOMAIN_NAME = env('DOMAIN_NAME')
 
-ALLOWED_HOSTS = ['app']
-if DEBUG:
-    ALLOWED_HOSTS.append('localhost')
+ALLOWED_HOSTS = ['app', 'localhost', DOMAIN_NAME]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     # Django
