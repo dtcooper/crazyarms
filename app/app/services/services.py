@@ -109,6 +109,7 @@ class HarborService(ServiceBase):
             self.render_supervisor_conf_file(command=f'sh -c "wait-for-it -t 0 localhost:4713 && {liq_cmd}"', **kwargs)
             self.render_supervisor_conf_file(
                 # TODO is auth-ip-acl needed?
+                # TODO: log source/sink connections
                 command='pulseaudio -n --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" '
                         '--load=module-native-protocol-unix --load=module-always-sink --exit-idle-time=-1',
                 program_name='pulseaudio', **kwargs)

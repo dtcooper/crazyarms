@@ -111,6 +111,10 @@ zoom = strip_blank(
     min_noise=0.5,
     zoom,
 )
+zoom = map_metadata(update=false, strip=true, fun(_) -> begin
+    # TODO hit redis for show name
+    [('title', 'Live Broadcast')]
+end, zoom)
 {% endif %}
 
 prerecord = request.queue(id='prerecord')
