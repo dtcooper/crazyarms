@@ -57,3 +57,6 @@ class ConstanceForm(constance_admin.ConstanceForm):
         if any(change.startswith('HARBOR_') for change in changes):
             logger.info('Got HARBOR_* config change. Restarting harbor.')
             init_services(services=('harbor',), restart_services=True)
+        if 'AUTODJ_ENABLED' in changes:
+            logger.info('Got AUTODJ_ENABLED config change. Restart harbor.')
+            init_services(services=('harbor',), restart_services=True)

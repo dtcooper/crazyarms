@@ -4,9 +4,7 @@ set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 set('scheduler.fast_queues', 1)
 
-# Safely rendered environment variables based on configuration.
-%include "harbor.vars.liq"
-
+SECRET_KEY = base64.decode("{{ B64_SECRET_KEY }}")
 BUFFER = 5.
 MAX = 10.
 REQUEST_QUEUE_LENGTH = 15.
@@ -138,6 +136,7 @@ prerecord = on_end(id='prerecord_onend', delay=0., fun(_, _) -> begin
 end, prerecord)
 add_skip_command_carb(prerecord)
 
+{% if config.AUTODJ_ENABLED %}
 autodj = request.dynamic.list(id='autodj', length=REQUEST_QUEUE_LENGTH, retry_delay=5., fun() -> begin
     url = '#{API_PREFIX}next-track/'
     let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
@@ -166,11 +165,12 @@ end, autodj)
 # transition to failsafe and just have a few ms of silence
 autodj = strip_blank(id='autodj_strip', max_blank=5., start_blank=true, mksafe(id='autodj_safe', autodj))
 add_skip_command_carb(autodj)
+{% endif %}
 
 failsafe = single(id='failsafe', '/assets/hold-music.mp3')
 
 # If you add a source that has timed tracks, they should be added to this list
-timed_sources = [prerecord, autodj]
+timed_sources = [prerecord{% if config.AUTODJ_ENABLED %}, autodj{% endif %}]
 
 # You can add to these using custom code, see below
 source_hierarchy = [
@@ -179,7 +179,9 @@ source_hierarchy = [
 {% if settings.ZOOM_ENABLED %}
     ('Zoom Room', zoom),
 {% endif %}
+{% if config.AUTODJ_ENABLED %}
     ('AutoDJ', autodj),
+{% endif %}
     ('Failsafe Audio', failsafe)
 ]
 
@@ -274,21 +276,20 @@ ignore(list.map(fun(src) -> begin
     end, source_hierarchy))
 
 # Radio playout
+{% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
 swoosh = single('/assets/transition.mp3')
+{% endif %}
 def transition(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
 
+{% if config.AUTODJ_ENABLED %}
     # AutoDJ skip when we transition to it
     if source.id(source) == source.id(autodj) then
         source.skip(autodj)
     end
+{% endif %}
 
-    # TODO maybe this should just be a jinja conditional
-    add(normalize=false, if TRANSITION_WITH_SWOOSH then
-        [fade.final(duration=2.5, one), once(swoosh),  two]
-    else
-        [fade.final(duration=2.5, one), two]
-    end)
+    add(normalize=false, [fade.final(duration=2.5, one),{% if config.HARBOR_TRANSITION_WITH_SWOOSH %} swoosh,{% endif %} two])
 end
 
 radio = fallback(
@@ -308,13 +309,10 @@ radio = on_metadata(fun(m) -> begin
     update_status()
 end, radio)
 
-# TODO: maybe this should just be jinja?
-radio = if COMPRESSION_NORMALIZATION then
-    log('Enabling compression and normalization.')
-    normalize(target=0., window=0.03, gain_min=-16., gain_max=0., compress.exponential(radio, mu=1.))
-else
-    radio
-end
+{% if config.HARBOR_COMPRESSION_NORMALIZATION %}
+log('Enabling output compression and normalization.')
+radio = normalize(target=0., window=0.03, gain_min=-16., gain_max=0., compress.exponential(radio, mu=1.))
+{% endif %}
 
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),

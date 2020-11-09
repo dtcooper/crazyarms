@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 import shutil
@@ -95,12 +96,11 @@ class HarborService(ServiceBase):
     service_name = 'harbor'
 
     def render_conf(self):
-        self.render_conf_file('harbor.vars.liq', context={'vars': {
-            'COMPRESSION_NORMALIZATION': config.HARBOR_COMPRESSION_NORMALIZATION,
-            'SECRET_KEY': settings.SECRET_KEY,
-            'TRANSITION_WITH_SWOOSH': config.HARBOR_TRANSITION_WITH_SWOOSH,
-        }})
-        self.render_conf_file('harbor.liq', context=cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT))
+        context = {
+            **(cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT) or {}),
+            'B64_SECRET_KEY': base64.b64encode(settings.SECRET_KEY.encode('utf-8')).decode('utf-8'),
+        }
+        self.render_conf_file('harbor.liq', context=context)
         kwargs = {'environment': 'HOME="/tmp/pulse"', 'user': 'liquidsoap'}
 
         liq_cmd = 'liquidsoap /config/harbor/harbor.liq'
@@ -108,6 +108,7 @@ class HarborService(ServiceBase):
             # Wait for pulse to be up
             self.render_supervisor_conf_file(command=f'sh -c "wait-for-it -t 0 localhost:4713 && {liq_cmd}"', **kwargs)
             self.render_supervisor_conf_file(
+                # TODO is auth-ip-acl needed?
                 command='pulseaudio -n --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" '
                         '--load=module-native-protocol-unix --load=module-always-sink --exit-idle-time=-1',
                 program_name='pulseaudio', **kwargs)
@@ -138,9 +139,8 @@ class ZoomService(ServiceBase):
         return len(status) >= 2 and status[1] == 'RUNNING'
 
     def render_conf(self):
-        # TODO: run pulse on harbor (don't use docker.for.mac.localhost)
-        # TODO: set timezone properly from Django config
-        kwargs = {'environment': f'TZ="{settings.TIME_ZONE}",HOME="/home/user",DISPLAY=":0",PULSE_SERVER="harbor"', 'user': 'user'}
+        kwargs = {'environment': f'TZ="{settings.TIME_ZONE}",HOME="/home/user",DISPLAY=":0",PULSE_SERVER="harbor"',
+                  'user': 'user'}
         self.render_supervisor_conf_file(
             program_name='xvfb-icewm',
             command='xvfb-run --auth-file=/home/user/.Xauthority --server-num=0 '

@@ -1,7 +1,9 @@
 import logging
 import os
+import random
 import shlex
 import shutil
+import string
 import subprocess
 import time
 
@@ -36,9 +38,10 @@ def asset_download_external_url(asset, url, title='', task=None):
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             cache.set(constants.CACHE_KEY_YTDL_UP2DATE, True, timeout=60 * 60 * 24)
 
+        unique_filename_suffix = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
         args = [YDL_CMD, '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
-                config.EXTERNAL_ASSET_ENCODING, '--output', f'{settings.MEDIA_ROOT}/external/%(title)s.%(ext)s',
-                '--no-continue', '--add-metadata', '--exec', 'echo {}']
+                config.EXTERNAL_ASSET_ENCODING, '--no-continue', '--add-metadata', '--exec', 'echo {}', '--output',
+                f'{settings.MEDIA_ROOT}/external/%(title)s-{unique_filename_suffix}.%(ext)s', '--restrict-filenames']
         if config.EXTERNAL_ASSET_ENCODING != 'flac':
             args += ['--audio-quality', config.EXTERNAL_ASSET_BITRATE]
 
@@ -52,7 +55,7 @@ def asset_download_external_url(asset, url, title='', task=None):
             line = line.removesuffix('\n')
             if not line.startswith('[download]') or (time.time() - last_dl_log_time >= 2.5):
                 logger.info(f'youtube-dl: {line}')
-                cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}:{task.id}', line)
+                cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}{task.id}', line)
                 last_dl_log_time = time.time()
 
         return_code = cmd.wait()

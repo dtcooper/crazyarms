@@ -41,6 +41,10 @@ class CARBAdminSite(admin.AdminSite):
             'app_list': False,
         })
 
+    def app_index(self, request, app_label, extra_context=None):
+        return super().app_index(request, app_label, extra_context={
+            **(extra_context or {}), 'extra_urls': []})
+
     def each_context(self, request):
         context = super().each_context(request)
         current_url_name = resolve(request.path_info).url_name

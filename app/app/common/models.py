@@ -81,8 +81,8 @@ class User(AbstractUser):
     def harbor_auth_pretty(self):
         if self.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
             if config.GOOGLE_CALENDAR_ENABLED:
-                return (f'{self.get_harbor_auth_display()} ({self.google_calender_entry_grace_minutes} mins early entry, '
-                        f'{self.google_calender_exit_grace_minutes} mins late exit)')
+                return (f'{self.get_harbor_auth_display()} ({self.google_calender_entry_grace_minutes} mins early '
+                        f'entry, {self.google_calender_exit_grace_minutes} mins late exit)')
             else:
                 return User.HarborAuth.ALWAYS.label
         else:
@@ -221,6 +221,7 @@ class AudioAssetBase(TimestampedModel):
         model_cls = type(self)
         model_cls.objects.filter(id=self.id).update(task_id=task.id)
         model_cls.objects.filter(id=self.id, status=model_cls.Status.PENDING).update(status=model_cls.Status.QUEUED)
+        cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}{task.id}', f'Starting download for {url}')
 
     def __str__(self, s=None):
         if s is None:

@@ -7,6 +7,8 @@ from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 from django.views.generic import FormView
 
+from constance import config
+
 from carb import constants
 
 from .forms import HarborCustomConfigForm, UpstreamServerForm
@@ -46,7 +48,7 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        harbor_liq_context = {'settings': settings}
+        harbor_liq_context = {'settings': settings, 'config': config, 'B64_SECRET_KEY': '***REDACTED***'}
         harbor_liq_context.update({
             f'section{section_number}': mark_safe(f"</pre>{context['form'][f'section{section_number}']}<pre>")
             for section_number in range(1, HarborService.CUSTOM_CONFIG_NUM_SECTIONS + 1)
