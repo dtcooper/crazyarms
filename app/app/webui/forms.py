@@ -1,11 +1,14 @@
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
+from django.utils.safestring import mark_safe
 
 from constance import config
 
 from common.models import User
 from services import init_services
+
+from .tasks import generate_sample_assets, NUM_SAMPLE_ASSETS
 
 
 CONSTANCE_FIELDS = ('STATION_NAME',)
@@ -17,6 +20,12 @@ class FirstRunForm(UserCreationForm):
         icecast_passwords = forms.CharField(
             label='Icecast Password', help_text='The password for Icecast (admin, source, relay).')
     email = forms.EmailField(label='Email Address')
+    generate_sample_assets = forms.BooleanField(
+        label='Preload AutoDJ', required=False,
+        widget=forms.Select(choices=((False, 'No'), (True, 'Yes (this may take a while)'))),
+        help_text=mark_safe(f'Preload {NUM_SAMPLE_ASSETS} of this month\'s most popular tracks from '
+                            '<a href="http://ccmixter.org/" target="_blank">ccMixter</a> to kick start music for the '
+                            'AutoDJ. (Creative Commons licensed)'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,6 +56,9 @@ class FirstRunForm(UserCreationForm):
             for config_name in CONSTANCE_ICECAST_PASSWORD_FIELDS:
                 setattr(config, config_name, self.cleaned_data['icecast_passwords'])
             config.ICECAST_ADMIN_EMAIL = user.email
+
+        if self.cleaned_data['generate_sample_assets']:
+            generate_sample_assets(uploader=user)
 
         init_services(restart_services=True)
 

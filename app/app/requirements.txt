@@ -2,9 +2,9 @@ argh
 dateutils
 django-cleanup
 django-constance[redis]
-django-redis
 django-environ
 django-extensions
+django-redis
 Django>=3.0,<4.0
 google-api-python-client
 google-auth-httplib2
@@ -14,6 +14,7 @@ huey
 psycopg2-binary
 python-dotenv
 pyyaml
+requests
 supervisor
 unidecode
 watchdog

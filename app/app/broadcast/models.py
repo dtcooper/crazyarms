@@ -8,6 +8,8 @@ from common.models import after_db_commit, AudioAssetBase, TimestampedModel
 
 
 class BroadcastAsset(AudioAssetBase):
+    UPLOAD_DIR = 'scheduled'
+
     class Meta:
         verbose_name = 'scheduled broadcast asset'
         verbose_name_plural = 'scheduled broadcast assets'

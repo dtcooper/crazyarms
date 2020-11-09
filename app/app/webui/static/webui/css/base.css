@@ -34,7 +34,7 @@ input[type=text], input[type=password], input[type=email] { width: 100%; }
 .bg-green { background-color: forestgreen; }
 
 .center-text { text-align: center; }
-.right-text, .first-td-right td:first-child { text-align: right; }
+.right-text, .first-td-right td:first-child, .first-td-right th:first-child { text-align: right; }
 
 .boot-btn {
   margin: 2px 0;
