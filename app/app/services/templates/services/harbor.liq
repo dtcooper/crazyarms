@@ -7,7 +7,10 @@ set('scheduler.fast_queues', 1)
 SECRET_KEY = base64.decode("{{ B64_SECRET_KEY }}")
 BUFFER = 5.
 MAX = 10.
+{% if config.AUTODJ_ENABLED %}
 REQUEST_QUEUE_LENGTH = 15.
+{% endif %}
+MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION }}))
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://app:8000/api/'
 SSE_MESSAGE_URL = 'http://sse:3000/message'
@@ -26,24 +29,6 @@ def json_of_mixed_types(~strs=[], ~bools=[], ~ints=[], ~floats=[], ~nulls=[])
     json = list.append(json, list.map(fun(s) -> '#{json_of(s)}:null', nulls))
     json = string.concat(separator=',', json)
     '{#{json}}'
-end
-
-def list.insert(index, new_element, l) =
-  if index == 0 then
-    list.add(new_element, l)
-  else
-    def f(cur, el) =
-      let (pos, l) = cur
-      l = if pos+1 == index then
-          list.add(new_element, list.add(el, l))
-        else
-          list.add(el, l)
-        end
-      (pos+1, l)
-    end
-    let (_, l) = list.fold(f, (0, []), l)
-    list.rev(l)
-  end
 end
 
 def is_infinity(f)
@@ -110,7 +95,7 @@ dj_harbor = audio_to_stereo(
 ignore(output.dummy(id='dj_harbor_dummy', dj_harbor, fallible=true))
 dj_harbor = strip_blank(
     id='dj_harbor_strip',
-    max_blank=15.,  # TODO: configurable
+    max_blank=MAX_SILENCE,
     start_blank=true,
     dj_harbor,
 )
@@ -120,7 +105,7 @@ zoom = input.pulseaudio(id='zoom')
 ignore(output.dummy(id='zoom_dummy', zoom))
 
 zoom = strip_blank(
-    max_blank=15.,  # TODO: make a constance
+    max_blank=MAX_SILENCE,
     id='zoom_strip',
     start_blank=true,
     min_noise=0.5,
@@ -189,13 +174,16 @@ source_hierarchy = [
 # To add a source,
 #  * Make sure it's fallible unless this is a design choice, possibly by strip_blank()
 #  * Insert it into hierarchy, (possibly list.insert() above)
-#  * Example below for a secondary DJ
+#  * Example below for a secondary DJ,
 #
-#    secondary_dj_harbor = audio_to_stereo(input.harbor(
-#        '/secondary', port=8001, password='topsecret', buffer=BUFFER, max=MAX))
-#    output.dummy(secondary_dj_harbor, fallible=true)
-#    # Insert after dj_harbor
-#    source_hierarchy = list.insert(2, ('Secondary DJ', secondary_dj_harbor), source_hierarchy)
+#>>>    secondary_harbor = audio_to_stereo(input.harbor(
+#>>>        '/secondary', port=8001, password='topsecret', buffer=BUFFER, max=MAX))
+#>>>    output.dummy(secondary_harbor, fallible=true)
+#
+#  * And then redefine the source_hierarchy,
+#
+#>>>    source_hierarchy = [...from above, ('Secondary DJ', secondary_harbor), ...from above]
+#
 
 ### BEGIN SECTION 2 OF CUSTOM USER SOURCE CODE ###
 {{ section2 }}
