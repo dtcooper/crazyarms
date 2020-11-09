@@ -1,3 +1,6 @@
+import random
+import string
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
@@ -7,18 +10,17 @@ from constance import config
 
 from common.models import User
 from services import init_services
+from services.models import UpstreamServer
 
 from .tasks import generate_sample_assets, NUM_SAMPLE_ASSETS
 
 
 CONSTANCE_FIELDS = ('STATION_NAME',)
-CONSTANCE_ICECAST_PASSWORD_FIELDS = ('ICECAST_SOURCE_PASSWORD', 'ICECAST_RELAY_PASSWORD', 'ICECAST_ADMIN_PASSWORD')
 
 
 class FirstRunForm(UserCreationForm):
     if settings.ICECAST_ENABLED:
-        icecast_passwords = forms.CharField(
-            label='Icecast Password', help_text='The password for Icecast (admin, source, relay).')
+        icecast_admin_password = forms.CharField(label='Icecast Password', help_text='The password for Icecast admin.')
     email = forms.EmailField(label='Email Address')
     generate_sample_assets = forms.BooleanField(
         label='Preload AutoDJ', required=False,
@@ -43,6 +45,10 @@ class FirstRunForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
 
+    @staticmethod
+    def random_password():
+        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+
     def save(self):
         user = super().save(commit=False)
         user.is_superuser = True
@@ -53,9 +59,18 @@ class FirstRunForm(UserCreationForm):
             setattr(config, config_name, self.cleaned_data[config_name.lower()])
 
         if settings.ICECAST_ENABLED:
-            for config_name in CONSTANCE_ICECAST_PASSWORD_FIELDS:
-                setattr(config, config_name, self.cleaned_data['icecast_passwords'])
             config.ICECAST_ADMIN_EMAIL = user.email
+            config.ICECAST_ADMIN_PASSWORD = self.cleaned_data['icecast_admin_password']
+            config.ICECAST_SOURCE_PASSWORD = self.random_password()
+            config.ICECAST_RELAY_PASSWORD = self.random_password()
+            UpstreamServer.objects.create(
+                name='local-icecast',  # Special read-only name
+                hostname='icecast',
+                port=8000,
+                username='source',
+                password=config.ICECAST_SOURCE_PASSWORD,  # Todo refresh upstream when changed
+                mount='live',
+            )
 
         if self.cleaned_data['generate_sample_assets']:
             generate_sample_assets(uploader=user)

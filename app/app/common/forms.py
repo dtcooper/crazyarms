@@ -7,6 +7,7 @@ from django.utils.safestring import mark_safe
 from constance import admin as constance_admin, config
 
 from services import init_services
+from services.models import UpstreamServer
 from gcal.tasks import sync_google_calendar_api
 
 
@@ -47,16 +48,20 @@ class ConstanceForm(constance_admin.ConstanceForm):
             self.process_config_changes(config_changes)
 
     def process_config_changes(self, changes):
-        # TODO if we move this in ConstanceAdmin, we can send messages to the request
+        # TODO if we move this in ConstanceAdmin's save_model(), we can send messages to the request
         if any(change.startswith('GOOGLE_CALENDAR_') for change in changes):
             logger.info("Got GOOGLE_CALENDAR_* config change. Re-sync'ing")
             sync_google_calendar_api()
         if any(change.startswith('ICECAST_') for change in changes):
-            logger.info('Got ICECAST_* config change. Restarting upstream and icecast.')
-            init_services(services=('upstream', 'icecast',), restart_services=True)
-        if any(change.startswith('HARBOR_') for change in changes):
-            logger.info('Got HARBOR_* config change. Restarting harbor.')
-            init_services(services=('harbor',), restart_services=True)
-        if 'AUTODJ_ENABLED' in changes:
-            logger.info('Got AUTODJ_ENABLED config change. Restart harbor.')
-            init_services(services=('harbor',), restart_services=True)
+            logger.info('Got ICECAST_* config change. Restarting icecast.')
+            init_services(services='icecast')
+        if (
+            any(change.startswith('HARBOR_') for change in changes)
+            or 'AUTODJ_ENABLED' in changes
+        ):
+            logger.info('Got HARBOR_* or AUTODJ_ENABLED config change. Restarting harbor.')
+            init_services(services='harbor', restart_specific_services='harbor')
+        if 'ICECAST_SOURCE_PASSWORD' in changes:
+            logger.info('Got ICECAST_SOURCE_PASSWORD config change. Setting local-icecast upstream password.')
+            UpstreamServer.objects.filter(name='local-icecast').update(password=config.ICECAST_SOURCE_PASSWORD)
+            init_services(services='upstream', restart_specific_services='local-icecast')

@@ -144,6 +144,10 @@ class User(AbstractUser):
             return False
 
 
+def audio_asset_file_upload_to(instance, filename):
+    return f'{instance.UPLOAD_DIR}/{filename}'
+
+
 class AudioAssetBase(TimestampedModel):
     UPLOAD_DIR = 'assets'
     TITLE_FIELDS = ('title',)
@@ -158,8 +162,7 @@ class AudioAssetBase(TimestampedModel):
     title = TruncatingCharField('title', max_length=255, blank=True,
                                 help_text="If left empty, a title will be generated from the file's metadata.")
     uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
-    file = models.FileField('audio file', blank=True,
-                            upload_to=lambda instance, filename: f'{instance.UPLOAD_DIR}/{filename}',
+    file = models.FileField('audio file', blank=True, upload_to=audio_asset_file_upload_to,
                             help_text='You can provide either an uploaded audio file or a URL to an external asset.')
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
     status = models.CharField('upload status', max_length=1, choices=Status.choices, default=Status.PENDING,

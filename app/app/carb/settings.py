@@ -1,6 +1,8 @@
 from collections import OrderedDict
 import os
 
+from django.utils.safestring import mark_safe
+
 import environ
 
 
@@ -199,7 +201,10 @@ CONSTANCE_CONFIG = OrderedDict((
                                 'EXTERNAL_ASSET_BITRATE')),
     ('GOOGLE_CALENDAR_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs.')),
     ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID.')),
-    ('GOOGLE_CALENDAR_CREDENTIALS_JSON', ('', 'credentials.json service file from Google (TODO: document better)')),
+    ('GOOGLE_CALENDAR_CREDENTIALS_JSON', (
+        '', mark_safe('Past the contents of your Google Service JSON Account Key here (a <code>credentials.json</code> '
+                      'file).<br>For more info from Google about this please <a href="https://cloud.google.com/docs'
+                      '/authentication/getting-started" target="_blank">click here</a>.'))),
 ))
 
 if ICECAST_ENABLED:

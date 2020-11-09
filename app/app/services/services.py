@@ -80,7 +80,7 @@ class ServiceBase:
             self.supervisorctl('update')
 
             if self.programs_to_start:
-                self.supervisorctl('restart', *self.programs_to_start)
+                self.supervisorctl('start', *self.programs_to_start)
 
 
 class IcecastService(ServiceBase):
@@ -96,11 +96,7 @@ class HarborService(ServiceBase):
     service_name = 'harbor'
 
     def render_conf(self):
-        context = {
-            **(cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT) or {}),
-            'B64_SECRET_KEY': base64.b64encode(settings.SECRET_KEY.encode('utf-8')).decode('utf-8'),
-        }
-        self.render_conf_file('harbor.liq', context=context)
+        self.render_conf_file('harbor.liq', context=cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT))
         kwargs = {'environment': 'HOME="/tmp/pulse"', 'user': 'liquidsoap'}
 
         liq_cmd = 'liquidsoap /config/harbor/harbor.liq'
@@ -121,15 +117,12 @@ class UpstreamService(ServiceBase):
     service_name = 'upstream'
 
     def render_conf(self):
-        if settings.ICECAST_ENABLED:
-            self.render_conf_file('upstream.liq', conf_filename='_icecast.liq', context={
-                'TELNET_PORT': 1234,
-                'HOST': 'icecast',
-                'PORT': 8000,
-                'PASSWORD': config.ICECAST_SOURCE_PASSWORD,
-                'MOUNT': '/live',
-            })
-            self.render_supervisor_conf_file(command='liquidsoap /config/upstream/_icecast.liq', user='liquidsoap')
+        from .models import UpstreamServer
+
+        for upstream in UpstreamServer.objects.all():
+            self.render_conf_file('upstream.liq', conf_filename=f'{upstream.name}.liq', context={'upstream': upstream})
+            self.render_supervisor_conf_file(command=f'liquidsoap /config/upstream/{upstream.name}.liq',
+                                             program_name=upstream.name, user='liquidsoap')
 
 
 class ZoomService(ServiceBase):
@@ -164,7 +157,10 @@ if not settings.ZOOM_ENABLED:
     del SERVICES[ZoomService.service_name]
 
 
-def init_services(services=None, restart_services=False):
+def init_services(services=None, restart_services=False, restart_specific_services=()):
+    if isinstance(services, str):
+        services = (services,)
+
     if not services:
         services = SERVICES.keys()
 
@@ -172,8 +168,16 @@ def init_services(services=None, restart_services=False):
         logger.info(f'initializing service: {service}')
         service_cls = SERVICES[service]
         service = service_cls()
+
         if service.supervisor_enabled:
             service.clear_supervisor_conf()
+
         service.render_conf()
+
         if service.supervisor_enabled:
             service.reload_supervisor(restart_services=restart_services)
+
+            if restart_specific_services:
+                if isinstance(restart_specific_services, str):
+                    restart_specific_services = (restart_specific_services,)
+                service.supervisorctl('restart', *restart_specific_services)

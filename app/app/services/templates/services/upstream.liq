@@ -1,5 +1,7 @@
+{% load services %}
+
 set('server.telnet', true)
-set('server.telnet.port', {{ TELNET_PORT }})
+set('server.telnet.port', {{ upstream.telnet_port|liquidsoap_value }})
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 
@@ -11,13 +13,24 @@ output.dummy(input, fallible=true)
 failsafe = single(id='failsafe', '/assets/failsafe.mp3')
 broadcast = fallback(track_sensitive=false, [input, failsafe])
 
+host = {{ upstream.hostname|liquidsoap_value }}
+user = {{ upstream.username|liquidsoap_value }}
+password = {{ upstream.password|liquidsoap_value }}
+mount = {{ '/'|add:upstream.mount|liquidsoap_value }}
+name = {{ upstream.name|liquidsoap_value }}
+log('Starting upstream "#{name}"')
+
 output.icecast(
-    %mp3(bitrate=128),
+    %{{ upstream.encoding }}(
+        {# TODO implement upstream.encoding_args #}
+        {% if upstream.bitrate %}bitrate={{ upstream.bitrate }},{% endif %}
+    ),
     id='broadcast',
     icy_metadata='true',
-    host='{{ HOST }}',
-    port={{ PORT }},
-    password='{{ PASSWORD }}',
-    mount='{{ MOUNT }}',
+    host=host,
+    port={{ upstream.port|liquidsoap_value }},
+    user=user,
+    password=password,
+    mount=mount,
     broadcast,
 )

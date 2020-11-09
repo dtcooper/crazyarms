@@ -10,7 +10,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('services', nargs='*', type=str, help='list of services (default: all)', default=None)
         parser.add_argument('-r', '--restart', action='store_true', help='force a restart of the services')
-        parser.add_argument('-f', '--force', action='store_true', help='always run')
+        parser.add_argument('-f', '--force', action='store_true', help='always run (even if no users exist)')
 
     def handle(self, *args, **options):
         if User.objects.exists() or options['force']:

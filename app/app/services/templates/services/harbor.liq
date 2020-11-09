@@ -1,16 +1,18 @@
+{% load services %}
+
 set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 set('scheduler.fast_queues', 1)
 
-SECRET_KEY = base64.decode("{{ B64_SECRET_KEY }}")
+SECRET_KEY = {{ settings.SECRET_KEY|liquidsoap_value:False }}
 BUFFER = 5.
 MAX = 10.
 {% if config.AUTODJ_ENABLED %}
 REQUEST_QUEUE_LENGTH = 15.
 {% endif %}
-MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION }}))
+MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liquidsoap_value }}))
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
 API_PREFIX = 'http://app:8000/api/'
 SSE_MESSAGE_URL = 'http://sse:3000/message'
