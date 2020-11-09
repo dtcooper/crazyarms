@@ -141,10 +141,10 @@ autodj = request.dynamic.list(id='autodj', length=REQUEST_QUEUE_LENGTH, retry_de
     url = '#{API_PREFIX}next-track/'
     let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
     if status_code == 200 then
-        if list.assoc(default=false, 'has_track', of_json(default=[('_', false)], response)) then
-            track_uri = list.assoc(default='', 'track_uri', of_json(default=[('_', '')], response))
-            log('autodj: selected URI #{track_uri}')
-            [request.create(track_uri)]
+        if list.assoc(default=false, 'has_asset', of_json(default=[('_', false)], response)) then
+            asset_uri = list.assoc(default='', 'asset_uri', of_json(default=[('_', '')], response))
+            log('autodj: selected URI #{asset_uri}')
+            [request.create(asset_uri)]
         else
             log('ERROR: autodj returned no track')
             []
@@ -305,7 +305,11 @@ radio = fallback(
 #### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
 
 radio = on_metadata(fun(m) -> begin
-    current_metadata := metadata.export(m)
+    asset_id = m['asset_id']
+    cleaned_metadata = metadata.export(m)
+    cleaned_metadata = if asset_id == '' then
+        cleaned_metadata else list.add(('asset_id', asset_id), cleaned_metadata) end
+    current_metadata := cleaned_metadata
     update_status()
 end, radio)
 

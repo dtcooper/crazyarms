@@ -63,9 +63,10 @@ def auth(request, data):
 
 @api_view(methods=('GET',))
 def next_track(request):
-    response = {'has_track': False}
+    response = {'has_asset': False}
     if config.AUTODJ_ENABLED:
         audio_asset = AudioAsset.get_next_for_autodj()
         if audio_asset:
-            response.update({'has_track': True, 'track_uri': f'file://{audio_asset.file.path}'})
+            asset_uri = f'annotate:asset_id="{audio_asset.id}":file://{audio_asset.file.path}'
+            response.update({'has_asset': True, 'asset_uri': asset_uri})
     return response
