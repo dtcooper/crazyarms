@@ -45,7 +45,9 @@ class UpstreamServer(models.Model):
                              help_text='Mount point for the upstream server, eg. /stream')
     encoding = models.CharField('encoding format', max_length=20, choices=Encoding.choices, default=Encoding.MP3)
     bitrate = models.PositiveSmallIntegerField(
-        'bitrate', null=True, blank=True, help_text="Encoding bitrate (kbits), leave blank for a sane default.")
+        'bitrate', null=True, blank=True, help_text="Encoding bitrate (kbits), blank for a sane default or ffmpeg.")
+    mime = models.CharField('MIME format', max_length=50, help_text='MIME format, ie audio/mpeg, leave blank for '
+                            'Liquidsoap to guess. (Needed for ffmpeg.)', blank=True)
     encoding_args = models.JSONField(
         'additional arguments for encoding', blank=True, null=True, default=None, help_text=mark_safe(
             # TODO dynamic Liquidsoap version somehow

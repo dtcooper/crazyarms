@@ -1,9 +1,16 @@
+import datetime
+
+import pytz
+
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.admin.templatetags.admin_list import _boolean_icon
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
+from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.views.generic import FormView
 
@@ -11,7 +18,8 @@ from constance import config
 
 from carb import constants
 
-from .forms import HarborCustomConfigForm, UpstreamServerForm
+from .forms import HarborCustomConfigForm
+from .liquidsoap import upstream
 from .models import UpstreamServer
 from .services import init_services, HarborService
 
@@ -58,8 +66,22 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
 
 
 class UpstreamServerAdmin(admin.ModelAdmin):
-    form = UpstreamServerForm
-    list_display = ('name', '__str__')
+    list_display = ('name', '__str__', 'is_online')
+
+    def is_online(self, obj):
+        connected = False
+        message = 'Error: upstream failed to start (see upstream logs)'
+        status = upstream(obj).status(safe=True)
+        if status:
+            connected = status['online']
+            if connected:
+                uptime = timezone.now() - pytz.utc.localize(datetime.datetime.utcfromtimestamp(status['start_time']))
+                uptime = uptime - datetime.timedelta(microseconds=uptime.microseconds)  # remove microseconds
+                message = f'Uptime: {uptime}'
+            else:
+                message = f'Error: {status["error"]}'
+        return format_html(f'{_boolean_icon(connected)} &mdash; {{}}', message)
+    is_online.short_description = mark_safe('Currently Online?')
 
     def has_change_permission(self, request, obj=None):
         if obj is not None and settings.ICECAST_ENABLED and obj.name == 'local-icecast':
@@ -85,9 +107,6 @@ class UpstreamServerAdmin(admin.ModelAdmin):
         deleted = super().delete_queryset(request, queryset)
         init_services('upstream', restart_services=False)
         return deleted
-
-    class Media:
-        js = ('admin/js/server_type.js',)
 
 
 admin.site.register(UpstreamServer, UpstreamServerAdmin)

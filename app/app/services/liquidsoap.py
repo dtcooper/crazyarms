@@ -32,14 +32,17 @@ class _Liquidsoap:
                 return 'unknown'
         return self._version
 
-    def status(self):
-        redis = get_redis_connection()
-        status = redis.get('liquidsoap:status')
+    def status(self, *args, **kwargs):
+        # Use cached value for harbor
+        status = None
+        if self.host == 'harbor':
+            redis = get_redis_connection()
+            status = redis.get('liquidsoap:status')
         if status is None:
-            status = self.execute('status')
+            status = self.execute('status', *args, **kwargs)
         return json.loads(status) if status is not None else None
 
-    def execute(self, command, arg=None, splitlines=None):
+    def execute(self, command, arg=None, splitlines=None, safe=False):
         if arg is not None:
             command += f' {arg}'
         command = f'{command}\n'.encode('utf-8')
@@ -56,7 +59,10 @@ class _Liquidsoap:
                 except Exception as e:
                     self._telnet = None
                     if try_number >= self.MAX_TRIES - 1:
-                        raise LiquidsoapTelnetException(str(e))
+                        if safe:
+                            return None
+                        else:
+                            raise LiquidsoapTelnetException(str(e))
 
         response = response.removesuffix(END_PREFIX).decode('utf-8').splitlines()
         return response if splitlines else '\n'.join(response)
@@ -66,4 +72,17 @@ class _Liquidsoap:
         return lambda arg=None, splitlines=None: self.execute(command, arg, splitlines)
 
 
+class _UpstreamGetter:
+    def __init__(self):
+        self.upstream_liquidsoaps = {}
+
+    def __call__(self, upstream):
+        port = upstream.telnet_port
+        liquidsoap = self.upstream_liquidsoaps.get(port)
+        if not liquidsoap:
+            liquidsoap = self.upstream_liquidsoaps[port] = _Liquidsoap(host='upstream', port=port)
+        return liquidsoap
+
+
 harbor = _Liquidsoap()
+upstream = _UpstreamGetter()
