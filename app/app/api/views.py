@@ -11,17 +11,18 @@ from constance import config
 
 from autodj.models import AudioAsset
 from common.models import User
+from services.models import TrackLogEntry
 
 
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-def api_view(methods=('POST',)):
+def api_view(method='POST'):
     def wrapped(view_func):
         @wraps(view_func)
         @csrf_exempt
         def view(request):
-            if request.method in methods and request.headers.get('X-CARB-Secret-Key') == settings.SECRET_KEY:
+            if request.method == method and request.headers.get('X-CARB-Secret-Key') == settings.SECRET_KEY:
                 if request.method == 'POST':
                     data = json.loads(request.body.decode('utf-8'))
                     response = view_func(request, data)
@@ -36,15 +37,15 @@ def api_view(methods=('POST',)):
                 return HttpResponseForbidden()
         return view
 
-    if callable(methods):
-        view_func, methods = methods, ['POST']
+    if callable(method):
+        view_func, method = method, 'POST'
         return wrapped(view_func)
     else:
         return wrapped
 
 
 @api_view
-def auth(request, data):
+def dj_auth(request, data):
     username, password = data['username'], data['password']
     response = {'authorized': False}
     user = authenticate(username=username, password=password)
@@ -61,7 +62,7 @@ def auth(request, data):
     return response
 
 
-@api_view(methods=('GET',))
+@api_view(method='GET')
 def next_track(request):
     response = {'has_asset': False}
     if config.AUTODJ_ENABLED:
@@ -70,3 +71,23 @@ def next_track(request):
             asset_uri = f'annotate:asset_id="{audio_asset.id}":file://{audio_asset.file.path}'
             response.update({'has_asset': True, 'asset_uri': asset_uri})
     return response
+
+
+@api_view
+def log_track(request, data):
+    name = audio_asset = None
+    audio_asset_id = data.get('asset_id')
+
+    if audio_asset_id:
+        try:
+            audio_asset = AudioAsset.objects.get(id=audio_asset_id)
+        except AudioAsset.DoesNotExist:
+            pass
+        else:
+            name = str(audio_asset)
+
+    if not name:
+        name = ' - '.join(filter(None, (data.get(k) for k in ('artist', 'album', 'title')))) or AudioAsset.UNNAMED_TRACK
+
+    TrackLogEntry.objects.create(name=name, active_source=data['active_source'], audio_asset=audio_asset)
+    return {'status': 'ok'}

@@ -29,6 +29,7 @@
           {% endif %}
           {% if user.is_authenticated %}
             <a href="{% url 'status' %}">Server Status</a> /
+            <a href="{% url 'track_log' %}">Track Log</a> /
             {% if config.GOOGLE_CALENDAR_ENABLED %}
               <a href="{% url 'gcal' %}">My Scheduled Shows</a> /
             {% endif %}

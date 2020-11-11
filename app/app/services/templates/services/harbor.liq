@@ -6,6 +6,7 @@ set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 set('scheduler.fast_queues', 1)
 
+STATION_NAME = {{ config.STATION_NAME|liquidsoap_value }}
 SECRET_KEY = {{ settings.SECRET_KEY|liquidsoap_value:False }}
 BUFFER = 5.
 MAX = 10.
@@ -21,6 +22,8 @@ REDIS_KEY = 'liquidsoap:source-status'
 
 start_time = time()
 
+
+### Additional library functions
 
 def json_of_mixed_types(~strs=[], ~bools=[], ~ints=[], ~floats=[], ~nulls=[])
     json = [json_of(compact=true, strs), json_of(compact=true, bools),
@@ -44,12 +47,17 @@ def add_skip_command_carb(source)
 end
 
 
+def mksafe.no_replay_metadata(~id='mksafe', source)
+  fallback(id=id, track_sensitive=false, replay_metadata=false, [source, blank(id='safe_blank')])
+end
+
+
 # DJ Authentication
 # (username, full_name, user_id)
 last_authorized_user = ref ('', '', 0)
 def dj_auth(username, password)
-    data = json_of([('username', username), ('password', password)])
-    url = '#{API_PREFIX}auth/'
+    data = json_of(compact=true, [('username', username), ('password', password)])
+    url = '#{API_PREFIX}dj-auth/'
     let ((_, status_code, _), _, response) = http.post(url, headers=API_HEADERS, data=data)
     if status_code == 200 then
         authorized = list.assoc(default=false, 'authorized', of_json(default=[('_', false)], response))
@@ -70,18 +78,25 @@ end
 live_user_connected = ref false
 live_user = ref ('', '', 0, -1.)
 status_update_ref = ref fun() -> ()  # requires dj_harbor to be defined
+dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()
 def dj_connect(headers)
     live_user_connected := true
     let (username, full_name, user_id) = !last_authorized_user
     live_user := (username, full_name, user_id, time())
+    dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
+    dj_harbor_insert_metadata(new_track=true, [('title', '#{full_name} LIVE on #{STATION_NAME}')])
     status_update = !status_update_ref
     status_update()
 end
 
 def dj_disconnect()
+    # TODO: wrap dj_harbor in metadata setter, and then set to blank on disconnect
+    # possibly put this in output.dummy() for dj harbor as on_stop
     last_authorized_user := ('', '', 0)
     live_user_connected := false
     live_user := ('', '', 0, -1.)
+    dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
+    dj_harbor_insert_metadata(new_track=true, [])
     status_update = !status_update_ref
     status_update()
 end
@@ -94,6 +109,11 @@ dj_harbor = audio_to_stereo(
     id='dj_harbor_to_stereo',
     input.harbor('/stream', id='dj_harbor', port=8001, auth=dj_auth, on_connect=dj_connect,
                  on_disconnect=dj_disconnect, buffer=BUFFER, max=MAX))
+
+let (dj_harbor_insert_metadata, dj_harbor) = insert_metadata(dj_harbor)
+dj_harbor_insert_metadata_ref := dj_harbor_insert_metadata
+dj_harbor_insert_metadata(new_track=true, [])
+
 ignore(output.dummy(id='dj_harbor_dummy', dj_harbor, fallible=true))
 dj_harbor = strip_blank(
     id='dj_harbor_strip',
@@ -152,9 +172,9 @@ autodj = on_end(id='autodj_onend', delay=0., fun(_, _) -> begin
     status_update()
 end, autodj)
 
-# Having autodj safe for up to 5 seconds means resolution loading files won't
+# Having autodj safe for up to 7.5 seconds means resolution loading files won't
 # transition to failsafe and just have a few ms of silence
-autodj = strip_blank(id='autodj_strip', max_blank=5., start_blank=true, mksafe(id='autodj_safe', autodj))
+autodj = strip_blank(id='autodj_strip', max_blank=7.5, start_blank=true, mksafe.no_replay_metadata(id='autodj_safe', autodj))
 add_skip_command_carb(autodj)
 {% endif %}
 
@@ -165,15 +185,15 @@ timed_sources = [prerecord{% if config.AUTODJ_ENABLED %}, autodj{% endif %}]
 
 # You can add to these using custom code, see below
 source_hierarchy = [
-    ('Prerecorded Broadcast', prerecord),
-    ('Live DJ', dj_harbor),
+    (prerecord, 'Prerecorded Broadcast'),
+    (dj_harbor, 'Live DJ'),
 {% if settings.ZOOM_ENABLED %}
-    ('Zoom Room', zoom),
+    (zoom, 'Zoom Room'),
 {% endif %}
 {% if config.AUTODJ_ENABLED %}
-    ('AutoDJ', autodj),
+    (autodj, 'AutoDJ'),
 {% endif %}
-    ('Failsafe Audio', failsafe)
+    (failsafe, 'Failsafe Audio')
 ]
 
 #
@@ -188,20 +208,22 @@ source_hierarchy = [
 #
 #  * And then redefine the source_hierarchy,
 #
-#>>>    source_hierarchy = [...from above, ('Secondary DJ', secondary_harbor), ...from above]
+#>>>    source_hierarchy = [...from above, (secondary_harbor, 'Secondary DJ'), ...from above]
 #
 
 ### BEGIN SECTION 2 OF CUSTOM USER SOURCE CODE ###
 {{ section2 }}
 #### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
 
+source_hierarchy_lookups = list.map(fun(s) -> (source.id(fst(s)), snd(s)), source_hierarchy)
+
 # Server status stuff
 current_metadata = ref []
 def status_json()
-    active_sources = list.filter(fun(src) -> source.is_ready(snd(src)), source_hierarchy)
-    streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(snd(src)), active_sources))
+    active_sources = list.filter(fun(src) -> source.is_ready(fst(src)), source_hierarchy)
+    streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(fst(src)), active_sources))
     sources = '[' ^ string.concat(separator=',', list.mapi(fun(n, src) -> begin
-        let (name, source) = src
+        let (source, name) = src
         id = source.id(source)
         json_of_mixed_types(
             strs=[('id', id), ('name', name)], ints=[('precedence', n + 1)],
@@ -264,7 +286,7 @@ end)
 
 # Register callbacks on start/stop of all sources for push notifications
 ignore(list.map(fun(src) -> begin
-    source = snd(src)
+    source = fst(src)
     output.dummy(id='#{source.id(source)}_callback_dummy', fallible=true,
                  on_start=update_status, on_stop=update_status, source)
     end, source_hierarchy))
@@ -273,8 +295,10 @@ ignore(list.map(fun(src) -> begin
 {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
 swoosh = single('/assets/transition.mp3')
 {% endif %}
+current_source = ref failsafe
 def transition(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
+    current_source := source
 
 {% if config.AUTODJ_ENABLED %}
     # AutoDJ skip when we transition to it
@@ -283,15 +307,20 @@ def transition(~source, one, two)
     end
 {% endif %}
 
-    add(normalize=false, [fade.final(duration=2.5, one),{% if config.HARBOR_TRANSITION_WITH_SWOOSH %} swoosh,{% endif %} two])
+    add(normalize=false, [
+        drop_metadata(fade.final(duration=2.5, one)),
+{% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
+        once(swoosh),
+{% endif %}
+        two])
 end
 
 radio = fallback(
     id='radio',
     replay_metadata=false,
     track_sensitive=false,
-    transitions=list.map(fun(src) -> transition(source=snd(src)), source_hierarchy),
-    list.map(fun(src) -> snd(src), source_hierarchy),
+    transitions=list.map(fun(src) -> transition(source=fst(src)), source_hierarchy),
+    list.map(fun(src) -> fst(src), source_hierarchy),
 )
 
 ### BEGIN SECTION 3 OF CUSTOM USER SOURCE CODE ###
@@ -300,11 +329,26 @@ radio = fallback(
 
 radio = on_metadata(fun(m) -> begin
     asset_id = m['asset_id']
-    cleaned_metadata = metadata.export(m)
-    cleaned_metadata = if asset_id == '' then
-        cleaned_metadata else list.add(('asset_id', asset_id), cleaned_metadata) end
-    current_metadata := cleaned_metadata
+    metadata = metadata.export(m)
+    metadata = if asset_id == '' then
+        metadata else list.add(('asset_id', asset_id), metadata) end
+    current_metadata := metadata
     update_status()
+
+    # Per the manual, on_metadata "should be fast because it is executed in the main streaming thread,"
+    # so we post the track  asynchronously
+    add_timeout(0., fun() -> begin
+        url = '#{API_PREFIX}log-track/'
+        source = list.assoc(default='Unknown', source.id(!current_source), source_hierarchy_lookups)
+        data = json_of(compact=true, list.add(('active_source', source), metadata))
+        let ((_, status_code, _), _, _) = http.post(url, headers=API_HEADERS, data=data)
+        if status_code == 200 then
+            log('log_track: successfully logged track with API')
+        else
+            log('ERROR: log_track: got non-200 status got API (#{status_code})')
+        end
+        -1.
+    end)
 end, radio)
 
 {% if config.HARBOR_COMPRESSION_NORMALIZATION %}

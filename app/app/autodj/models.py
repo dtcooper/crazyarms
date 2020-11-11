@@ -112,7 +112,7 @@ class AudioAsset(AudioAssetBase):
             if audio_asset is not None:
                 return audio_asset
 
-        logger.info('autodj: no track found, giving up')
+            logger.info('autodj: no track found, giving up')
         return None
 
     class Meta:

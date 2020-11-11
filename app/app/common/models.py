@@ -149,6 +149,7 @@ def audio_asset_file_upload_to(instance, filename):
 
 
 class AudioAssetBase(TimestampedModel):
+    UNNAMED_TRACK = 'Untitled Track'
     UPLOAD_DIR = 'assets'
     TITLE_FIELDS = ('title',)
 
@@ -232,7 +233,7 @@ class AudioAssetBase(TimestampedModel):
         if s is None:
             s = self.title
         if not s:
-            s = 'unnamed'
+            s = self.UNNAMED_TRACK
         if self.duration != datetime.timedelta(0):
             s = f'{s} [{self.duration}]'
         return s

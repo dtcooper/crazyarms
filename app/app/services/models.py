@@ -2,6 +2,9 @@ from django.db import models
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 
+from autodj.models import AudioAsset
+from common.models import TruncatingCharField
+
 
 class UpstreamServer(models.Model):
     class Encoding(models.TextChoices):
@@ -54,3 +57,13 @@ class UpstreamServer(models.Model):
             'Enter any additional arguments for the encoder here. Advanced use cases only, see the '
             '<a href="https://www.liquidsoap.info/doc-1.4.3/encoding_formats.html" target="_blank">Liquidsoap docs '
             'here</a> for more info. Leave empty or <code>null</code> for none.'))
+
+
+class TrackLogEntry(models.Model):
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    name = TruncatingCharField(max_length=500)
+    active_source = TruncatingCharField(max_length=50)
+    audio_asset = models.ForeignKey(AudioAsset, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        ordering = ('-created',)

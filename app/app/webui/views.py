@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import format_html
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import FormView, TemplateView, UpdateView
+from django.views.generic import FormView, ListView, TemplateView, UpdateView
 
 from constance import config
 from huey.contrib.djhuey import lock_task
@@ -23,6 +23,7 @@ from huey.exceptions import TaskLockedException
 from carb import constants
 from common.models import User
 from services.liquidsoap import harbor
+from services.models import TrackLogEntry
 from services.services import ZoomService
 
 from .forms import FirstRunForm, UserProfileForm
@@ -253,6 +254,11 @@ def status_skip(request):
         return HttpResponse(response, content_type='text/plain')
     else:
         return HttpResponseNotAllowed(('POST',))
+
+
+class TrackLogView(ListView):
+    template_name = 'webui/track_log.html'
+    model = TrackLogEntry
 
 
 @csrf_exempt
