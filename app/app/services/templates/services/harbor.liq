@@ -84,6 +84,7 @@ def dj_connect(headers)
     let (username, full_name, user_id) = !last_authorized_user
     live_user := (username, full_name, user_id, time())
     dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
+    # TODO: log show name if we have it
     dj_harbor_insert_metadata(new_track=true, [('title', '#{full_name} LIVE on #{STATION_NAME}')])
     status_update = !status_update_ref
     status_update()
@@ -95,8 +96,6 @@ def dj_disconnect()
     last_authorized_user := ('', '', 0)
     live_user_connected := false
     live_user := ('', '', 0, -1.)
-    dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
-    dj_harbor_insert_metadata(new_track=true, [])
     status_update = !status_update_ref
     status_update()
 end
@@ -302,7 +301,9 @@ def transition(~source, one, two)
 
 {% if config.AUTODJ_ENABLED %}
     # AutoDJ skip when we transition to it
+    # TODO: this appears to still be spitting out metadata, even with the drop_metadata() below
     if source.id(source) == source.id(autodj) then
+        log('Got transition to AutoDJ, skipping current track')
         source.skip(autodj)
     end
 {% endif %}

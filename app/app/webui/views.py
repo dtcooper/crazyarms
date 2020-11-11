@@ -256,7 +256,10 @@ def status_skip(request):
         return HttpResponseNotAllowed(('POST',))
 
 
-class TrackLogView(ListView):
+class TrackLogView(LoginRequiredMixin, ListView):
+    # TODO:
+    # 1) pagination
+    # 2) make this a unified log, not just a track log
     template_name = 'webui/track_log.html'
     model = TrackLogEntry
 
