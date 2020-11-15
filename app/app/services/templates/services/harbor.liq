@@ -6,18 +6,20 @@ set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 set('scheduler.fast_queues', 1)
 
-STATION_NAME = {{ config.STATION_NAME|liquidsoap_value }}
-SECRET_KEY = {{ settings.SECRET_KEY|liquidsoap_value:False }}
+API_HEADERS = [('X-CARB-Secret-Key', {{ settings.SECRET_KEY|liquidsoap_value:False }})]
+API_PREFIX = 'http://app:8000/api/'
 BUFFER = 5.
+FAILSAFE_SOURCE_NAME = 'Failsafe Audio'
 MAX = 10.
+MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liquidsoap_value }}))
+REDIS_KEY = 'liquidsoap:source-status'
 {% if config.AUTODJ_ENABLED %}
 REQUEST_QUEUE_LENGTH = 45.
+REQUEST_RETRY_DELAY = 5.
+REQUEST_TIMEOUT = 30.
 {% endif %}
-MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liquidsoap_value }}))
-API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]
-API_PREFIX = 'http://app:8000/api/'
 SSE_MESSAGE_URL = 'http://sse:3000/message'
-REDIS_KEY = 'liquidsoap:source-status'
+STATION_NAME = {{ config.STATION_NAME|liquidsoap_value }}
 
 
 start_time = time()
@@ -51,6 +53,24 @@ def mksafe.no_replay_metadata(~id='mksafe', source)
   fallback(id=id, track_sensitive=false, replay_metadata=false, [source, blank(id='safe_blank')])
 end
 
+current_source_name = ref FAILSAFE_SOURCE_NAME
+def log_playout_event(type, description, ~extras=[])
+    # Do this asynchronously so it doesn't block
+    add_timeout(0., fun() -> begin
+        url = '#{API_PREFIX}log-playout-event/'
+        event = json_of(compact=true, [('event_type', type), ('active_source', !current_source_name),
+                                       ('description', description)])
+        extras = if list.length(extras) >= 1 then json_of(compact=true, extras) else 'null' end
+        data = '{"event":#{event},"extras":#{extras}}'
+        let ((_, status_code, _), _, _) = http.post(url, headers=API_HEADERS, data=data)
+        if status_code == 201 then
+            log('log_track: successfully logged track with API')
+        else
+            log('ERROR: log_track: got non-200 status got API (#{status_code})')
+        end
+        -1.
+    end)
+end
 
 # DJ Authentication
 # (username, full_name, user_id)
@@ -82,6 +102,7 @@ dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()
 def dj_connect(headers)
     live_user_connected := true
     let (username, full_name, user_id) = !last_authorized_user
+    log_playout_event('dj', '#{full_name} authorized on the harbor', extras=[('user_id', user_id)])
     live_user := (username, full_name, user_id, time())
     dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
     # TODO: log show name if we have it
@@ -93,6 +114,8 @@ end
 def dj_disconnect()
     # TODO: wrap dj_harbor in metadata setter, and then set to blank on disconnect
     # possibly put this in output.dummy() for dj harbor as on_stop
+    let (_, full_name, user_id) = !last_authorized_user
+    log_playout_event('dj', '#{full_name} disconnected from the harbor', extras=[('user_id', user_id)])
     last_authorized_user := ('', '', 0)
     live_user_connected := false
     live_user := ('', '', 0, -1.)
@@ -147,23 +170,24 @@ end, prerecord)
 add_skip_command_carb(prerecord)
 
 {% if config.AUTODJ_ENABLED %}
-autodj = request.dynamic.list(id='autodj', length=REQUEST_QUEUE_LENGTH, retry_delay=5., fun() -> begin
-    url = '#{API_PREFIX}next-track/'
-    let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
-    if status_code == 200 then
-        if list.assoc(default=false, 'has_asset', of_json(default=[('_', false)], response)) then
-            asset_uri = list.assoc(default='', 'asset_uri', of_json(default=[('_', '')], response))
-            log('autodj: selected URI #{asset_uri}')
-            [request.create(asset_uri)]
+autodj = request.dynamic.list(
+    id='autodj', length=REQUEST_QUEUE_LENGTH, retry_delay=REQUEST_RETRY_DELAY, timeout=REQUEST_TIMEOUT, fun() -> begin
+        url = '#{API_PREFIX}next-track/'
+        let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
+        if status_code == 200 then
+            if list.assoc(default=false, 'has_asset', of_json(default=[('_', false)], response)) then
+                asset_uri = list.assoc(default='', 'asset_uri', of_json(default=[('_', '')], response))
+                log('autodj: selected URI #{asset_uri}')
+                [request.create(asset_uri)]
+            else
+                log('ERROR: autodj returned no track')
+                []
+            end
         else
-            log('ERROR: autodj returned no track')
+            log('ERROR: autodj: got non-200 status got API (#{status_code}) for next track')
             []
         end
-    else
-        log('ERROR: autodj: got non-200 status got API (#{status_code}) for next track')
-        []
-    end
-end)
+    end)
 
 autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
 autodj = on_end(id='autodj_onend', delay=0., fun(_, _) -> begin
@@ -192,7 +216,7 @@ source_hierarchy = [
 {% if config.AUTODJ_ENABLED %}
     (autodj, 'AutoDJ'),
 {% endif %}
-    (failsafe, 'Failsafe Audio')
+    (failsafe, FAILSAFE_SOURCE_NAME)
 ]
 
 #
@@ -294,10 +318,9 @@ ignore(list.map(fun(src) -> begin
 {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
 swoosh = single('/assets/transition.mp3')
 {% endif %}
-current_source = ref failsafe
 def transition(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
-    current_source := source
+    current_source_name := list.assoc(default='Unknown', source.id(source), source_hierarchy_lookups)
 
 {% if config.AUTODJ_ENABLED %}
     # AutoDJ skip when we transition to it
@@ -336,20 +359,7 @@ radio = on_metadata(fun(m) -> begin
     current_metadata := metadata
     update_status()
 
-    # Per the manual, on_metadata "should be fast because it is executed in the main streaming thread,"
-    # so we post the track  asynchronously
-    add_timeout(0., fun() -> begin
-        url = '#{API_PREFIX}log-track/'
-        source = list.assoc(default='Unknown', source.id(!current_source), source_hierarchy_lookups)
-        data = json_of(compact=true, list.add(('active_source', source), metadata))
-        let ((_, status_code, _), _, _) = http.post(url, headers=API_HEADERS, data=data)
-        if status_code == 200 then
-            log('log_track: successfully logged track with API')
-        else
-            log('ERROR: log_track: got non-200 status got API (#{status_code})')
-        end
-        -1.
-    end)
+    log_playout_event('track', string_of_metadata(metadata), extras=metadata)
 end, radio)
 
 {% if config.HARBOR_COMPRESSION_NORMALIZATION %}

@@ -59,10 +59,19 @@ class UpstreamServer(models.Model):
             'here</a> for more info. Leave empty or <code>null</code> for none.'))
 
 
-class TrackLogEntry(models.Model):
+class PlayoutLogEntry(models.Model):
+    class EventType(models.TextChoices):
+        TRACK = 'track', 'New Track'
+        LIVE_DJ = 'dj', 'Live DJ'
+        GENERAL = 'general', 'General'
+
     created = models.DateTimeField(auto_now_add=True, db_index=True)
-    name = TruncatingCharField(max_length=500)
+    event_type = models.CharField(max_length=10, choices=EventType.choices, default=EventType.GENERAL)
+    description = TruncatingCharField(max_length=500)
     active_source = TruncatingCharField(max_length=50)
+    # TODO: Maybe convert this to a JSONField called extras to map up more closely
+    # to what liquidsoap is doing, then we could have a method on this model for playout_log.html
+    # to look up the foreign keys and display
     audio_asset = models.ForeignKey(AudioAsset, on_delete=models.SET_NULL, null=True)
 
     class Meta:

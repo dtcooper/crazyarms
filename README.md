@@ -90,20 +90,24 @@ broadcasting scripts.
     - Initial setup
     - env file
     - docker build process + describing `./compose.sh` + `overrides.yml`
-2. ~~AutoDJ~~ - done!
+1. ~~AutoDJ~~ - _done!_
     - Playlists
     - Ad rotators
     - Weighting similar to [Tomato](https://github.com/dtcooper/tomato)
-3. Finish Zoom broadcasting
-4. Potential for S3 as a storage source using
+1. Finish Zoom broadcasting
+1. Potential for S3 as a storage source using
    [django-storages](https://django-storages.readthedocs.io/)
-5. Clean up Dockerfiles stripping dev stuff
-6. Go over `TODO`s and `XXX`s in codebase
-7. Unit tests for at least the Django app
-8. Mature `strip_blank` implementation
-9. Convert some Django views to class-based
-10. ~~Player for local icecast on status page~~ - done!
-11. ..._and more!_
+1. Clean up Dockerfiles stripping dev stuff
+1. Go over `TODO`s and `XXX`s in codebase
+1. Unit tests for at least the Django app
+1. Mature `strip_blank` implementation
+1. Convert some Django views to class-based
+    - ~~api~~ - _done!_
+    - webui
+1. ~~Player for local icecast on status page~~ - _done!_
+1. ~~Make track log a more generic playout log, with asset playing on metadata one
+   particular type.~~ - _done!_
+1. ..._and more!_
 
 ## License
 

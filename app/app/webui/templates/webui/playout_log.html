@@ -1,0 +1,33 @@
+{% extends 'webui/base.html' %}
+
+{% block content %}
+  <table>
+    <caption>Playout Log</caption>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Event Type</th>
+        <th>Description</th>
+        <th>Active Source</th>
+    </thead>
+    <tbody>
+      {% for playout_log in object_list %}
+        <tr>
+          <td>{{ playout_log.created|date:'m/d/Y g:i:s a' }}</td>
+          <td>{{ playout_log.get_event_type_display }}</td>
+          <td>
+            {% if playout_log.event_type == playout_log.EventType.TRACK and playout_log.audio_asset %}
+              <a href="{{ playout_log.audio_asset.file.url }}">
+                {{ playout_log.audio_asset }}
+              </a>
+            {% else %}
+              {{ playout_log.description }}
+            {% endif %}
+          </td>
+          <td>{{ playout_log.active_source }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </tr>
+</table>
+{% endblock %}

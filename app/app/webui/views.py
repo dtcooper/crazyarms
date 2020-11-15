@@ -23,7 +23,7 @@ from huey.exceptions import TaskLockedException
 from carb import constants
 from common.models import User
 from services.liquidsoap import harbor
-from services.models import TrackLogEntry
+from services.models import PlayoutLogEntry
 from services.services import ZoomService
 
 from .forms import FirstRunForm, UserProfileForm
@@ -256,12 +256,10 @@ def status_skip(request):
         return HttpResponseNotAllowed(('POST',))
 
 
-class TrackLogView(LoginRequiredMixin, ListView):
-    # TODO:
-    # 1) pagination
-    # 2) make this a unified log, not just a track log
-    template_name = 'webui/track_log.html'
-    model = TrackLogEntry
+class PlayoutLogView(LoginRequiredMixin, ListView):
+    # TODO: pagination
+    template_name = 'webui/playout_log.html'
+    model = PlayoutLogEntry
 
 
 @csrf_exempt
