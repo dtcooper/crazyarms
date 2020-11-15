@@ -170,6 +170,8 @@ if [ "$FIRST_RUN" ]; then
     .env set SECRET_KEY="'$(LC_CTYPE=C tr -dc 'a-z0-9!@#$%^&*(-_=+)' < /dev/urandom | head -c50)'"
 
     get_str 'Domain name' DOMAIN_NAME 'localhost'
+    get_str 'Timezone' TIMEZONE 'US/Pacific'
+
     get_bool 'Use HTTPS with letsencrypt (must have a valid domain)' HTTPS_ENABLED 0
     if .env get HTTPS_ENABLED && [ "$REPLY" = 1 ]; then
         get_str 'Administrator email for letsencrypt' HTTPS_CERTBOT_EMAIL
@@ -182,7 +184,7 @@ if [ "$FIRST_RUN" ]; then
         get_str 'SMTP server, ie smtp.gmail.com' EMAIL_SMTP_SERVER
         get_str 'STMP port' EMAIL_SMTP_PORT 587
         get_str 'STMP username, ie user@gmail.com' EMAIL_SMTP_USERNAME
-        get_str 'STMP password (WARNING: stored in plain text)' EMAIL_SMTP_PASSWORD
+        get_str 'STMP password (WARNING: stored in plain text in the .env file)' EMAIL_SMTP_PASSWORD
     fi
 
     echo

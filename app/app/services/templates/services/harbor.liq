@@ -11,7 +11,7 @@ SECRET_KEY = {{ settings.SECRET_KEY|liquidsoap_value:False }}
 BUFFER = 5.
 MAX = 10.
 {% if config.AUTODJ_ENABLED %}
-REQUEST_QUEUE_LENGTH = 15.
+REQUEST_QUEUE_LENGTH = 45.
 {% endif %}
 MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liquidsoap_value }}))
 API_HEADERS = [('X-CARB-Secret-Key', SECRET_KEY)]

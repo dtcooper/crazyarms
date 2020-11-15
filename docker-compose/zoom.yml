@@ -18,6 +18,8 @@ services:
       - zoom_user_home:/home/user
     cap_add:
       - SYS_ADMIN
+    environment:
+      TZ: ${TIMEZONE:-US/Pacific}
 
 volumes:
   zoom_user_home:

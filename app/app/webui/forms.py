@@ -20,7 +20,8 @@ CONSTANCE_FIELDS = ('STATION_NAME',)
 
 class FirstRunForm(UserCreationForm):
     if settings.ICECAST_ENABLED:
-        icecast_admin_password = forms.CharField(label='Icecast Password', help_text='The password for Icecast admin.')
+        icecast_admin_password = forms.CharField(label='Icecast Password', help_text='The password for Icecast admin. '
+                                                 '(WARNING: Stored in plain text that administrators can see.)')
     email = forms.EmailField(label='Email Address')
     generate_sample_assets = forms.BooleanField(
         label='Preload AutoDJ', required=False,

@@ -18,6 +18,7 @@ ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
 HARBOR_TELNET_ENABLED = env.bool('HARBOR_TELNET_ENABLED', default=False)
 DOMAIN_NAME = env('DOMAIN_NAME')
+TIME_ZONE = env('TIMEZONE')
 
 ALLOWED_HOSTS = ['app', 'localhost', DOMAIN_NAME]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -144,8 +145,6 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'US/Pacific'
 
 USE_I18N = True
 
