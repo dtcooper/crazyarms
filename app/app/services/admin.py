@@ -20,7 +20,7 @@ from carb import constants
 
 from .forms import HarborCustomConfigForm
 from .liquidsoap import upstream
-from .models import UpstreamServer
+from .models import PlayoutLogEntry, UpstreamServer
 from .services import init_services, HarborService
 
 
@@ -109,4 +109,21 @@ class UpstreamServerAdmin(admin.ModelAdmin):
         return deleted
 
 
+class PlayoutLogEntryAdmin(admin.ModelAdmin):
+    list_display = ('created', 'event_type', 'description', 'active_source')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj=obj)
+
+
 admin.site.register(UpstreamServer, UpstreamServerAdmin)
+admin.site.register(PlayoutLogEntry, PlayoutLogEntryAdmin)

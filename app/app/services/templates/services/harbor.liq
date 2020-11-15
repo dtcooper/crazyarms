@@ -4,7 +4,8 @@ set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
-set('scheduler.fast_queues', 1)
+set('scheduler.fast_queues', 2)
+set('scheduler.generic_queues', 4)
 
 API_HEADERS = [('X-CARB-Secret-Key', {{ settings.SECRET_KEY|liquidsoap_value:False }})]
 API_PREFIX = 'http://app:8000/api/'
@@ -21,8 +22,14 @@ REQUEST_TIMEOUT = 30.
 SSE_MESSAGE_URL = 'http://sse:3000/message'
 STATION_NAME = {{ config.STATION_NAME|liquidsoap_value }}
 
+# Copied from services/models.py
+EVENT_TRACK = 'track'
+EVENT_LIVE_DJ = 'dj'
+EVENT_GENERAL = 'general'
+
 
 start_time = time()
+is_shutting_down = ref false
 
 
 ### Additional library functions
@@ -54,23 +61,30 @@ def mksafe.no_replay_metadata(~id='mksafe', source)
 end
 
 current_source_name = ref FAILSAFE_SOURCE_NAME
-def log_playout_event(type, description, ~extras=[])
+def log_event(type, description, ~extras=[])
     # Do this asynchronously so it doesn't block
-    add_timeout(0., fun() -> begin
-        url = '#{API_PREFIX}log-playout-event/'
-        event = json_of(compact=true, [('event_type', type), ('active_source', !current_source_name),
-                                       ('description', description)])
-        extras = if list.length(extras) >= 1 then json_of(compact=true, extras) else 'null' end
-        data = '{"event":#{event},"extras":#{extras}}'
-        let ((_, status_code, _), _, _) = http.post(url, headers=API_HEADERS, data=data)
-        if status_code == 201 then
-            log('log_track: successfully logged track with API')
-        else
-            log('ERROR: log_track: got non-200 status got API (#{status_code})')
-        end
-        -1.
-    end)
+    if not !is_shutting_down then
+        add_timeout(fast=false, 0., fun() -> begin
+            url = '#{API_PREFIX}log-playout-event/'
+            event = json_of(compact=true, [('event_type', type), ('active_source', !current_source_name),
+                                           ('description', description)])
+            extras = if list.length(extras) >= 1 then json_of(compact=true, extras) else 'null' end
+            data = '{"event":#{event},"extras":#{extras}}'
+            let ((_, status_code, _), _, _) = http.post(url, headers=API_HEADERS, data=data)
+            if status_code == 201 then
+                log('log_event: logged #{type} event: #{description}')
+            else
+                log('ERROR: log_event: got non-200 status got API (#{status_code}) for #{type} event: #{description}')
+            end
+            -1.
+        end)
+    end
 end
+
+on_shutdown(fun() -> begin
+    log_event(EVENT_GENERAL, 'Harbor is shutting down')
+    is_shutting_down := true
+end)
 
 # DJ Authentication
 # (username, full_name, user_id)
@@ -102,7 +116,7 @@ dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()
 def dj_connect(headers)
     live_user_connected := true
     let (username, full_name, user_id) = !last_authorized_user
-    log_playout_event('dj', '#{full_name} authorized on the harbor', extras=[('user_id', user_id)])
+    log_event(EVENT_LIVE_DJ, '#{full_name} authorized on the harbor', extras=[('user_id', user_id)])
     live_user := (username, full_name, user_id, time())
     dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
     # TODO: log show name if we have it
@@ -115,7 +129,7 @@ def dj_disconnect()
     # TODO: wrap dj_harbor in metadata setter, and then set to blank on disconnect
     # possibly put this in output.dummy() for dj harbor as on_stop
     let (_, full_name, user_id) = !last_authorized_user
-    log_playout_event('dj', '#{full_name} disconnected from the harbor', extras=[('user_id', user_id)])
+    log_event(EVENT_LIVE_DJ, '#{full_name} disconnected from the harbor', extras=[('user_id', user_id)])
     last_authorized_user := ('', '', 0)
     live_user_connected := false
     live_user := ('', '', 0, -1.)
@@ -285,7 +299,7 @@ server.register(usage='status_pretty', description='Get status of sources in JSO
 
 def update_status()
     # Do this asynchronously (0.05 to give things time to settle.)
-    add_timeout(0.25, fun() -> begin
+    add_timeout(fast=false, 0.25, fun() -> begin
         status = status_json()
         cmd = "redis-cli -h redis set 'liquidsoap:status' #{string.quote(status)}"
         log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')
@@ -301,7 +315,7 @@ def update_status()
     end)
 end
 status_update_ref := update_status
-add_timeout(2.5, fun() -> begin update_status(); -1. end)
+add_timeout(fast=false, 2.5, fun() -> begin update_status(); -1. end)
 server.register(usage='status_update', description='Force a status update push to web clients', 'status_update', fun(_) -> begin
     update_status()
     'Done!'
@@ -319,8 +333,8 @@ ignore(list.map(fun(src) -> begin
 swoosh = single('/assets/transition.mp3')
 {% endif %}
 def transition(~source, one, two)
-    log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
     current_source_name := list.assoc(default='Unknown', source.id(source), source_hierarchy_lookups)
+    log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
 
 {% if config.AUTODJ_ENABLED %}
     # AutoDJ skip when we transition to it
@@ -359,7 +373,11 @@ radio = on_metadata(fun(m) -> begin
     current_metadata := metadata
     update_status()
 
-    log_playout_event('track', string_of_metadata(metadata), extras=metadata)
+    if !current_source_name == FAILSAFE_SOURCE_NAME then
+        log_event(EVENT_TRACK, 'Played failsafe audio track')
+    else
+        log_event(EVENT_TRACK, string_of_metadata(metadata), extras=metadata)
+    end
 end, radio)
 
 {% if config.HARBOR_COMPRESSION_NORMALIZATION %}
@@ -374,3 +392,5 @@ output.harbor(
     port=4000,
     radio,
 )
+
+log_event(EVENT_GENERAL, 'Harbor started')

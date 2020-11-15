@@ -15,16 +15,28 @@ def create_user_perm_group(codename, description):
         content_type=user, codename=codename, defaults={'name': description})[0])
 
 
-def create_groups(sender, **kwargs):
+def create_perm_group_for_models(models, description):
     from django.contrib.auth.models import Group, Permission
     from django.contrib.contenttypes.models import ContentType
 
-    from broadcast.models import Broadcast, BroadcastAsset
+    if not isinstance(models, list):
+        models = [models]
 
-    broadcast = ContentType.objects.get_for_model(Broadcast)
-    broadcast_asset = ContentType.objects.get_for_model(BroadcastAsset)
-    group, _ = Group.objects.get_or_create(name='Add prerecorded broadcasts')
-    group.permissions.add(*Permission.objects.filter(content_type__in=(broadcast, broadcast_asset)))
+    content_types = [ContentType.objects.get_for_model(model) for model in models]
+    group, _ = Group.objects.get_or_create(name=description)
+    group.permissions.add(*Permission.objects.filter(content_type__in=content_types))
+
+
+def create_groups(sender, **kwargs):
+    from django.contrib.auth.models import Group, Permission
+
+    from broadcast.models import Broadcast, BroadcastAsset
+    from autodj.models import AudioAsset
+    from services.models import PlayoutLogEntry
+
+    create_perm_group_for_models((Broadcast, BroadcastAsset), 'Add prerecorded broadcasts')
+    create_perm_group_for_models(PlayoutLogEntry, 'Advanced view of the playout log in admin site')
+    create_perm_group_for_models(AudioAsset, 'Program the AutoDJ')
 
     create_user_perm_group('view_telnet', 'Access Liquidsoap harbor over telnet (experimental)')
     create_user_perm_group('view_websockify', 'Can configure and administrate Zoom over VNC')

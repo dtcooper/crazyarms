@@ -61,14 +61,15 @@ class UpstreamServer(models.Model):
 
 class PlayoutLogEntry(models.Model):
     class EventType(models.TextChoices):
-        TRACK = 'track', 'New Track'
+        # Make sure these match templates/services/harbor.liq
+        TRACK = 'track', 'Track'
         LIVE_DJ = 'dj', 'Live DJ'
         GENERAL = 'general', 'General'
 
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-    event_type = models.CharField(max_length=10, choices=EventType.choices, default=EventType.GENERAL)
-    description = TruncatingCharField(max_length=500)
-    active_source = TruncatingCharField(max_length=50)
+    created = models.DateTimeField('Date', auto_now_add=True, db_index=True)
+    event_type = models.CharField('Type', max_length=10, choices=EventType.choices, default=EventType.GENERAL)
+    description = TruncatingCharField('Entry', max_length=500)
+    active_source = TruncatingCharField('Active Source', max_length=50)
     # TODO: Maybe convert this to a JSONField called extras to map up more closely
     # to what liquidsoap is doing, then we could have a method on this model for playout_log.html
     # to look up the foreign keys and display
@@ -76,3 +77,5 @@ class PlayoutLogEntry(models.Model):
 
     class Meta:
         ordering = ('-created',)
+        verbose_name = 'playout log entry'
+        verbose_name_plural = 'playout logs'

@@ -73,11 +73,8 @@ class StatusView(LoginRequiredMixin, TemplateView):
             return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        return {
-            **super().get_context_data(**kwargs),
-            'title': 'Server Status',
-            'liquidsoap_status': harbor.status(),
-        }
+        return {**super().get_context_data(**kwargs),
+                'title': 'Stream Status', 'liquidsoap_status': harbor.status()}
 
 
 class BanListView(PermissionRequiredMixin, TemplateView):
@@ -147,7 +144,7 @@ class ZoomView(LoginRequiredMixin, TemplateView):
 class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     form_class = UserProfileForm
     success_message = 'Your user profile was successfully updated.'
-    success_url = reverse_lazy('status')
+    success_url = reverse_lazy('user_profile')
     template_name = 'webui/form.html'
 
     def get_object(self, **kwargs):
@@ -173,10 +170,7 @@ class GCalView(LoginRequiredMixin, TemplateView):
         return super().dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        return {
-            **super().get_context_data(**kwargs),
-            'title': 'My Scheduled Shows'
-        }
+        return {**super().get_context_data(**kwargs), 'title': 'My Scheduled Shows'}
 
 
 class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
@@ -257,9 +251,13 @@ def status_skip(request):
 
 
 class PlayoutLogView(LoginRequiredMixin, ListView):
-    # TODO: pagination
+    MAX_ENTRIES = 250
     template_name = 'webui/playout_log.html'
-    model = PlayoutLogEntry
+    queryset = PlayoutLogEntry.objects.order_by('-created')[:MAX_ENTRIES]
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs),
+                'title': 'Playout Log', 'MAX_ENTRIES': self.MAX_ENTRIES}
 
 
 @csrf_exempt

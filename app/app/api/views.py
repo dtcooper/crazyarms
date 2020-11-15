@@ -76,18 +76,19 @@ class NextTrackAPIView(APIView):
 class LogPlayoutEventAPIView(APIView):
     def get_track_event_kwargs(self, kwargs):
         metadata = self.request_json['extras']
-        kwargs['description'] = ' - '.join(filter(None, (
-            metadata.get(k) for k in ('artist', 'album', 'title')))) or AudioAsset.UNNAMED_TRACK
+        if metadata:
+            kwargs['description'] = ' - '.join(filter(None, (
+                metadata.get(k) for k in ('artist', 'album', 'title')))) or AudioAsset.UNNAMED_TRACK
 
-        audio_asset_id = metadata.get('asset_id')
-        if audio_asset_id:
-            try:
-                audio_asset = AudioAsset.objects.get(id=audio_asset_id)
-            except AudioAsset.DoesNotExist:
-                pass
-            else:
-                kwargs['audio_asset'] = audio_asset
-                kwargs['description'] = str(audio_asset)
+            audio_asset_id = metadata.get('asset_id')
+            if audio_asset_id:
+                try:
+                    audio_asset = AudioAsset.objects.get(id=audio_asset_id)
+                except AudioAsset.DoesNotExist:
+                    pass
+                else:
+                    kwargs['audio_asset'] = audio_asset
+                    kwargs['description'] = str(audio_asset)
 
         return kwargs
 

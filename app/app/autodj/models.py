@@ -101,13 +101,13 @@ class AudioAsset(AudioAssetBase):
 
         if run_no_repeat_artists and run_no_repeat_track_ids:
             # First recurse without artist skips, we won't this recursive block
-            logger.info('autodj: no track found, attempting to run with artist repeats')
+            logger.info('autodj: no track found, attempting to run without artist repeats')
             audio_asset = cls.get_next_for_autodj(run_no_repeat_artists=False)
             if audio_asset is not None:
                 return audio_asset
 
             # Then recurse without track ID skips, we won't hit this recursive block either
-            logger.info('autodj: no track found, attempting to run with artist and track repeats')
+            logger.info('autodj: no track found, attempting to run without artist or track repeats')
             audio_asset = cls.get_next_for_autodj(run_no_repeat_artists=False, run_no_repeat_track_ids=False)
             if audio_asset is not None:
                 return audio_asset

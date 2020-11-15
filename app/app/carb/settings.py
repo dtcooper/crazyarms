@@ -146,11 +146,12 @@ SESSION_CACHE_ALIAS = 'default'
 
 LANGUAGE_CODE = 'en-us'
 
-USE_I18N = True
-
-USE_L10N = True
-
+USE_I18N = False
+USE_L10N = False
 USE_TZ = True
+# If we ever translate this app (USE_L10N/USE_I18N), we'll need to figure out a way to show seconds
+SHORT_DATETIME_FORMAT = 'm/d/Y g:i:s a'
+DATETIME_FORMAT = 'N j, Y, g:i:s a'
 
 AUTH_USER_MODEL = 'common.User'
 
@@ -184,6 +185,8 @@ CONSTANCE_ADDITIONAL_FIELDS = {
 
 CONSTANCE_CONFIG = OrderedDict((
     ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.')),
+    ('PLAYOUT_LOG_PURGE_DAYS', (14, "The number of days to keep playout log entries after which they're purged. "
+                                'Set to 0 to keep playout log entries forever.')),
     ('HARBOR_COMPRESSION_NORMALIZATION', (True, 'Enable compression and normalization on harbor stream.')),
     ('HARBOR_TRANSITION_WITH_SWOOSH', (False, 'Transition between harbor sources with a ~1 second swoosh effect.')),
     ('HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION', (15, 'The maximum number of seconds of silence on a live source '
@@ -218,7 +221,7 @@ if ICECAST_ENABLED:
     )))
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
-    ('General Options', ('STATION_NAME',)),
+    ('General Options', ('STATION_NAME', 'PLAYOUT_LOG_PURGE_DAYS')),
     ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH',
                               'HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION')),
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',

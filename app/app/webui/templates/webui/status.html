@@ -189,24 +189,4 @@
   </table>
 {% endif %}
 
-<table class="even-columns first-td-right">
-  <caption>Current User</caption>
-  <tr>
-    <td>Username:</td>
-    <td>{{ user.username }}</td>
-  </tr>
-  <tr>
-    <td>Contact:</td>
-    <td>"{{ user.get_full_name }}" &lt;{{ user.email }}&gt;</td>
-  </tr>
-  <tr>
-    <td>Harbor Authorization:</td>
-    <td>{{ user.harbor_auth_pretty }}</td>
-  </tr>
-  <tr>
-    <td>Timezone:</td>
-    <td>{{ user.get_timezone_display }} (currently {% now 'SHORT_DATETIME_FORMAT' %})</td>
-  </tr>
-</table>
-
 {% endblock %}

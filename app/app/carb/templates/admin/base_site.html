@@ -2,6 +2,11 @@
 
 {% load static %}
 
+{% block userlinks %}
+  <a href="{% url 'status' %}">Back to Status Page</a> /
+  {{ block.super }}
+{% endblock %}
+
 {% block extrastyle %}
 {{ block.super}}
 <style>

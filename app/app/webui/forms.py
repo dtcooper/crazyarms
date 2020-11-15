@@ -4,6 +4,8 @@ import string
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
+from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
 
 from constance import config
@@ -84,9 +86,18 @@ class FirstRunForm(UserCreationForm):
 class UserProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].disabled = True
-        self.fields['username'].help_text = ''
+        for field_name in ('username', 'harbor_auth'):
+            field = self.fields[field_name]
+            if not self.instance or not self.instance.is_superuser:
+                field.disabled = True
+            field.help_text = ''
+
+        self.fields['timezone'].help_text = f'Currently {date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")}'
+
+        if not config.GOOGLE_CALENDAR_ENABLED:
+            self.fields['harbor_auth'].choices = list(filter(
+                lambda c: c[0] != User.HarborAuth.GOOGLE_CALENDAR, User.HarborAuth.choices))
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'first_name', 'last_name', 'timezone')
+        fields = ('email', 'username', 'harbor_auth', 'first_name', 'last_name', 'timezone')

@@ -81,12 +81,9 @@ def asset_download_external_url(asset, url, title='', task=None):
         raise
 
 
-# TODO: is this used?
 def local_daily_task(hour, minute=0, sunday_only=False):
     def test(datetime_utc):
         datetime_local = timezone.localtime(pytz.utc.localize(datetime_utc))
-        print(
-             datetime_local.hour == hour and datetime_local.minute == minute
-             and (not sunday_only or datetime_local.weekday() == 6))
-        return True
+        return (datetime_local.hour == hour and datetime_local.minute == minute
+                and (not sunday_only or datetime_local.weekday() == 6))
     return test

@@ -14,7 +14,7 @@ from autodj.models import AudioAsset
 
 logger = logging.getLogger(f'carb.{__name__}')
 
-NUM_SAMPLE_ASSETS = 50
+NUM_SAMPLE_ASSETS = 75
 CCMIXTER_API_URL = 'http://ccmixter.org/api/query'
 # Ask for a few month, since we only want ones with mp3s
 CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limit': round(NUM_SAMPLE_ASSETS * 1.5)}
@@ -22,7 +22,7 @@ CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limi
 
 @djhuey.db_task()
 def generate_sample_assets(uploader=None):
-    logger.info(f'Downloading {NUM_SAMPLE_ASSETS} from ccMixter')
+    logger.info(f'Downloading {NUM_SAMPLE_ASSETS} sample assets from ccMixter')
     tracks_json = requests.get(CCMIXTER_API_URL, params=CCMIXTER_API_PARAMS).json()
     num_downloaded = 0
 
