@@ -1,0 +1,11 @@
+--2020-11-18 13:04:43--  http://ccmixter.org/api/query?sinced=1%20month%20ago
+Resolving ccmixter.org (ccmixter.org)... 66.135.63.137
+Connecting to ccmixter.org (ccmixter.org)|66.135.63.137|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+Saving to: 'ccmixter.json'
+
+ccmixter.json                                      [<=>                                                                                                  ]       0  --.-KB/s               ccmixter.json                                      [ <=>                                                                                                 ]  68.41K   438KB/s    in 0.2s    
+
+2020-11-18 13:04:45 (438 KB/s) - 'ccmixter.json' saved [70050]
+

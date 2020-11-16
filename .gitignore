@@ -1,5 +1,7 @@
 __pycache__/
 media/
 .env
+.coverage
+htmlcov/
 credentials.json
 docker-compose/overrides.yml

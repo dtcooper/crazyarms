@@ -17,9 +17,6 @@ from services.models import UpstreamServer
 from .tasks import generate_sample_assets, NUM_SAMPLE_ASSETS
 
 
-CONSTANCE_FIELDS = ('STATION_NAME',)
-
-
 class FirstRunForm(UserCreationForm):
     if settings.ICECAST_ENABLED:
         icecast_admin_password = forms.CharField(label='Icecast Password', help_text='The password for Icecast admin. '
@@ -31,18 +28,10 @@ class FirstRunForm(UserCreationForm):
         help_text=mark_safe(f'Preload {NUM_SAMPLE_ASSETS} of this month\'s most popular tracks from '
                             '<a href="http://ccmixter.org/" target="_blank">ccMixter</a> to kick start music for the '
                             'AutoDJ. (Creative Commons licensed)'))
+    station_name = forms.CharField(label='Station Name', help_text='The name of your radio station.')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        for config_name in CONSTANCE_FIELDS:
-            default, help_text = settings.CONSTANCE_CONFIG[config_name]
-            self.fields[config_name.lower()] = forms.CharField(
-                label=config_name.replace('_', ' ').lower().capitalize(),
-                help_text=help_text,
-                initial=default,
-            )
-
         self.order_fields(['station_name', 'username', 'email', 'password1', 'password2', 'icecast_passwords'])
 
     class Meta(UserCreationForm.Meta):
@@ -58,8 +47,7 @@ class FirstRunForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         user.save()
 
-        for config_name in CONSTANCE_FIELDS:
-            setattr(config, config_name, self.cleaned_data[config_name.lower()])
+        config.STATION_NAME = self.cleaned_data['station_name']
 
         if settings.ICECAST_ENABLED:
             config.ICECAST_ADMIN_EMAIL = user.email
@@ -71,7 +59,7 @@ class FirstRunForm(UserCreationForm):
                 hostname='icecast',
                 port=8000,
                 username='source',
-                password=config.ICECAST_SOURCE_PASSWORD,  # Todo refresh upstream when changed
+                password=config.ICECAST_SOURCE_PASSWORD,
                 mount='live',
             )
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "$#" -gt 0 ]; then
-    exec $@
+    exec "$@"
 fi
 
 CONF=/etc/icecast.xml

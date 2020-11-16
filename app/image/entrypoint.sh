@@ -4,7 +4,9 @@ if [ "$RUN_HUEY" ]; then
     __RUN_HUEY=1
 fi
 
-source /.env
+if [ -f /.env ]; then
+    source /.env
+fi
 
 if [ "$#" = 0 ]; then
     if [ "${__RUN_HUEY}" ]; then
@@ -35,5 +37,5 @@ if [ "$#" = 0 ]; then
         fi
     fi
 else
-    exec $@
+    exec "$@"
 fi

@@ -206,24 +206,38 @@ fi
 
 source .env
 
-COMPOSE_ARGS='--env-file .env --project-directory . -f docker-compose/base.yml'
+COMPOSE_ARGS='--env-file .env --project-directory .'
 ALL_SERVICES=
 if [ "$1" = '--all-services' ]; then
     ALL_SERVICES=1
     shift 1
 fi
 
-# Enable compose files for services
-for CONF in https icecast zoom email harbor-telnet; do
-    CONF_VAR="$(echo "$CONF" | LC_CTYPE=C tr '[:lower:]-' '[:upper:]_')_ENABLED"
-    CONF_VAL="${!CONF_VAR}"
-    if [ "$CONF_VAL" -a "$CONF_VAL" != '0' -o "$ALL_SERVICES" ]; then
-        COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/$CONF.yml"
+if [ "$1" = '--test' -o "$1" = test ]; then
+    COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/test.yml"
+    if [ "$1" = '--test' ]; then
+        shift 1
+    else
+        shift $#
     fi
-done
+    if [ "$#" = 0 ]; then
+        set -- "$@" run app_test
+    fi
+else
+    COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/base.yml"
 
-if [ -f 'docker-compose/overrides.yml' ]; then
-    COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/overrides.yml"
+    # Enable compose files for services
+    for CONF in https icecast zoom email harbor-telnet; do
+        CONF_VAR="$(echo "$CONF" | LC_CTYPE=C tr '[:lower:]-' '[:upper:]_')_ENABLED"
+        CONF_VAL="${!CONF_VAR}"
+        if [ "$CONF_VAL" -a "$CONF_VAL" != '0' -o "$ALL_SERVICES" ]; then
+            COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/$CONF.yml"
+        fi
+    done
+
+    if [ -f 'docker-compose/overrides.yml' ]; then
+        COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/overrides.yml"
+    fi
 fi
 
 set -x

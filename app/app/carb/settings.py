@@ -7,18 +7,19 @@ import environ
 
 
 env = environ.Env()
-env.read_env('/.env')
+if os.path.exists('/.env'):
+    env.read_env('/.env')
 
 BASE_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY', default='topsecret')
 
 DEBUG = env.bool('DEBUG', default=False)
 ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
 ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
 HARBOR_TELNET_ENABLED = env.bool('HARBOR_TELNET_ENABLED', default=False)
-DOMAIN_NAME = env('DOMAIN_NAME')
-TIME_ZONE = env('TIMEZONE')
+DOMAIN_NAME = env('DOMAIN_NAME', default='localhost')
+TIME_ZONE = env('TIMEZONE', default='US/Pacific')
 
 ALLOWED_HOSTS = ['app', 'localhost', DOMAIN_NAME]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -212,7 +213,7 @@ CONSTANCE_CONFIG = OrderedDict((
 if ICECAST_ENABLED:
     CONSTANCE_CONFIG.update(OrderedDict((
         ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server.')),
-        ('ICECAST_ADMIN_EMAIL', (f'admin@{env("DOMAIN_NAME")}', 'The admin email setting for the Icecast server.')),
+        ('ICECAST_ADMIN_EMAIL', (f'admin@{DOMAIN_NAME}', 'The admin email setting for the Icecast server.')),
         ('ICECAST_ADMIN_PASSWORD', ('', 'Admin password for the Icecast server.')),
         ('ICECAST_SOURCE_PASSWORD', ('', 'Source password for the Icecast server.')),
         ('ICECAST_RELAY_PASSWORD', ('', 'Relay password for the Icecast server.')),

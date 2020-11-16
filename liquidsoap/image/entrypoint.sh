@@ -7,4 +7,4 @@ fi
 
 ln -s "/config/${CONTAINER_NAME}/supervisor" /etc/supervisor/conf.d
 
-exec $@
+exec "$@"

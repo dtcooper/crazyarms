@@ -1,0 +1,32 @@
+services:
+  app_test:
+    container_name: app
+    image: dtcooper/carb-app:${CARB_VERSION:-latest}
+    build:
+      context: ./app
+    volumes:
+      - ./app/app:/app
+    depends_on:
+      - db_test
+      - redis_test
+    environment:
+      DJANGO_SETTINGS_MODULE: carb.settings_test
+      TZ: ${TIMEZONE:-US/Pacific}
+      EMAIL_ENABLED: 1
+      HARBOR_TELNET_ENABLED: 1
+      ICECAST_ENABLED: 1
+      ZOOM_ENABLED: 1
+    command: sh -c "wait-for-it -t 0 db_test:5432 && wait-for-it -t 0 redis_test:6379 && pytest"
+
+  db_test:
+    container_name: db_test
+    image: library/postgres:13-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+      TZ: ${TIMEZONE:-US/Pacific}
+
+  redis_test:
+    container_name: redis_test
+    image: library/redis:6-alpine
+    environment:
+      TZ: ${TIMEZONE:-US/Pacific}

@@ -39,7 +39,8 @@ def sync_google_calendar_api():
         try:
             GoogleCalendarShowTimes.sync_api()
         except Exception:
-            cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, "failed, please check your settings and try again.", timeout=None)
+            cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC,
+                      "failed, please check your settings and try again.", timeout=None)
             raise
         else:
             cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, timezone.now(), timeout=None)

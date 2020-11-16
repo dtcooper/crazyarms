@@ -18,3 +18,10 @@ requests
 supervisor
 unidecode
 watchdog
+
+# Testing, TODO: move this to separate container
+pytest
+pytest-cov
+pytest-django
+pytest-flake8
+requests-mock
