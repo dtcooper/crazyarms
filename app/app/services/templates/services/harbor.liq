@@ -15,6 +15,7 @@ MAX = 10.
 MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liquidsoap_value }}))
 REDIS_KEY = 'liquidsoap:source-status'
 {% if config.AUTODJ_ENABLED %}
+REQUEST_ALLOW_BLANK = 5.
 REQUEST_QUEUE_LENGTH = 45.
 REQUEST_RETRY_DELAY = 5.
 REQUEST_TIMEOUT = 30.
@@ -185,7 +186,7 @@ add_skip_command_carb(prerecord)
 
 {% if config.AUTODJ_ENABLED %}
 autodj = request.dynamic.list(
-    id='autodj', length=REQUEST_QUEUE_LENGTH, retry_delay=REQUEST_RETRY_DELAY, timeout=REQUEST_TIMEOUT, fun() -> begin
+    id='autodj', conservative=true, length=REQUEST_QUEUE_LENGTH, retry_delay=REQUEST_RETRY_DELAY, timeout=REQUEST_TIMEOUT, fun() -> begin
         url = '#{API_PREFIX}next-track/'
         let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
         if status_code == 200 then
@@ -209,9 +210,10 @@ autodj = on_end(id='autodj_onend', delay=0., fun(_, _) -> begin
     status_update()
 end, autodj)
 
-# Having autodj safe for up to 7.5 seconds means resolution loading files won't
-# transition to failsafe and just have a few ms of silence
-autodj = strip_blank(id='autodj_strip', max_blank=7.5, start_blank=true, mksafe.no_replay_metadata(id='autodj_safe', autodj))
+# Having autodj safe for a few seconds means resolution loading files won't
+# transition to failsafe and just have a few seconds of silence
+autodj = strip_blank(id='autodj_strip', max_blank=REQUEST_ALLOW_BLANK,
+                     start_blank=true, mksafe.no_replay_metadata(id='autodj_safe', autodj))
 add_skip_command_carb(autodj)
 {% endif %}
 
@@ -337,9 +339,9 @@ def transition(~source, one, two)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
 
 {% if config.AUTODJ_ENABLED %}
-    # AutoDJ skip when we transition to it
+    # AutoDJ skip when we transition to it (unless we're transitioning from failsafe)
     # TODO: this appears to still be spitting out metadata, even with the drop_metadata() below
-    if source.id(source) == source.id(autodj) then
+    if source.id(source) == source.id(autodj) and source.id(one) != source.id(failsafe) then
         log('Got transition to AutoDJ, skipping current track')
         source.skip(autodj)
     end

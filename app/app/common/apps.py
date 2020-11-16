@@ -19,8 +19,8 @@ def create_perm_group_for_models(models, description):
     from django.contrib.auth.models import Group, Permission
     from django.contrib.contenttypes.models import ContentType
 
-    if not isinstance(models, list):
-        models = [models]
+    if not isinstance(models, (tuple, list)):
+        models = (models,)
 
     content_types = [ContentType.objects.get_for_model(model) for model in models]
     group, _ = Group.objects.get_or_create(name=description)
