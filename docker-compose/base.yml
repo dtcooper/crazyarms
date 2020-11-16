@@ -15,7 +15,7 @@ services:
       - sse
     volumes:
       - static_root:/static_root:ro
-      - media_root:/media_root:ro
+      - ./media:/media_root:ro
       - ./.env:/.env:ro
     environment:
       TZ: ${TIMEZONE:-US/Pacific}
@@ -29,7 +29,7 @@ services:
     volumes:
       - ./.env:/.env:ro
       - static_root:/static_root
-      - media_root:/media_root
+      - ./media:/media_root
       - services_config:/config
     depends_on:
       - db
@@ -47,7 +47,7 @@ services:
       context: ./app
     volumes:
       - ./.env:/.env:ro
-      - media_root:/media_root
+      - ./media:/media_root
     depends_on:
       - db
       - redis
@@ -94,7 +94,7 @@ services:
       - '8001:8001'
     volumes:
       - services_config:/config:ro
-      - media_root:/media_root:ro
+      - ./media:/media_root:ro
     environment:
       CONTAINER_NAME: harbor
       TZ: ${TIMEZONE:-US/Pacific}
@@ -128,4 +128,3 @@ volumes:
   redis_data:
   services_config:
   static_root:
-  media_root:

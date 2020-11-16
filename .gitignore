@@ -1,4 +1,5 @@
 __pycache__/
+media/
 .env
-docker-compose/overrides.yml
 credentials.json
+docker-compose/overrides.yml
