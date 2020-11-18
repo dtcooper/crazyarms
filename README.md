@@ -33,6 +33,16 @@ cd carb
 
 Then in your browser go to http://localhost/. To stop, press `CTRL+C`.
 
+## Unit Tests
+
+To run the unit tests, use the shell `compose.sh` script as follows,
+
+```
+./compose.sh test
+
+# Tear down test dependent containers (postgres and redis)
+./compose --test down
+```
 
 ## Features
 
@@ -100,6 +110,7 @@ broadcasting scripts.
 1. Clean up Dockerfiles stripping dev stuff
 1. Go over `TODO`s and `XXX`s in codebase
 1. Unit tests for at least the Django app
+    - Skeleton for tests is _done!_
 1. Mature `strip_blank` implementation
 1. Convert some Django views to class-based
     - ~~api~~ - _done!_
