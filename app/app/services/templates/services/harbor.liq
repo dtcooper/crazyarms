@@ -9,9 +9,9 @@ set('scheduler.generic_queues', 4)
 
 API_HEADERS = [('X-CARB-Secret-Key', {{ settings.SECRET_KEY|liqval:False }})]
 API_PREFIX = 'http://app:8000/api/'
-BUFFER = 0.5  # XXX
+BUFFER = 5.
 FAILSAFE_SOURCE_NAME = 'Failsafe Audio'
-MAX = 1.  # XXX
+MAX = 10.
 MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liqval }})
 REDIS_KEY = 'liquidsoap:source-status'
 {% if config.AUTODJ_ENABLED %}
