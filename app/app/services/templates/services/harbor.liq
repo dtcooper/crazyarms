@@ -338,6 +338,7 @@ ignore(list.map(fun(src) -> begin
 def transition(~source, one, two)
     current_source_name := list.assoc(default='Unknown', source.id(source), source_hierarchy_lookups)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
+    # TODO: log transition to playout log
 
     {% if config.AUTODJ_ENABLED %}
         two = if source.id(source) == source.id(autodj) and source.id(one) != source.id(failsafe) then
