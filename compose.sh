@@ -153,7 +153,7 @@ FIRST_RUN=
 if [ ! -f .env ]; then
     FIRST_RUN=1
     cp .default.env .env
-elif [ "$1" = '--first-run' ]; then
+elif [ "$1" = '--first-run' -o "$1" = '--setup' ]; then
     FIRST_RUN=1
     shift 1
 fi
@@ -208,7 +208,7 @@ source .env
 
 COMPOSE_ARGS='--env-file .env --project-directory .'
 ALL_SERVICES=
-if [ "$1" = '--all-services' ]; then
+if [ "$1" = '--all-services' -o "$1" = '--all' ]; then
     ALL_SERVICES=1
     shift 1
 fi

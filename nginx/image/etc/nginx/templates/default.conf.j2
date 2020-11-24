@@ -121,7 +121,7 @@ server {
         }
     {% endif %}
 
-    {% if ICECAST_ENABLED %}
+    {% if ICECAST_ENABLED|int %}
         # Optionally forward /live URL on Icecast, useful for https or clean URLs
         location = /live {
             proxy_set_header Host $host;

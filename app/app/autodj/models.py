@@ -34,7 +34,7 @@ class AudioAsset(AudioAssetBase):
         super().save(*args, **kwargs)
         if self.artist_normalized == '' or artist_normalized_before_save != self.artist_normalized:
             self.artist_normalized = (' '.join(unidecode.unidecode(self.artist).strip().split())).lower()
-        super().save(*args, **kwargs)
+            super().save(*args, **kwargs)
 
     @classmethod
     def process_anti_repeat_autodj(cls, audio_asset):

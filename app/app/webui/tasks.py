@@ -1,11 +1,10 @@
 import logging
 import os
-import tempfile
 from urllib.parse import urlsplit
 
 import requests
 
-from django.core.files import File
+from django.conf import settings
 
 from huey.contrib import djhuey
 
@@ -37,13 +36,16 @@ def generate_sample_assets(uploader=None):
                 break
 
             logger.info(f'Downloading sample asset {mp3_url} ({num_downloaded}/{NUM_SAMPLE_ASSETS})')
-            with tempfile.TemporaryFile() as temp_file:
+            mp3_path = f'{settings.MEDIA_ROOT}/ccmixter-sample/{os.path.basename(urlsplit(mp3_url).path)}'
+
+            os.makedirs(f'{settings.MEDIA_ROOT}/ccmixter-sample', exist_ok=True)
+            with open(mp3_path, 'wb') as mp3_file:
                 response = requests.get(mp3_url, stream=True)
                 for chunk in response.iter_content(chunk_size=4 * 1024):
-                    temp_file.write(chunk)
-                temp_file.seek(0)
-                file = File(temp_file, name=f'ccmixter-sample/{os.path.basename(urlsplit(mp3_url).path)}')
-                audio_asset = AudioAsset(file=file, uploader=uploader)
-                audio_asset.save()
+                    mp3_file.write(chunk)
+
+            audio_asset = AudioAsset(uploader=uploader)
+            audio_asset.file = mp3_path.removeprefix(f'{settings.MEDIA_ROOT}/')
+            audio_asset.save()
 
     logger.info(f'Done downloading {NUM_SAMPLE_ASSETS} sample assets from ccMixter')

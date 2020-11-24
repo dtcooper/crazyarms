@@ -168,6 +168,10 @@ HUEY = {
     # 'connection_pool': ConnectionPool(host='redis', max_connections=5),
 }
 
+SHELL_PLUS_IMPORTS = [
+    'from constance import config',
+]
+
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'
 CONSTANCE_REDIS_CONNECTION_CLASS = 'django_redis.get_redis_connection'
 CONSTANCE_SUPERUSER_ONLY = False
@@ -189,6 +193,8 @@ CONSTANCE_CONFIG = OrderedDict((
     ('PLAYOUT_LOG_PURGE_DAYS', (14, "The number of days to keep playout log entries after which they're purged. "
                                 'Set to 0 to keep playout log entries forever.')),
     ('HARBOR_COMPRESSION_NORMALIZATION', (True, 'Enable compression and normalization on harbor stream.')),
+    ('HARBOR_TRANSITION_SECONDS', (2.5, 'Fadeout time in seconds when transitioning between harbor sources. '
+                                        'Set to 0 for no fadeout.')),
     ('HARBOR_TRANSITION_WITH_SWOOSH', (False, 'Transition between harbor sources with a ~1 second swoosh effect.')),
     ('HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION', (15, 'The maximum number of seconds of silence on a live source '
                                                       '(eg. Zoom or live DJs) until it will be considered inactive.')),
@@ -224,7 +230,7 @@ if ICECAST_ENABLED:
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME', 'PLAYOUT_LOG_PURGE_DAYS')),
     ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH',
-                              'HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION')),
+                              'HARBOR_TRANSITION_SECONDS', 'HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION')),
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
                               'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST')),
     ('Externally Downloaded Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),

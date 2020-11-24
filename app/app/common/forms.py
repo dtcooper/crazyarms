@@ -42,6 +42,14 @@ class ConstanceForm(constance_admin.ConstanceForm):
     def save(self):
         pre_save = {name: getattr(config, name) for name in settings.CONSTANCE_CONFIG}
         super().save()
+
+        # Force numeric types to >= 0
+        for name in settings.CONSTANCE_CONFIG:
+            value = getattr(config, name)
+            if isinstance(value, (float, int)):
+                zero = type(value)(0)  # Make sure it's the correct type
+                setattr(config, name, max(value, zero))
+
         post_save = {name: getattr(config, name) for name in settings.CONSTANCE_CONFIG}
         config_changes = [name for name in settings.CONSTANCE_CONFIG if pre_save[name] != post_save[name]]
         if config_changes:

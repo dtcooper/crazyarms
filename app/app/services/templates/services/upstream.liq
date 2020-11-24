@@ -1,7 +1,7 @@
 {% load services %}
 
 set('server.telnet', true)
-set('server.telnet.port', {{ upstream.telnet_port|liquidsoap_value }})
+set('server.telnet.port', {{ upstream.telnet_port|liqval }})
 set('server.telnet.bind_addr', '0.0.0.0')
 set('server.timeout', -1.)
 
@@ -13,13 +13,13 @@ output.dummy(input, fallible=true)
 failsafe = single(id='failsafe', '/assets/failsafe.mp3')
 broadcast = fallback(track_sensitive=false, [input, failsafe])
 
-host = {{ upstream.hostname|liquidsoap_value }}
-user = {{ upstream.username|liquidsoap_value }}
-password = {{ upstream.password|liquidsoap_value }}
-mount = {{ '/'|add:upstream.mount|liquidsoap_value }}
-name = {{ upstream.name|liquidsoap_value }}
+host = {{ upstream.hostname|liqval }}
+user = {{ upstream.username|liqval }}
+password = {{ upstream.password|liqval }}
+mount = {{ '/'|add:upstream.mount|liqval }}
+name = {{ upstream.name|liqval }}
 {% if upstream.mime %}
-format = {{ upstream.mime|liquidsoap_value }}
+format = {{ upstream.mime|liqval }}
 {% endif %}
 log('Starting upstream "#{name}"')
 
@@ -45,7 +45,7 @@ output.icecast(
     format=format,
 {% endif %}
     host=host,
-    port={{ upstream.port|liquidsoap_value }},
+    port={{ upstream.port|liqval }},
     user=user,
     password=password,
     mount=mount,

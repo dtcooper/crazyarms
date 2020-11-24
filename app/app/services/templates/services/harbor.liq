@@ -7,21 +7,23 @@ set('server.timeout', -1.)
 set('scheduler.fast_queues', 2)
 set('scheduler.generic_queues', 4)
 
-API_HEADERS = [('X-CARB-Secret-Key', {{ settings.SECRET_KEY|liquidsoap_value:False }})]
+API_HEADERS = [('X-CARB-Secret-Key', {{ settings.SECRET_KEY|liqval:False }})]
 API_PREFIX = 'http://app:8000/api/'
-BUFFER = 5.
+BUFFER = 0.5  # XXX
 FAILSAFE_SOURCE_NAME = 'Failsafe Audio'
-MAX = 10.
-MAX_SILENCE = float_of_int(abs({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liquidsoap_value }}))
+MAX = 1.  # XXX
+MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liqval }})
 REDIS_KEY = 'liquidsoap:source-status'
 {% if config.AUTODJ_ENABLED %}
-REQUEST_ALLOW_BLANK = 5.
-REQUEST_QUEUE_LENGTH = 45.
-REQUEST_RETRY_DELAY = 5.
-REQUEST_TIMEOUT = 30.
+    REQUEST_QUEUE_LENGTH = 45.
+    REQUEST_RETRY_DELAY = 5.
+    REQUEST_TIMEOUT = 30.
 {% endif %}
 SSE_MESSAGE_URL = 'http://sse:3000/message'
-STATION_NAME = {{ config.STATION_NAME|liquidsoap_value }}
+STATION_NAME = {{ config.STATION_NAME|liqval }}
+{% if config.HARBOR_TRANSITION_SECONDS %}
+    TRANSITION_SECONDS = {{ config.HARBOR_TRANSITION_SECONDS|liqval }}
+{% endif %}
 
 # Copied from services/models.py
 EVENT_TRACK = 'track'
@@ -160,20 +162,20 @@ dj_harbor = strip_blank(
 )
 
 {% if settings.ZOOM_ENABLED %}
-zoom = input.pulseaudio(id='zoom')
-ignore(output.dummy(id='zoom_dummy', zoom))
+    zoom = input.pulseaudio(id='zoom')
+    ignore(output.dummy(id='zoom_dummy', zoom))
 
-zoom = strip_blank(
-    max_blank=MAX_SILENCE,
-    id='zoom_strip',
-    start_blank=true,
-    min_noise=0.5,
-    zoom,
-)
-zoom = map_metadata(update=false, strip=true, fun(_) -> begin
-    # TODO hit redis for show name
-    [('title', 'Live Broadcast')]
-end, zoom)
+    zoom = strip_blank(
+        max_blank=MAX_SILENCE,
+        id='zoom_strip',
+        start_blank=true,
+        min_noise=0.5,
+        zoom,
+    )
+    zoom = map_metadata(update=false, strip=true, fun(_) -> begin
+        # TODO hit redis for show name
+        [('title', 'Live Broadcast')]
+    end, zoom)
 {% endif %}
 
 prerecord = request.queue(id='prerecord')
@@ -185,36 +187,35 @@ end, prerecord)
 add_skip_command_carb(prerecord)
 
 {% if config.AUTODJ_ENABLED %}
-autodj = request.dynamic.list(
-    id='autodj', conservative=true, length=REQUEST_QUEUE_LENGTH, retry_delay=REQUEST_RETRY_DELAY, timeout=REQUEST_TIMEOUT, fun() -> begin
-        url = '#{API_PREFIX}next-track/'
-        let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
-        if status_code == 200 then
-            if list.assoc(default=false, 'has_asset', of_json(default=[('_', false)], response)) then
-                asset_uri = list.assoc(default='', 'asset_uri', of_json(default=[('_', '')], response))
-                log('autodj: selected URI #{asset_uri}')
-                [request.create(asset_uri)]
+    autodj = request.dynamic.list(
+        id='autodj', conservative=true, length=REQUEST_QUEUE_LENGTH,
+        retry_delay=REQUEST_RETRY_DELAY, timeout=REQUEST_TIMEOUT, fun() -> begin
+            url = '#{API_PREFIX}next-track/'
+            let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
+            if status_code == 200 then
+                if list.assoc(default=false, 'has_asset', of_json(default=[('_', false)], response)) then
+                    asset_uri = list.assoc(default='', 'asset_uri', of_json(default=[('_', '')], response))
+                    log('autodj: selected URI #{asset_uri}')
+                    [request.create(asset_uri)]
+                else
+                    log('ERROR: autodj returned no track')
+                    []
+                end
             else
-                log('ERROR: autodj returned no track')
+                log('ERROR: autodj: got non-200 status got API (#{status_code}) for next track')
                 []
             end
-        else
-            log('ERROR: autodj: got non-200 status got API (#{status_code}) for next track')
-            []
-        end
-    end)
+        end)
 
-autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
-autodj = on_end(id='autodj_onend', delay=0., fun(_, _) -> begin
-    status_update = !status_update_ref
-    status_update()
-end, autodj)
+    autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
+    autodj = on_end(id='autodj_onend', delay=0., fun(_, _) -> begin
+        status_update = !status_update_ref
+        status_update()
+    end, autodj)
 
-# Having autodj safe for a few seconds means resolution loading files won't
-# transition to failsafe and just have a few seconds of silence
-autodj = strip_blank(id='autodj_strip', max_blank=REQUEST_ALLOW_BLANK,
-                     start_blank=true, mksafe.no_replay_metadata(id='autodj_safe', autodj))
-add_skip_command_carb(autodj)
+    # Having autodj safe for a few seconds means resolution loading files won't
+    # transition to failsafe and just have a few seconds of silence
+    add_skip_command_carb(autodj)
 {% endif %}
 
 failsafe = single(id='failsafe', '/assets/hold-music.mp3')
@@ -332,27 +333,35 @@ ignore(list.map(fun(src) -> begin
 
 # Radio playout
 {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
-swoosh = single('/assets/transition.mp3')
+    swoosh = single('/assets/transition.mp3')
 {% endif %}
 def transition(~source, one, two)
     current_source_name := list.assoc(default='Unknown', source.id(source), source_hierarchy_lookups)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
 
-{% if config.AUTODJ_ENABLED %}
-    # AutoDJ skip when we transition to it (unless we're transitioning from failsafe)
-    # TODO: this appears to still be spitting out metadata, even with the drop_metadata() below
-    if source.id(source) == source.id(autodj) and source.id(one) != source.id(failsafe) then
-        log('Got transition to AutoDJ, skipping current track')
-        source.skip(autodj)
-    end
-{% endif %}
+    {% if config.AUTODJ_ENABLED %}
+        two = if source.id(source) == source.id(autodj) and source.id(one) != source.id(failsafe) then
+            source.skip(autodj)
+            # Avoid metadata duplication by sequencing after 50ms
+            sequence([blank(duration=0.05), two])
+        else
+            two
+        end
+    {% endif %}
 
-    add(normalize=false, [
-        drop_metadata(fade.final(duration=2.5, one)),
-{% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
-        once(swoosh),
-{% endif %}
-        two])
+    {% if not config.HARBOR_TRANSITION_SECONDS and not config.HARBOR_TRANSITION_WITH_SWOOSH %}
+        two
+    {% else %}
+        add(normalize=false, [
+            two,
+            {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
+                once(swoosh),
+            {% endif %}
+            {% if config.HARBOR_TRANSITION_SECONDS %}
+                fade.final(duration=TRANSITION_SECONDS, one),
+            {% endif %}
+        ])
+    {% endif %}
 end
 
 radio = fallback(
@@ -383,8 +392,8 @@ radio = on_metadata(fun(m) -> begin
 end, radio)
 
 {% if config.HARBOR_COMPRESSION_NORMALIZATION %}
-log('Enabling output compression and normalization.')
-radio = normalize(target=0., window=0.03, gain_min=-16., gain_max=0., compress.exponential(radio, mu=1.))
+    log('Enabling output compression and normalization.')
+    radio = normalize(target=0., window=0.03, gain_min=-16., gain_max=0., compress.exponential(radio, mu=1.))
 {% endif %}
 
 output.harbor(

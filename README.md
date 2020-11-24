@@ -104,6 +104,8 @@ broadcasting scripts.
     - Playlists
     - Ad rotators
     - Weighting similar to [Tomato](https://github.com/dtcooper/tomato)
+    - [select2](https://django-easy-select2.readthedocs.io/) AutoDJ requests in
+      webui (add a new list redis that gets popped from
 1. Finish Zoom broadcasting
 1. Potential for S3 as a storage source using
    [django-storages](https://django-storages.readthedocs.io/)
@@ -118,6 +120,9 @@ broadcasting scripts.
 1. ~~Player for local icecast on status page~~ - _done!_
 1. ~~Make track log a more generic playout log, with asset playing on metadata one
    particular type.~~ - _done!_
+1. Pin versions in all Dockerfiles, and Python packages
+    (using [Poetry](https://python-poetry.org/))
+1. Convert logging to redis queue (so web server doesn't have to be up to log)
 1. ..._and more!_
 
 ## License
