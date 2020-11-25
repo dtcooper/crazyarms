@@ -65,6 +65,7 @@ class PlayoutLogEntry(models.Model):
         TRACK = 'track', 'Track'
         LIVE_DJ = 'dj', 'Live DJ'
         GENERAL = 'general', 'General'
+        SOURCE_TRANSITION = 'source', 'Source Transition'
 
     created = models.DateTimeField('Date', auto_now_add=True, db_index=True)
     event_type = models.CharField('Type', max_length=10, choices=EventType.choices, default=EventType.GENERAL)

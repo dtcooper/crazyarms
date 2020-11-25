@@ -315,9 +315,10 @@ ignore(list.map(fun(src) -> begin
     swoosh = single('/assets/transition.mp3')
 {% endif %}
 def transition(~source, one, two)
+    last_source_name = !current_source_name
     current_source_name := list.assoc(default='Unknown', source.id(source), source_hierarchy_lookups)
     log('Transitioning to #{source.id(source)} [#{source.id(one)} -> #{source.id(two)}]')
-    # TODO: log transition to playout log
+    log_event(type=EVENT_SOURCE_TRANSITION, 'Transitioned from #{last_source_name} to #{!current_source_name}')
 
     {% if config.AUTODJ_ENABLED %}
         two = if source.id(source) == source.id(autodj) and source.id(one) != source.id(failsafe) then
