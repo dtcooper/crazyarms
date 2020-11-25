@@ -113,7 +113,7 @@ broadcasting scripts.
 1. Go over `TODO`s and `XXX`s in codebase
 1. Unit tests for at least the Django app
     - Skeleton for tests is _done!_
-1. Mature `strip_blank` implementation
+1. ~~Mature `strip_blank` implementation~~ - _done!_
 1. Convert some Django views to class-based
     - ~~api~~ - _done!_
     - webui
@@ -122,7 +122,8 @@ broadcasting scripts.
    particular type.~~ - _done!_
 1. Pin versions in all Dockerfiles, and Python packages
     (using [Poetry](https://python-poetry.org/))
-1. Convert logging to redis queue (so web server doesn't have to be up to log)
+1. ~~Convert logging to redis queue (so web server doesn't have to be up to log)~~ - _done!_
+   (used `psql` to directly insert into the DB)
 1. ~~Kick off DJs outside of calendar times (with a grace period)~~
 1. ..._and more!_
 
