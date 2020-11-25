@@ -68,37 +68,6 @@ class NextTrackAPIView(APIView):
         if config.AUTODJ_ENABLED:
             audio_asset = AudioAsset.get_next_for_autodj()
             if audio_asset:
-                asset_uri = f'annotate:asset_id="{audio_asset.id}":file://{audio_asset.file.path}'
-                response.update({'has_asset': True, 'asset_uri': asset_uri})
+                asset_uri = f'annotate:audio_asset_id="{audio_asset.id}":file://{audio_asset.file.path}'
+                response.update({'has_audio_asset': True, 'audio_asset_uri': asset_uri})
         return response
-
-
-class LogPlayoutEventAPIView(APIView):
-    def get_track_event_kwargs(self, kwargs):
-        metadata = self.request_json['extras']
-        if metadata:
-            kwargs['description'] = ' - '.join(filter(None, (
-                metadata.get(k) for k in ('artist', 'album', 'title')))) or AudioAsset.UNNAMED_TRACK
-
-            audio_asset_id = metadata.get('asset_id')
-            if audio_asset_id:
-                try:
-                    audio_asset = AudioAsset.objects.get(id=audio_asset_id)
-                except AudioAsset.DoesNotExist:
-                    pass
-                else:
-                    kwargs['audio_asset'] = audio_asset
-                    kwargs['description'] = str(audio_asset)
-
-        return kwargs
-
-    def post(self, request):
-        kwargs = self.request_json['event']
-
-        if kwargs['event_type'] == PlayoutLogEntry.EventType.TRACK:
-            kwargs = self.get_track_event_kwargs(kwargs)
-
-        # TODO: user_id is provided for LIVE_DJ
-
-        PlayoutLogEntry.objects.create(**kwargs)
-        return 201  # Created

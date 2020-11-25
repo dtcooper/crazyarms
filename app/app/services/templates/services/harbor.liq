@@ -1,5 +1,8 @@
 {% load services %}
 
+SCRIPT_NAME = 'harbor'
+%include "library.liq"
+
 set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
@@ -25,15 +28,9 @@ STATION_NAME = {{ config.STATION_NAME|liqval }}
     TRANSITION_SECONDS = {{ config.HARBOR_TRANSITION_SECONDS|liqval }}
 {% endif %}
 
-# Copied from services/models.py
-EVENT_TRACK = 'track'
-EVENT_LIVE_DJ = 'dj'
-EVENT_GENERAL = 'general'
-
-
 start_time = time()
-is_shutting_down = ref false
 
+current_source_name := FAILSAFE_SOURCE_NAME
 
 ### Additional library functions
 
@@ -58,36 +55,15 @@ def add_skip_command_carb(source)
     add_skip_command(source)
 end
 
-
-def mksafe.no_replay_metadata(~id='mksafe', source)
-  fallback(id=id, track_sensitive=false, replay_metadata=false, [source, blank(id='safe_blank')])
-end
-
-current_source_name = ref FAILSAFE_SOURCE_NAME
-def log_event(type, description, ~extras=[])
-    # Do this asynchronously so it doesn't block
-    if not !is_shutting_down then
-        add_timeout(fast=false, 0., fun() -> begin
-            url = '#{API_PREFIX}log-playout-event/'
-            event = json_of(compact=true, [('event_type', type), ('active_source', !current_source_name),
-                                           ('description', description)])
-            extras = if list.length(extras) >= 1 then json_of(compact=true, extras) else 'null' end
-            data = '{"event":#{event},"extras":#{extras}}'
-            let ((_, status_code, _), _, _) = http.post(url, headers=API_HEADERS, data=data)
-            if status_code == 201 then
-                log('log_event: logged #{type} event: #{description}')
-            else
-                log('ERROR: log_event: got non-200 status got API (#{status_code}) for #{type} event: #{description}')
-            end
-            -1.
-        end)
+def string_of_metadata(metadata)
+    title = list.map(fun(key) -> metadata[key], ['artist', 'album', 'title'])
+    title = string.concat(separator=' - ', list.filter(fun(val) -> val != '', title))
+    if title == '' then
+        'Untitled Track'
+    else
+        title
     end
 end
-
-on_shutdown(fun() -> begin
-    log_event(EVENT_GENERAL, 'Harbor is shutting down')
-    is_shutting_down := true
-end)
 
 # DJ Authentication
 # (username, full_name, user_id)
@@ -119,7 +95,7 @@ dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()
 def dj_connect(headers)
     live_user_connected := true
     let (username, full_name, user_id) = !last_authorized_user
-    log_event(EVENT_LIVE_DJ, '#{full_name} authorized on the harbor', extras=[('user_id', user_id)])
+    log_event(type=EVENT_LIVE_DJ, '#{full_name} authorized on the harbor', extras=[('user_id', string_of(user_id))])
     live_user := (username, full_name, user_id, time())
     dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
     # TODO: log show name if we have it
@@ -132,7 +108,7 @@ def dj_disconnect()
     # TODO: wrap dj_harbor in metadata setter, and then set to blank on disconnect
     # possibly put this in output.dummy() for dj harbor as on_stop
     let (_, full_name, user_id) = !last_authorized_user
-    log_event(EVENT_LIVE_DJ, '#{full_name} disconnected from the harbor', extras=[('user_id', user_id)])
+    log_event(type=EVENT_LIVE_DJ, '#{full_name} disconnected from harbor', extras=[('user_id', string_of(user_id))])
     last_authorized_user := ('', '', 0)
     live_user_connected := false
     live_user := ('', '', 0, -1.)
@@ -188,15 +164,18 @@ add_skip_command_carb(prerecord)
 
 {% if config.AUTODJ_ENABLED %}
     autodj = request.dynamic.list(
-        id='autodj', conservative=true, length=REQUEST_QUEUE_LENGTH,
+        # TODO: conservative always keeps one request in the queue, useful for skipping but
+        # means station ID + could come several minutes afterwards. I think this is needed
+        # so we don't transition to fallback all the time from autoDJ, but double check.
+        id='autodj', conservative=false, length=REQUEST_QUEUE_LENGTH,
         retry_delay=REQUEST_RETRY_DELAY, timeout=REQUEST_TIMEOUT, fun() -> begin
             url = '#{API_PREFIX}next-track/'
             let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
             if status_code == 200 then
-                if list.assoc(default=false, 'has_asset', of_json(default=[('_', false)], response)) then
-                    asset_uri = list.assoc(default='', 'asset_uri', of_json(default=[('_', '')], response))
-                    log('autodj: selected URI #{asset_uri}')
-                    [request.create(asset_uri)]
+                if list.assoc(default=false, 'has_audio_asset', of_json(default=[('_', false)], response)) then
+                    audio_asset_uri = list.assoc(default='', 'audio_asset_uri', of_json(default=[('_', '')], response))
+                    log('autodj: selected URI #{audio_asset_uri}')
+                    [request.create(audio_asset_uri)]
                 else
                     log('ERROR: autodj returned no track')
                     []
@@ -298,16 +277,16 @@ def status_json()
 end
 server.register(usage='status', description='Get status of sources in JSON', 'status', fun(_) -> status_json())
 server.register(usage='status_pretty', description='Get status of sources in JSON (pretty-printed)', 'status_pretty',
-                fun(_) -> get_process_output('echo #{string.quote(status_json())} | python3 -m json.tool --sort-keys'))
+                fun(_) -> get_process_output(env=[('JSON', status_json())], 'echo "$JSON" | python3 -m json.tool --sort-keys'))
 
 def update_status()
     # Do this asynchronously (0.05 to give things time to settle.)
     add_timeout(fast=false, 0.25, fun() -> begin
         status = status_json()
-        cmd = "redis-cli -h redis set 'liquidsoap:status' #{string.quote(status)}"
+        cmd = 'redis-cli -h redis set "liquidsoap:status" "$STATUS"'
         log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')
-        if not test_process(cmd) then
-            log.severe('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd})')
+        if not test_process(env=[('STATUS', status)], cmd) then
+            log.severe('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd} / json = #{status})')
         end
         log('update_status: hitting sse service (step 2/2)')
         let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=status)
@@ -378,17 +357,22 @@ radio = fallback(
 #### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
 
 radio = on_metadata(fun(m) -> begin
-    asset_id = m['asset_id']
-    metadata = metadata.export(m)
-    metadata = if asset_id == '' then
-        metadata else list.add(('asset_id', asset_id), metadata) end
-    current_metadata := metadata
     update_status()
 
     if !current_source_name == FAILSAFE_SOURCE_NAME then
-        log_event(EVENT_TRACK, 'Played failsafe audio track')
+        log_event(type=EVENT_TRACK, 'Played failsafe audio track')
     else
-        log_event(EVENT_TRACK, string_of_metadata(metadata), extras=metadata)
+        audio_asset_id = m['audio_asset_id']
+        metadata = metadata.export(m)
+
+        let (metadata, extras) = if audio_asset_id == '' then
+            (metadata, [])
+        else
+            (list.add(('audio_asset_id', audio_asset_id), metadata), [('audio_asset_id', audio_asset_id)])
+        end
+
+        current_metadata := metadata
+        log_event(type=EVENT_TRACK, string_of_metadata(metadata), extras=extras)
     end
 end, radio)
 
@@ -404,5 +388,3 @@ output.harbor(
     port=4000,
     radio,
 )
-
-log_event(EVENT_GENERAL, 'Harbor started')

@@ -95,6 +95,11 @@ class HarborService(ServiceBase):
     service_name = 'harbor'
 
     def render_conf(self):
+        from .models import PlayoutLogEntry
+
+        self.render_conf_file('library.liq', context={
+            'table_name': PlayoutLogEntry._meta.db_table,
+            'event_types': zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values)})
         self.render_conf_file('harbor.liq', context=cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT))
         kwargs = {'environment': 'HOME="/tmp/pulse"', 'user': 'liquidsoap'}
 
@@ -116,7 +121,12 @@ class UpstreamService(ServiceBase):
     service_name = 'upstream'
 
     def render_conf(self):
-        from .models import UpstreamServer
+        from .models import PlayoutLogEntry, UpstreamServer
+
+        if UpstreamServer.objects.exists():
+            self.render_conf_file('library.liq', context={
+                'table_name': PlayoutLogEntry._meta.db_table,
+                'event_types': zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values)})
 
         for upstream in UpstreamServer.objects.all():
             self.render_conf_file('upstream.liq', conf_filename=f'{upstream.name}.liq', context={'upstream': upstream})
@@ -156,7 +166,7 @@ if not settings.ZOOM_ENABLED:
     del SERVICES[ZoomService.service_name]
 
 
-def init_services(services=None, restart_services=False, restart_specific_services=()):
+def init_services(services=None, restart_services=False, restart_specific_services=(), render_only=False):
     if isinstance(services, str):
         services = (services,)
 
@@ -164,7 +174,7 @@ def init_services(services=None, restart_services=False, restart_specific_servic
         services = SERVICES.keys()
 
     for service in services:
-        logger.info(f'initializing service: {service}')
+        logger.info(f'initializing service: {service}{" (rendering only)" if render_only else ""}')
         service_cls = SERVICES[service]
         service = service_cls()
 
@@ -173,7 +183,7 @@ def init_services(services=None, restart_services=False, restart_specific_servic
 
         service.render_conf()
 
-        if service.supervisor_enabled:
+        if service.supervisor_enabled and not render_only:
             service.reload_supervisor(restart_services=restart_services)
 
             if restart_specific_services:

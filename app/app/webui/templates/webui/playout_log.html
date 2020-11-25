@@ -29,7 +29,7 @@
   <thead>
     <tr>
       <th>#</th>
-      <th>Time</th>
+      <th>Time ({{ user.timezone }})</th>
       <th>Event Type</th>
       <th>Description</th>
       <th>Active Source</th>
@@ -43,10 +43,14 @@
         <td>
           {% if perms.playout.view_audioasset and playout_log_entry.audio_asset_id %}
             <a href="{% url 'admin:autodj_audioasset_change' object_id=playout_log_entry.audio_asset_id %}">
-          {% endif %}
-          {{ playout_log_entry.description }}
-          {% if playout_log_entry.audio_asset_id %}
+              {{ playout_log_entry.description }}
             </a>
+          {% elif user.is_superuser and playout_log_entry.user_id %}
+            <a href="{% url 'admin:common_user_change' object_id=playout_log_entry.user_id %}">
+              {{ playout_log_entry.description }}
+            </a>
+          {% else%}
+            {{ playout_log_entry.description }}
           {% endif %}
         </td>
         <td>{{ playout_log_entry.active_source }}</td>

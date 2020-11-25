@@ -170,6 +170,7 @@ HUEY = {
 
 SHELL_PLUS_IMPORTS = [
     'from constance import config',
+    'from django_redis import get_redis_connection',
 ]
 
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'

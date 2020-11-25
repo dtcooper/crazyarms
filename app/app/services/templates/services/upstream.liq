@@ -1,5 +1,9 @@
 {% load services %}
 
+name = {{ upstream.name|liqval }}
+SCRIPT_NAME = 'upstream #{name}'
+%include "library.liq"
+
 set('server.telnet', true)
 set('server.telnet.port', {{ upstream.telnet_port|liqval }})
 set('server.telnet.bind_addr', '0.0.0.0')
@@ -17,7 +21,6 @@ host = {{ upstream.hostname|liqval }}
 user = {{ upstream.username|liqval }}
 password = {{ upstream.password|liqval }}
 mount = {{ '/'|add:upstream.mount|liqval }}
-name = {{ upstream.name|liqval }}
 {% if upstream.mime %}
 format = {{ upstream.mime|liqval }}
 {% endif %}

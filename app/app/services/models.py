@@ -3,7 +3,7 @@ from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 
 from autodj.models import AudioAsset
-from common.models import TruncatingCharField
+from common.models import User, TruncatingCharField
 
 
 class UpstreamServer(models.Model):
@@ -61,7 +61,7 @@ class UpstreamServer(models.Model):
 
 class PlayoutLogEntry(models.Model):
     class EventType(models.TextChoices):
-        # Make sure these match templates/services/harbor.liq
+        # These are used by templates/services/*.liq files, so be mindful before changing
         TRACK = 'track', 'Track'
         LIVE_DJ = 'dj', 'Live DJ'
         GENERAL = 'general', 'General'
@@ -69,11 +69,9 @@ class PlayoutLogEntry(models.Model):
     created = models.DateTimeField('Date', auto_now_add=True, db_index=True)
     event_type = models.CharField('Type', max_length=10, choices=EventType.choices, default=EventType.GENERAL)
     description = TruncatingCharField('Entry', max_length=500)
-    active_source = TruncatingCharField('Active Source', max_length=50)
-    # TODO: Maybe convert this to a JSONField called extras to map up more closely
-    # to what liquidsoap is doing, then we could have a method on this model for playout_log.html
-    # to look up the foreign keys and display
+    active_source = TruncatingCharField('Active Source', max_length=50, default='N/A')
     audio_asset = models.ForeignKey(AudioAsset, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         ordering = ('-created',)

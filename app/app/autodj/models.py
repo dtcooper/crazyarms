@@ -46,7 +46,9 @@ class AudioAsset(AudioAssetBase):
             ):
                 if conf_amount > 0:
                     no_repeat_list = cache.get(cache_key) or []
-                    no_repeat_list.insert(0, getattr(audio_asset, attr))
+                    value = getattr(audio_asset, attr)
+                    if value:
+                        no_repeat_list.insert(0, value)
                     no_repeat_list = no_repeat_list[0:conf_amount]
                     cache.set(cache_key, no_repeat_list, timeout=60 * 60 * 24)
 
@@ -57,7 +59,9 @@ class AudioAsset(AudioAssetBase):
         id_range = cls.objects.aggregate(min=models.Min('id'), max=models.Max('id'))
         min_id, max_id = id_range['min'], id_range['max']
         if min_id is None or max_id is None:
+            logger.info('autodj: no assets exist (no min/max id), giving up early')
             return None
+
 
         if not config.AUTODJ_ANTI_REPEAT:
             # If anti-repeat is enabled, we don't run these things
@@ -99,20 +103,24 @@ class AudioAsset(AudioAssetBase):
                 logger.info(f'autodj: selected {audio_asset}')
                 return cls.process_anti_repeat_autodj(audio_asset)
 
-        if run_no_repeat_artists and run_no_repeat_track_ids:
-            # First recurse without artist skips, we won't this recursive block
-            logger.info('autodj: no track found, attempting to run without artist repeats')
-            audio_asset = cls.get_next_for_autodj(run_no_repeat_artists=False)
+        if run_no_repeat_artists:
+            # First recurse without artist skips
+            logger.info('autodj: no track found, attempting to run with artist repeats')
+            audio_asset = cls.get_next_for_autodj(
+                run_no_repeat_track_ids=run_no_repeat_track_ids, run_no_repeat_artists=False)
             if audio_asset is not None:
                 return audio_asset
 
-            # Then recurse without track ID skips, we won't hit this recursive block either
-            logger.info('autodj: no track found, attempting to run without artist or track repeats')
+        elif run_no_repeat_track_ids:
+            # Then recurse without track ID skips
+            logger.info('autodj: no track found, attempting to run with artist or track repeats')
             audio_asset = cls.get_next_for_autodj(run_no_repeat_artists=False, run_no_repeat_track_ids=False)
             if audio_asset is not None:
                 return audio_asset
 
             logger.info('autodj: no track found, giving up')
+
+        logger.info('autodj: no track found, giving up')
         return None
 
     class Meta:

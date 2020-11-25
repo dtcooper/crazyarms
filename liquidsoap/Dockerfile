@@ -10,6 +10,7 @@ RUN apt-get update \
         festvox-kallpc16k \
         ffmpeg \
         libsox-fmt-all \
+        postgresql-client \
         pulseaudio \
         # Do we need youtube-dl?
 #        python3 \
