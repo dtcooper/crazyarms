@@ -118,22 +118,6 @@ class User(AbstractUser):
         ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')
 
         if ban_seconds > 0:
-            from services.models import PlayoutLogEntry
-
-            try:
-                last_log_entry = PlayoutLogEntry.objects.latest('created')
-            except PlayoutLogEntry.DoesNotExist:
-                pass
-            else:
-                # De-dupe since we may get many logins
-                banned_description = 'attempted to log in, but was banned'
-                if last_log_entry.user_id != self.id or banned_description not in last_log_entry.description:
-                    PlayoutLogEntry.objects.create(
-                        event_type=PlayoutLogEntry.EventType.LIVE_DJ,
-                        description=f'{self} {banned_description}',
-                        user_id=self.id,
-                    )
-
             logger.info(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)')
             return False
 
@@ -143,7 +127,6 @@ class User(AbstractUser):
 
         elif self.harbor_auth == self.HarborAuth.GOOGLE_CALENDAR:
             if config.GOOGLE_CALENDAR_ENABLED:
-
                 if self.show_times:
                     if now is None:
                         now = timezone.now()
