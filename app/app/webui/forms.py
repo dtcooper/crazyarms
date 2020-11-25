@@ -74,11 +74,12 @@ class FirstRunForm(UserCreationForm):
 class UserProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field_name in ('username', 'harbor_auth'):
-            field = self.fields[field_name]
-            if not self.instance or not self.instance.is_superuser:
+        if not self.instance or not self.instance.is_superuser:
+            # Make sure these fields are only editable by superusers
+            for field_name in ('username', 'email', 'harbor_auth'):
+                field = self.fields[field_name]
                 field.disabled = True
-            field.help_text = ''
+                field.help_text = 'Read-only. Please ask an administrator to update.'
 
         self.fields['timezone'].help_text = f'Currently {date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")}'
 
@@ -88,4 +89,4 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'harbor_auth', 'first_name', 'last_name', 'timezone')
+        fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth')
