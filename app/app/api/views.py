@@ -12,7 +12,6 @@ from constance import config
 
 from autodj.models import AudioAsset
 from common.models import User
-from services.models import PlayoutLogEntry
 
 
 logger = logging.getLogger(f'carb.{__name__}')

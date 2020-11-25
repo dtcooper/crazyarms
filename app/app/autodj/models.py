@@ -29,11 +29,15 @@ class AudioAsset(AudioAssetBase):
         s = ' - '.join(filter(None, (getattr(self, field_name, None) for field_name in ('artist', 'album', 'title'))))
         return super().__str__(s)
 
+    @staticmethod
+    def normalize_artist(artist):
+        return (' '.join(unidecode.unidecode(artist).strip().split())).lower()
+
     def save(self, *args, **kwargs):
         artist_normalized_before_save = self.artist_normalized
         super().save(*args, **kwargs)
         if self.artist_normalized == '' or artist_normalized_before_save != self.artist_normalized:
-            self.artist_normalized = (' '.join(unidecode.unidecode(self.artist).strip().split())).lower()
+            self.artist_normalized = self.normalize_artist(self.artist)
             super().save(*args, **kwargs)
 
     @classmethod
@@ -59,9 +63,8 @@ class AudioAsset(AudioAssetBase):
         id_range = cls.objects.aggregate(min=models.Min('id'), max=models.Max('id'))
         min_id, max_id = id_range['min'], id_range['max']
         if min_id is None or max_id is None:
-            logger.info('autodj: no assets exist (no min/max id), giving up early')
+            logger.warning('autodj: no assets exist (no min/max id), giving up early')
             return None
-
 
         if not config.AUTODJ_ANTI_REPEAT:
             # If anti-repeat is enabled, we don't run these things
@@ -74,7 +77,7 @@ class AudioAsset(AudioAssetBase):
 
         queryset = cls.objects.filter(status=AudioAsset.Status.UPLOADED)
         if not queryset.exists():
-            logger.info('autodj: no assets exist, giving up early')
+            logger.warning('autodj: no assets exist, giving up early')
             return None
 
         if run_no_repeat_track_ids:
@@ -105,7 +108,7 @@ class AudioAsset(AudioAssetBase):
 
         if run_no_repeat_artists:
             # First recurse without artist skips
-            logger.info('autodj: no track found, attempting to run with artist repeats')
+            logger.warning('autodj: no track found, attempting to run with artist repeats')
             audio_asset = cls.get_next_for_autodj(
                 run_no_repeat_track_ids=run_no_repeat_track_ids, run_no_repeat_artists=False)
             if audio_asset is not None:
@@ -113,14 +116,14 @@ class AudioAsset(AudioAssetBase):
 
         elif run_no_repeat_track_ids:
             # Then recurse without track ID skips
-            logger.info('autodj: no track found, attempting to run with artist or track repeats')
+            logger.warning('autodj: no track found, attempting to run with artist and track repeats')
             audio_asset = cls.get_next_for_autodj(run_no_repeat_artists=False, run_no_repeat_track_ids=False)
             if audio_asset is not None:
                 return audio_asset
 
-            logger.info('autodj: no track found, giving up')
+            logger.warning('autodj: no track found, giving up')
 
-        logger.info('autodj: no track found, giving up')
+        logger.warning('autodj: no track found, giving up')
         return None
 
     class Meta:
