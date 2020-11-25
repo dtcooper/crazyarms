@@ -4,8 +4,9 @@ services:
       - harbor-telnet
   harbor-telnet:
     container_name: harbor-telnet
-    image: tsl0922/ttyd:alpine
+    build:
+      context: ./liquidsoap
+      dockerfile: Dockerfile.harbor-telnet
     restart: always
-    command: ['ttyd', 'sh', '-c', 'echo "# Welcome to the Harbor telnet. Enter "help" + [ENTER] for more info." && exec nc harbor 1234']
     environment:
       TZ: ${TIMEZONE:-US/Pacific}
