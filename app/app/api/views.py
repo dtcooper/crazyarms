@@ -1,3 +1,4 @@
+import datetime
 import logging
 import json
 
@@ -56,8 +57,13 @@ class DJAuthAPIView(APIView):
             else:
                 logger.info(f'auth requested by {username}: denied (incorrect password)')
         else:
-            if user.currently_harbor_authorized():
-                response.update({'authorized': True, 'full_name': user.get_full_name(), 'user_id': user.id})
+            authorized = user.currently_harbor_authorized()
+            if authorized:
+                kickoff = -1
+                if isinstance(authorized, datetime.datetime):
+                    kickoff = int(authorized.timestamp())
+                response.update({'authorized': True, 'full_name': user.get_full_name(),
+                                 'user_id': user.id, 'kickoff_time': kickoff})
         return response
 
 

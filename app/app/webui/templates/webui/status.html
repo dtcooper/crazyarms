@@ -56,6 +56,35 @@
     </td>
   </tr>
   <tr>
+    <td><strong>Time Remaining:</strong></td>
+    <td>
+      {{#each sources}}
+        {{#if this.is_current_stream}}
+          {{#ifEqual this.id ../dj_harbor_source}}
+            {{#if ../live_user}}
+              {{#with ../live_user}}
+                {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}
+                authorized to stream for
+                {{#if kickoff_time}}
+                  <code class="track-end" data-end="{{kickoff_time}}"></code> until kicked off
+                {{else}}
+                  an unlimited amount of time
+                {{/if}}
+              {{/with}}
+            {{else}}
+              &mdash;
+            {{/if}}
+          {{else}}
+            {{#with (lookup ../timed_sources [id])}}
+              <code class="track-end" data-end="{{this}}"></code> remaining of current track
+            {{else}}
+              &mdash;
+            {{/with}}
+          {{/ifEqual}}
+        {{/if}}
+      {{/each}}
+    </td>
+  <tr>
     <td><strong>Server Uptime:</strong></td>
     <td><code class="since-timer" data-since="{{server_info.start_time}}"></code></td>
   </tr>
@@ -93,6 +122,9 @@
                     <ul>
                       <li>User: {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}</li>
                       <li>Connected for <code class="since-timer" data-since="{{connected_since}}"></code></li>
+                      {{#if kickoff_time}}
+                        <li class="red">Kicked off in <code class="track-end" data-end="{{kickoff_time}}"></code></li>
+                      {{/if}}
                     <ul>
                   {{/with}}
                 {{else}}
@@ -105,6 +137,10 @@
             {{#if is_current_stream}}
               >
               Active &amp; streaming
+              {{#with (lookup ../timed_sources [id])}}
+                <br>
+                <code class="track-end" data-end="{{this}}"></code> remaining of track
+              {{/with}}
             {{else}}
               {{#if is_active}}
                 class="orange">
@@ -114,10 +150,6 @@
                 class="red">Inactive (or silent)
               {{/if}}
             {{/if}}
-            {{#with (lookup ../timed_sources [id])}}
-              <br>
-              <code class="track-end" data-end="{{this}}"></code> remaining of track
-            {{/with}}
             </td>
 
             {{#if ../showActions}}

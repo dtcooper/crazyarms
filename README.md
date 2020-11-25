@@ -123,6 +123,7 @@ broadcasting scripts.
 1. Pin versions in all Dockerfiles, and Python packages
     (using [Poetry](https://python-poetry.org/))
 1. Convert logging to redis queue (so web server doesn't have to be up to log)
+1. ~~Kick off DJs outside of calendar times (with a grace period)~~
 1. ..._and more!_
 
 ## License

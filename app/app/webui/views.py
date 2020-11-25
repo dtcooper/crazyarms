@@ -74,7 +74,7 @@ class StatusView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         return {**super().get_context_data(**kwargs),
-                'title': 'Stream Status', 'liquidsoap_status': harbor.status()}
+                'title': 'Stream Status (Realtime)', 'liquidsoap_status': harbor.status()}
 
 
 class BanListView(PermissionRequiredMixin, TemplateView):

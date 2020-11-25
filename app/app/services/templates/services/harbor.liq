@@ -66,8 +66,8 @@ def string_of_metadata(metadata)
 end
 
 # DJ Authentication
-# (username, full_name, user_id)
-last_authorized_user = ref ('', '', 0)
+# (username, full_name, kickoff_time, user_id)
+last_authorized_user = ref ('', '', -1., 0)
 def dj_auth(username, password)
     data = json_of(compact=true, [('username', username), ('password', password)])
     url = '#{API_PREFIX}dj-auth/'
@@ -76,9 +76,11 @@ def dj_auth(username, password)
         authorized = list.assoc(default=false, 'authorized', of_json(default=[('_', false)], response))
         log('dj_auth: authorize with API for user #{username} returned: #{string_of(authorized)}')
         if authorized then
-            user_id = list.assoc(default=0, 'user_id', of_json(default=[('_', 0)], response))
             full_name = list.assoc(default='', 'full_name', of_json(default=[('_', '')], response))
-            last_authorized_user := (username, full_name, user_id)
+            json_ints = of_json(default=[('_', 0)], response)
+            kickoff_time = float_of_int(list.assoc(default=-1, 'kickoff_time', json_ints))
+            user_id = list.assoc(default=0, 'user_id', json_ints)
+            last_authorized_user := (username, full_name, kickoff_time, user_id)
         end
         authorized
     else
@@ -87,16 +89,16 @@ def dj_auth(username, password)
     end
 end
 
-# (username, full_name, user_id, connection_time)
+# (username, full_name, kickoff_time, user_id, connection_time)
 live_user_connected = ref false
-live_user = ref ('', '', 0, -1.)
+live_user = ref ('', '', -1., 0, -1.)
 status_update_ref = ref fun() -> ()  # requires dj_harbor to be defined
 dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()
 def dj_connect(headers)
     live_user_connected := true
-    let (username, full_name, user_id) = !last_authorized_user
-    log_event(type=EVENT_LIVE_DJ, '#{full_name} authorized on the harbor', extras=[('user_id', string_of(user_id))])
-    live_user := (username, full_name, user_id, time())
+    let (username, full_name, kickoff_time, user_id) = !last_authorized_user
+    log_event(type=EVENT_LIVE_DJ, '#{username} authorized on the harbor', extras=[('user_id', string_of(user_id))])
+    live_user := (username, full_name, kickoff_time, user_id, time())
     dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
     # TODO: log show name if we have it
     dj_harbor_insert_metadata(new_track=true, [('title', '#{full_name} LIVE on #{STATION_NAME}')])
@@ -105,16 +107,30 @@ def dj_connect(headers)
 end
 
 def dj_disconnect()
-    # TODO: wrap dj_harbor in metadata setter, and then set to blank on disconnect
-    # possibly put this in output.dummy() for dj harbor as on_stop
-    let (_, full_name, user_id) = !last_authorized_user
-    log_event(type=EVENT_LIVE_DJ, '#{full_name} disconnected from harbor', extras=[('user_id', string_of(user_id))])
-    last_authorized_user := ('', '', 0)
-    live_user_connected := false
-    live_user := ('', '', 0, -1.)
-    status_update = !status_update_ref
-    status_update()
+    if !live_user_connected then
+        let (username, _, _, user_id, _) = !live_user
+        log_event(type=EVENT_LIVE_DJ, '#{username} disconnected from harbor', extras=[('user_id', string_of(user_id))])
+        last_authorized_user := ('', '', -1., 0)
+        live_user_connected := false
+        live_user := ('', '', -1., 0, -1.)
+        status_update = !status_update_ref
+        status_update()
+    end
 end
+
+add_timeout(fast=false, 2.5, fun() -> begin
+    if !live_user_connected then
+        let (username, full_name, kickoff_time, user_id, _) = !live_user
+        # 1.5s of clearance so the DJ doesn't immediately re-auth
+        if kickoff_time > 0. and time() - 1.5 > kickoff_time then
+            log('kicking off #{username} for streaming past kickoff time')
+            log_event(type=EVENT_LIVE_DJ, '#{username} kicked off for streaming past authorization bounds',
+                      extras=[('user_id', string_of(user_id))])
+            ignore(server.execute('dj_harbor.stop'))
+        end
+    end
+    2.5
+end)
 
 ### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
 {{ section1 }}
@@ -250,9 +266,15 @@ def status_json()
     end, source_hierarchy)) ^ ']'
 
     live_user = if !live_user_connected then
-        let (username, full_name, user_id, connected_since) = !live_user
-        json_of_mixed_types(strs=[('username', username), ('full_name', full_name)],
-                            ints=[('user_id', user_id)], floats=[('connected_since', connected_since)])
+        let (username, full_name, kickoff_time, user_id, connected_since) = !live_user
+        let (user_nulls, user_floats) = if kickoff_time > 0. then
+            ([], [('connected_since', connected_since), ('kickoff_time', kickoff_time)])
+        else
+            (['kickoff_time'], [('connected_since', connected_since)])
+        end
+
+        json_of_mixed_types(strs=[('username', username), ('full_name', full_name)], ints=[('user_id', user_id)],
+                            floats=user_floats, nulls=user_nulls)
     else
         'null'
     end
