@@ -10,6 +10,15 @@ from .models import BroadcastAsset, Broadcast
 class BroadcastAssetAdmin(AssetAdminBase):
     create_form = BroadcastAssetCreateForm
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+
+        # If it's the autocomplete view (from BroadcastAdmin), then filter by uploaded only
+        if request.path.endswith('/autocomplete/'):
+            queryset = queryset.filter(status=BroadcastAsset.Status.UPLOADED)
+
+        return queryset, use_distinct
+
 
 class BroadcastAdmin(admin.ModelAdmin):
     save_on_top = True
