@@ -59,11 +59,11 @@ class DJAuthAPIView(APIView):
         else:
             authorized = user.currently_harbor_authorized()
             if authorized:
-                kickoff = -1
+                kickoff_time = None
                 if isinstance(authorized, datetime.datetime):
-                    kickoff = int(authorized.timestamp())
+                    kickoff_time = int(authorized.timestamp())
                 response.update({'authorized': True, 'full_name': user.get_full_name(),
-                                 'user_id': user.id, 'kickoff_time': kickoff})
+                                 'user_id': user.id, 'kickoff_time': kickoff_time})
         return response
 
 

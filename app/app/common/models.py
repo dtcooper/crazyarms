@@ -99,14 +99,41 @@ class User(AbstractUser):
 
     @cached_property
     def upcoming_show_times(self):
-        earliest_entry = timezone.now() - datetime.timedelta(self.google_calender_entry_grace_minutes)
-        return list(filter(lambda show_time: show_time.lower >= earliest_entry, self.show_times))
+        now = timezone.now()
+        entry_grace = datetime.timedelta(minutes=self.google_calender_entry_grace_minutes)
+        exit_grace = datetime.timedelta(minutes=self.google_calender_exit_grace_minutes)
+
+        upcoming_show_times = []
+        for show_time in self.show_times:
+            # Current show
+            if (show_time.lower - entry_grace) <= now <= (show_time.upper + exit_grace):
+                upcoming_show_times.append(show_time)
+            # And future shows
+            elif show_time.lower > now:
+                upcoming_show_times.append(show_time)
+        return upcoming_show_times
 
     def currently_harbor_authorized(self, now=None):
         auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
         ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')
 
         if ban_seconds > 0:
+            from services.models import PlayoutLogEntry
+
+            try:
+                last_log_entry = PlayoutLogEntry.objects.latest('created')
+            except PlayoutLogEntry.DoesNotExist:
+                pass
+            else:
+                # De-dupe since we may get many logins
+                banned_description = 'attempted to log in, but was banned'
+                if last_log_entry.user_id != self.id or banned_description not in last_log_entry.description:
+                    PlayoutLogEntry.objects.create(
+                        event_type=PlayoutLogEntry.EventType.LIVE_DJ,
+                        description=f'{self} {banned_description}',
+                        user_id=self.id,
+                    )
+
             logger.info(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)')
             return False
 
