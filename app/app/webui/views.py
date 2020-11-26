@@ -25,7 +25,7 @@ from django.views.generic import FormView, ListView, TemplateView, UpdateView
 
 from constance import config
 from django_redis import get_redis_connection
-from huey.contrib.djhuey import lock_task
+from huey.contrib import djhuey
 
 from carb import constants
 from common.models import User
@@ -34,6 +34,7 @@ from services.models import PlayoutLogEntry
 from services.services import ZoomService
 
 from .forms import FirstRunForm, UserProfileForm, ZoomForm
+from .tasks import stop_zoom_broadcast
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -152,12 +153,13 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
 
     def post(self, request):
         try:
-            with lock_task('zoom-edit-lock'):
+            with djhuey.lock_task('zoom-edit-lock'):
                 if request.POST.get('stop_zoom'):
                     if request.user.is_superuser or self.zoom_user == self.request.user:
-                        self.service.supervisorctl('stop', 'zoom-runner')
-                        self.service.supervisorctl('stop', 'zoom')
-                        self.redis.delete(constants.REDIS_KEY_ROOM_INFO)
+                        task_id = self.room_env.get('STOP_TASK_ID')
+                        if task_id:
+                            djhuey.revoke_by_id(task_id)
+                        stop_zoom_broadcast.call_local()
                         messages.add_message(request, messages.INFO, 'Zoom broadcast was stopped.')
                         return redirect('zoom')
                 return super().post(request)
@@ -172,8 +174,12 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
 
     def form_valid(self, form):
         meeting_id, meeting_pwd = form.cleaned_data['zoom_room']
+
+        stop_task = stop_zoom_broadcast.schedule(delay=form.cleaned_data['ttl'])
         room_env = {'MEETING_ID': meeting_id, 'MEETING_USER_ID': str(self.request.user.id),
-                    'MEETING_USER_FULL_NAME': self.request.user.get_full_name(), 'MEETING_PWD': meeting_pwd}
+                    'MEETING_USERNAME': self.request.user.username, 'MEETING_PWD': meeting_pwd,
+                    'STOP_TASK_ID': stop_task.id}
+        # A bit jenky, but the zoom-runner.sh script evals this
         room_env_str = ''.join(f'{key}={shlex.quote(value)}\n' for key, value in room_env.items())
 
         harbor.zoom_metadata(json.dumps(form.cleaned_data['show_name'] or 'Live Broadcast'))

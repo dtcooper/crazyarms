@@ -7,8 +7,11 @@ import requests
 from django.conf import settings
 
 from huey.contrib import djhuey
+from django_redis import get_redis_connection
 
 from autodj.models import AudioAsset
+from carb import constants
+from services.services import ZoomService
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -53,4 +56,10 @@ def generate_sample_assets(uploader=None):
 
 @djhuey.db_task()
 def stop_zoom_broadcast():
-    print('would stop broadcast')
+    logger.info('Stopping Zoom broadcast')
+    service = ZoomService()
+    service.supervisorctl('stop', 'zoom-runner')
+    service.supervisorctl('stop', 'zoom')
+
+    redis = get_redis_connection()
+    redis.delete(constants.REDIS_KEY_ROOM_INFO)

@@ -14,6 +14,7 @@ MEETING_WINDOW_NAME='Zoom Meeting'
 ZOOM_INFO=
 MEETING_ID=
 MEETING_PWD=
+MEETING_USERNAME=
 MEETING_USER_ID=
 
 zoom_service_running() {
@@ -55,7 +56,7 @@ while true; do
 
         MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
         if [ -z "$MEETING_WINDOW" ]; then
-            echo "Opening Meet ID $MEETING_ID by request from user $MEETING_USER_FULL_NAME (id = $MEETING_USER_ID)."
+            echo "Opening Meet ID $MEETING_ID by request from user $MEETING_USERNAME (id = $MEETING_USER_ID)."
             # TODO: seems to join multiple times when using a waiting room, need to confirm + fix that
             as_user xdg-open "zoommtg://zoom.us/join?action=join&confno=$MEETING_ID&uname=$MEETING_USER&pwd=$MEETING_PWD"
             sleep 10
