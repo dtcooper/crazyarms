@@ -181,7 +181,9 @@ dj_harbor = strip_blank(
 
 {% if settings.ZOOM_ENABLED %}
     # TODOs:
-    #  * Show name as metadata?
+    #  * Show name as metadata? Could be entered in UI
+    #  * Have switch with variable set in terminal to turn Zoom (zoom-runner.sh in the
+    #    zoom container could do this.)
 
     # Use a pulseaudio input for Zoom
     zoom = input.pulseaudio(id='zoom')

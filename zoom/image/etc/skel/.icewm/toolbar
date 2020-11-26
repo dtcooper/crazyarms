@@ -1,1 +1,2 @@
 prog "Google Chrome" google-chrome /usr/bin/google-chrome-stable
+prog "Zoom" Zoom /usr/bin/zoom

@@ -122,7 +122,7 @@ class ZoomView(LoginRequiredMixin, TemplateView):
 
     def post(self, request):
         try:
-            with lock_task('zoom-view-lock'):
+            with lock_task('zoom-lock'):
                 if self.service.is_zoom_running():
                     self.service.supervisorctl('stop', 'zoom')
                 else:
