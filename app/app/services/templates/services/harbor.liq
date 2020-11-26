@@ -1,6 +1,6 @@
 {% load services %}
 
-SCRIPT_NAME = 'harbor'
+SCRIPT_NAME = 'Harbor'
 %include "library.liq"
 
 set('server.telnet', true)
@@ -14,6 +14,8 @@ API_HEADERS = [('X-CARB-Secret-Key', {{ settings.SECRET_KEY|liqval:False }})]
 API_PREFIX = 'http://app:8000/api/'
 BUFFER = 5.
 FAILSAFE_SOURCE_NAME = 'Failsafe Audio'
+LIVE_DJ_KICKOFF_INTERVAL = 5.
+HARBOR_PORT = 8001
 MAX = 10.
 MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liqval }})
 REDIS_KEY = 'liquidsoap:source-status'
@@ -30,6 +32,7 @@ STATION_NAME = {{ config.STATION_NAME|liqval }}
 
 start_time = time()
 
+# Override from library.liq
 current_source_name := FAILSAFE_SOURCE_NAME
 
 ### Additional library functions
@@ -45,16 +48,17 @@ def json_of_mixed_types(~strs=[], ~bools=[], ~ints=[], ~floats=[], ~nulls=[])
     '{#{json}}'
 end
 
-def is_infinity(f)
-    int_of_float(f) == 0 and abs(f) > 1.
-end
+# A complete hack
+def is_infinity(f) int_of_float(f) == 0 and abs(f) > 1. end
 
+# Track what sources we skip so we can serve that in status JSON
 skippable_sources = ref []
 def add_skip_command_carb(source)
     skippable_sources := list.add(source.id(source), !skippable_sources)
     add_skip_command(source)
 end
 
+# Override liquidsoap standard library function to make it Artist - Album - Track
 def string_of_metadata(metadata)
     title = list.map(fun(key) -> metadata[key], ['artist', 'album', 'title'])
     title = string.concat(separator=' - ', list.filter(fun(val) -> val != '', title))
@@ -65,8 +69,8 @@ def string_of_metadata(metadata)
     end
 end
 
-# DJ Authentication
-# (username, full_name, kickoff_time, user_id)
+# DJ authorization: hits api/views.py:
+# last_authorized_user = (username, full_name, kickoff_time, user_id)
 last_authorized_user = ref ('', '', -1., 0)
 def dj_auth(username, password)
     data = json_of(compact=true, [('username', username), ('password', password)])
@@ -76,6 +80,7 @@ def dj_auth(username, password)
         authorized = list.assoc(default=false, 'authorized', of_json(default=[('_', false)], response))
         log('dj_auth: authorize with API for user #{username} returned: #{string_of(authorized)}')
         if authorized then
+            # Parse out response and save to last_authorized_user
             full_name = list.assoc(default='', 'full_name', of_json(default=[('_', '')], response))
             json_ints = of_json(default=[('_', 0)], response)
             kickoff_time = float_of_int(list.assoc(default=-1, 'kickoff_time', json_ints))
@@ -89,39 +94,55 @@ def dj_auth(username, password)
     end
 end
 
-# (username, full_name, kickoff_time, user_id, connection_time)
+# Process internal state changes for dj connection and dj disconnection below
+
 live_user_connected = ref false
+# live_user = (username, full_name, kickoff_time, user_id, connection_time)
 live_user = ref ('', '', -1., 0, -1.)
-status_update_ref = ref fun() -> ()  # requires dj_harbor to be defined
-dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()
+
+# Circular references, ie status_update and dj_harbor_insert_metadata, need to be defined below but called here
+status_update_ref = ref fun() -> ()
+dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()  # requires dj_harbor to be defined
+
+# Process DJ connection
 def dj_connect(headers)
     live_user_connected := true
+
+    # Get data saved from last call to dj_auth
     let (username, full_name, kickoff_time, user_id) = !last_authorized_user
     log_event(type=EVENT_LIVE_DJ, '#{username} authorized on the harbor', extras=[('user_id', string_of(user_id))])
     live_user := (username, full_name, kickoff_time, user_id, time())
+
+    # Insert metadata about DJ (they can always override it via their client)
     dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
-    # TODO: log show name if we have it
+
+    # TODO: log show name if we have it?
     dj_harbor_insert_metadata(new_track=true, [('title', '#{full_name} LIVE on #{STATION_NAME}')])
     status_update = !status_update_ref
     status_update()
 end
 
+# Process DJ disconnect
 def dj_disconnect()
+    # Noticed multiple calls to on_disconnect, so make sure we process disconnection only once
     if !live_user_connected then
+        live_user_connected := false
+
         let (username, _, _, user_id, _) = !live_user
         log_event(type=EVENT_LIVE_DJ, '#{username} disconnected from harbor', extras=[('user_id', string_of(user_id))])
         last_authorized_user := ('', '', -1., 0)
-        live_user_connected := false
         live_user := ('', '', -1., 0, -1.)
+
         status_update = !status_update_ref
         status_update()
     end
 end
 
-add_timeout(fast=false, 2.5, fun() -> begin
+# Our "reaper" internal function
+add_timeout(fast=false, LIVE_DJ_KICKOFF_INTERVAL, fun() -> begin
     if !live_user_connected then
         let (username, full_name, kickoff_time, user_id, _) = !live_user
-        # 1.5s of clearance so the DJ doesn't immediately re-auth
+        # 1.5s of buffer to be sure backend will refuse DJ in the event of immediately trying to log in again
         if kickoff_time > 0. and time() - 1.5 > kickoff_time then
             log('kicking off #{username} for streaming past kickoff time')
             log_event(type=EVENT_LIVE_DJ, '#{username} kicked off for streaming past authorization bounds',
@@ -129,23 +150,28 @@ add_timeout(fast=false, 2.5, fun() -> begin
             ignore(server.execute('dj_harbor.stop'))
         end
     end
-    2.5
+    LIVE_DJ_KICKOFF_INTERVAL
 end)
 
 ### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
 {{ section1 }}
 #### END SECTION 1 OF CUSTOM USER SOURCE CODE ####
 
+# DJ harbor
 dj_harbor = audio_to_stereo(
     id='dj_harbor_to_stereo',
-    input.harbor('/stream', id='dj_harbor', port=8001, auth=dj_auth, on_connect=dj_connect,
+    input.harbor('/stream', id='dj_harbor', port=HARBOR_PORT, auth=dj_auth, on_connect=dj_connect,
                  on_disconnect=dj_disconnect, buffer=BUFFER, max=MAX))
 
+# Metadata insertion, used at connectino time above (hence the ref)
 let (dj_harbor_insert_metadata, dj_harbor) = insert_metadata(dj_harbor)
 dj_harbor_insert_metadata_ref := dj_harbor_insert_metadata
 dj_harbor_insert_metadata(new_track=true, [])
 
+# output.dummy() appears to be needed to avoid buffer overrun issues (ie the harbor always gets consumed)
 ignore(output.dummy(id='dj_harbor_dummy', dj_harbor, fallible=true))
+
+# Treat silence on the harbor as if a DJ weren't connected
 dj_harbor = strip_blank(
     id='dj_harbor_strip',
     max_blank=MAX_SILENCE,
@@ -154,24 +180,31 @@ dj_harbor = strip_blank(
 )
 
 {% if settings.ZOOM_ENABLED %}
+    # TODOs:
+    #  * Show name as metadata?
+
+    # Use a pulseaudio input for Zoom
     zoom = input.pulseaudio(id='zoom')
     ignore(output.dummy(id='zoom_dummy', zoom))
 
+    # Treat silence on pulseaudio as if it weren't connected
     zoom = strip_blank(
         max_blank=MAX_SILENCE,
         id='zoom_strip',
         start_blank=true,
-        min_noise=0.5,
+        min_noise=0.25,  # Higher threshold here since a microphone could be on but a room silent
         zoom,
     )
     zoom = map_metadata(update=false, strip=true, fun(_) -> begin
-        # TODO hit redis for show name
         [('title', 'Live Broadcast')]
     end, zoom)
 {% endif %}
 
+# Pre-recorded broadcasts
 prerecord = request.queue(id='prerecord')
 prerecord = audio_to_stereo(id='prerecord_to_stereo', prerecord)
+
+# Update status on track end
 prerecord = on_end(id='prerecord_onend', delay=0., fun(_, _) -> begin
     status_update = !status_update_ref
     status_update()
@@ -179,10 +212,11 @@ end, prerecord)
 add_skip_command_carb(prerecord)
 
 {% if config.AUTODJ_ENABLED %}
+    # Auto DJ
     autodj = request.dynamic.list(
         # TODO: conservative always keeps one request in the queue, useful for skipping but
-        # means station ID + could come several minutes afterwards. I think this is needed
-        # so we don't transition to fallback all the time from autoDJ, but double check.
+        # means station ID + could come several minutes afterwards. I think this isn't needed
+        # but if we observe transitions to fallback from autoDJ unexpected this may need to be re-enabled
         id='autodj', conservative=false, length=REQUEST_QUEUE_LENGTH,
         retry_delay=REQUEST_RETRY_DELAY, timeout=REQUEST_TIMEOUT, fun() -> begin
             url = '#{API_PREFIX}next-track/'
@@ -213,21 +247,27 @@ add_skip_command_carb(prerecord)
     add_skip_command_carb(autodj)
 {% endif %}
 
+# Our failsafe audio, right now some silly hold music.
+# TODO: make this configurable using constance
 failsafe = single(id='failsafe', '/assets/hold-music.mp3')
 
 # If you add a source that has timed tracks, they should be added to this list
+# in your user defined code below
 timed_sources = [prerecord{% if config.AUTODJ_ENABLED %}, autodj{% endif %}]
 
+#
+# Our heirarchical sources. Items first in the list have higher precedence
+# Format: (actual_source, 'Pretty Source Name')
+#
 # You can add to these using custom code, see below
+#
 source_hierarchy = [
     (prerecord, 'Prerecorded Broadcast'),
     (dj_harbor, 'Live DJ'),
-{% if settings.ZOOM_ENABLED %}
-    (zoom, 'Zoom Room'),
-{% endif %}
-{% if config.AUTODJ_ENABLED %}
-    (autodj, 'AutoDJ'),
-{% endif %}
+    {% if not settings.ZOOM_ENABLED %}# Zoom disabled (ZOOM_ENABLED = 0 in .env file)
+    # {% endif %}(zoom, 'Zoom Room'),
+    {% if not config.AUTODJ_ENABLED %}# AutoDJ disabled (AUTODJ_ENABLED = False in configuration)
+    # {% endif %}(autodj, 'AutoDJ'),
     (failsafe, FAILSAFE_SOURCE_NAME)
 ]
 
@@ -252,9 +292,10 @@ source_hierarchy = [
 
 source_hierarchy_lookups = list.map(fun(s) -> (source.id(fst(s)), snd(s)), source_hierarchy)
 
-# Server status stuff
+# Server status stuff, a bit messy but it puts together mixed-type JSON
 current_metadata = ref []
 def status_json()
+    # List of sources
     active_sources = list.filter(fun(src) -> source.is_ready(fst(src)), source_hierarchy)
     streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(fst(src)), active_sources))
     sources = '[' ^ string.concat(separator=',', list.mapi(fun(n, src) -> begin
@@ -265,6 +306,7 @@ def status_json()
             bools=[('is_active', source.is_ready(source)), ('is_current_stream', id == streaming_source_id)])
     end, source_hierarchy)) ^ ']'
 
+    # Live DJ
     live_user = if !live_user_connected then
         let (username, full_name, kickoff_time, user_id, connected_since) = !live_user
         let (user_nulls, user_floats) = if kickoff_time > 0. then
@@ -280,37 +322,37 @@ def status_json()
     end
 
     now = time()
-    timed = list.map(fun(s) -> begin
+    timed_sources = list.map(fun(s) -> begin
         remaining = source.remaining(s)
-        # int_of_float covers weird infinity case, truncating it to zero
-        remaining = if remaining > 0. and not is_infinity(remaining) then now + remaining else -1. end
-        (source.id(s), remaining)
+        track_end_time = if remaining > 0. and not is_infinity(remaining) then now + remaining else -1. end
+        (source.id(s), track_end_time)
     end, timed_sources)
-    timed = json_of(compact=true, list.filter(fun(s) -> snd(s) > -1., timed))
+    timed_sources = json_of(compact=true, list.filter(fun(s) -> snd(s) > -1., timed_sources))
 
-    skippable = json_of(compact=true, !skippable_sources)
+    skippable_sources = json_of(compact=true, !skippable_sources)
     dj_harbor_source = json_of(compact=true, source.id(dj_harbor))
     metadata = json_of(compact=true, !current_metadata)
     server_info = json_of_mixed_types(floats=[('start_time', start_time)], strs=[('version', liquidsoap.version)])
 
     '{"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
-        ^ '"skippable_sources":#{skippable},"timed_sources":#{timed},"metadata":#{metadata},'
+        ^ '"skippable_sources":#{skippable_sources},"timed_sources":#{timed_sources},"metadata":#{metadata},'
         ^ '"server_info": #{server_info}}'
 end
 server.register(usage='status', description='Get status of sources in JSON', 'status', fun(_) -> status_json())
 server.register(usage='status_pretty', description='Get status of sources in JSON (pretty-printed)', 'status_pretty',
                 fun(_) -> get_process_output(env=[('JSON', status_json())], 'echo "$JSON" | python3 -m json.tool --sort-keys'))
 
+# Push notifications of status (using the SSE service)
 def update_status()
-    # Do this asynchronously (0.05 to give things time to settle.)
-    add_timeout(fast=false, 0.25, fun() -> begin
+    # Do this asynchronously (100ms to give things time to settle.)
+    add_timeout(fast=false, 0.1, fun() -> begin
         status = status_json()
         cmd = 'redis-cli -h redis set "liquidsoap:status" "$STATUS"'
         log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')
         if not test_process(env=[('STATUS', status)], cmd) then
             log.severe('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd} / json = #{status})')
         end
-        log('update_status: hitting sse service (step 2/2)')
+        log('update_status: hitting SSE service (step 2/2)')
         let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=status)
         if status_code != 204 then
             log.severe('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
@@ -318,22 +360,25 @@ def update_status()
         -1.
     end)
 end
-status_update_ref := update_status
-add_timeout(fast=false, 2.5, fun() -> begin update_status(); -1. end)
+status_update_ref := update_status  # For use above
+add_timeout(fast=false, 2.5, fun() -> begin update_status(); -1. end)  # Run once after start-up
 server.register(usage='status_update', description='Force a status update push to web clients', 'status_update', fun(_) -> begin
     update_status()
     'Done!'
 end)
 
-# Register callbacks on start/stop of all sources for push notifications
+# Register callbacks on start/stop of all sources for sse (push) notifications
 ignore(list.map(fun(src) -> begin
     source = fst(src)
     output.dummy(id='#{source.id(source)}_callback_dummy', fallible=true,
                  on_start=update_status, on_stop=update_status, source)
     end, source_hierarchy))
 
-# Radio playout
+# Radio playout below
+
+# Our transition function used for logging, playing the "swoosh", and fadeouts
 {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
+    # TODO: make configurable by constance
     swoosh = single('/assets/transition.mp3')
 {% endif %}
 def transition(~source, one, two)
@@ -343,9 +388,10 @@ def transition(~source, one, two)
     log_event(type=EVENT_SOURCE_TRANSITION, 'Transitioned from #{last_source_name} to #{!current_source_name}')
 
     {% if config.AUTODJ_ENABLED %}
+        # Skip to new track when transitioning to AutoDJ
         two = if source.id(source) == source.id(autodj) and source.id(one) != source.id(failsafe) then
             source.skip(autodj)
-            # Avoid metadata duplication by sequencing after 50ms
+            # Avoid metadata duplication + any jitters from skipped track by sequencing after 50ms
             sequence([blank(duration=0.05), two])
         else
             two
@@ -353,10 +399,11 @@ def transition(~source, one, two)
     {% endif %}
 
     {% if not config.HARBOR_TRANSITION_SECONDS and not config.HARBOR_TRANSITION_WITH_SWOOSH %}
+        # No transition required
         two
     {% else %}
         add(normalize=false, [
-            two,
+            two,  # Second source first, since we wants its metadata (from add() in liquidsoap manual)
             {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
                 once(swoosh),
             {% endif %}
@@ -367,6 +414,7 @@ def transition(~source, one, two)
     {% endif %}
 end
 
+# Our actual radio is a fallback based on source_hierarchy's precedence
 radio = fallback(
     id='radio',
     replay_metadata=false,
@@ -379,6 +427,7 @@ radio = fallback(
 {{ section3 }}
 #### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
 
+# Metadata change function, used for SSE pushes and logging
 radio = on_metadata(fun(m) -> begin
     update_status()
 
@@ -401,9 +450,11 @@ end, radio)
 
 {% if config.HARBOR_COMPRESSION_NORMALIZATION %}
     log('Enabling output compression and normalization.')
+    # Borrowed from AzuraCast. Thanks!
     radio = normalize(target=0., window=0.03, gain_min=-16., gain_max=0., compress.exponential(radio, mu=1.))
 {% endif %}
 
+# Our raw WAVE format output harbor that upstream scripts connect to
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',

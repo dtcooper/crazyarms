@@ -1,7 +1,7 @@
 {% load services %}
 
 name = {{ upstream.name|liqval }}
-SCRIPT_NAME = 'upstream #{name}'
+SCRIPT_NAME = 'Upstream "#{name}"'
 %include "library.liq"
 
 set('server.telnet', true)

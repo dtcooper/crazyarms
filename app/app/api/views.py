@@ -46,24 +46,37 @@ class APIView(View):
 
 class DJAuthAPIView(APIView):
     def post(self, request):
-        username, password = self.request_json['username'], self.request_json['password']
+        username_password_tries = [
+            (self.request_json['username'], self.request_json['password']),
+        ]
+
+        # Allow username to be anything and password to be username:password or username-password
+        for pw_split_char in (':', '-'):
+            pw_split = self.request_json['password'].split(pw_split_char, 1)
+            if len(pw_split) == 2:
+                username_password_tries.append(pw_split)
+
         response = {'authorized': False}
-        user = authenticate(username=username, password=password)
-        if user is None:
-            try:
-                user = User.objects.get(username=username)
-            except User.DoesNotExist:
-                logger.info(f'auth requested by {username}: denied (user does not exist)')
+
+        for username, password in username_password_tries:
+            user = authenticate(username=username, password=password)
+            if user is None:
+                try:
+                    user = User.objects.get(username=username)
+                except User.DoesNotExist:
+                    logger.info(f'auth requested by {username}: denied (user does not exist)')
+                else:
+                    logger.info(f'auth requested by {username}: denied (incorrect password)')
             else:
-                logger.info(f'auth requested by {username}: denied (incorrect password)')
-        else:
-            authorized = user.currently_harbor_authorized()
-            if authorized:
-                kickoff_time = None
-                if isinstance(authorized, datetime.datetime):
-                    kickoff_time = int(authorized.timestamp())
-                response.update({'authorized': True, 'full_name': user.get_full_name(),
-                                 'user_id': user.id, 'kickoff_time': kickoff_time})
+                authorized = user.currently_harbor_authorized()
+                if authorized:
+                    kickoff_time = None
+                    if isinstance(authorized, datetime.datetime):
+                        kickoff_time = int(authorized.timestamp())
+                    response.update({'authorized': True, 'full_name': user.get_full_name(),
+                                    'user_id': user.id, 'kickoff_time': kickoff_time})
+                break
+
         return response
 
 
