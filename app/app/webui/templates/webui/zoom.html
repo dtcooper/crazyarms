@@ -1,14 +1,80 @@
-{% extends 'webui/base.html' %}
+{% extends 'webui/form.html' %}
+
+{% load static %}
 
 {% block content %}
-Zoom is currently{% if not is_running %} <b>NOT</b>{% endif %} running.
-
-<form method="POST">
-  {% csrf_token %}
-  {% if is_running %}
-    <button type="submit" name="action" value="stop" class="bg-orangered">Stop Zoom</button>
+<p>
+  Status:
+  {% if zoom_is_running %}
+    {% if zoom_belongs_to_current_user %}
+      <span class="orange">Zoom is currently running in your room</span>.
+    {% else%}
+      <span class="red">Zoom is currently in use</span> by {{ zoom_user.get_full_name }}.
+      You will <u class="red"><b>NOT</b></u> be able to broadcast until after the current show ends.
+    {% endif %}
+    {% if room_ttl_hours or room_ttl_minutes %}
+      <br>
+      In
+      {% if room_ttl_hours %}
+        {{ room_ttl_hours }} hour{{ room_ttl_hours|pluralize }}{% if room_ttl_minutes %},{% endif %}
+      {% endif %}
+      {% if room_ttl_minutes %}
+        {{ room_ttl_minutes }} minute{{ room_ttl_minutes|pluralize }}
+      {% endif %}
+      {% if zoom_belongs_to_current_user %}your{% else %}the current{% endif %} show ends.
+    {% endif %}
+    {% if user.is_superuser or zoom_belongs_to_current_user %}
+      <br>
+      <form method="post">
+        {% csrf_token %}
+        {# TODO generic javascript for confirm dialog, backport to status.html #}
+        <button type="submit" class="bg-orangered" name="stop_zoom" value="1">
+          <u><b>Click here to END
+            {% if zoom_belongs_to_current_user %}your{% else %}{{ zoom_user.get_full_name }}'s{% endif %}
+            current Zoom Broadcast</b></u>
+        </button>
+      </form>
+    {% endif %}
   {% else %}
-    <button type="submit" name="action" value="start">Start Zoom</button>
+    {# TODO: say whether current user can broadcast based on harbor_auth #}
+    <span class="green">Zoom is not currently running</span>.<br>
+    Start a show by filling out the form below.
   {% endif %}
-</form>
+</p>
+
+<details>
+  <summary>Zoom Broadcasting Instructions (Click Here to Expand)</summary>
+  <p>
+    Here are the instructions to start <a href="https://zoom.us/" target="_blank">Zoom</a>
+    broadcasting via a room.
+  </p>
+  <p class="orange">
+    NOTE: if you're <em>not</em> using a paid Zoom account, or {{ config.STATION_NAME }}'s
+    administrator has not set up a paid account, there are room time limits for group
+    meetings held in Zoom rooms. (40 minutes at the time of this writing.) Your show will
+    be capped at that length.
+  </p>
+  <p>
+    <ol>
+      <li>Create and start a Zoom room</li>
+      <li>Click on the <em>Meeting Information</em> icon, shown below<br>
+        <img src="{% static 'webui/images/zoom-instructions-1.png' %}"></li>
+      <li>Copy link to the Zoom by clicking <em>Copy Link</em>, show below<br>
+        <img src="{% static 'webui/images/zoom-instructions-2.png' %}"></li>
+      <li>Paste the link into the <em>Room Link</em> input, choose a show
+        length, and click <em>Start Zoom Broadcast Now</em> below.</li>
+      <li>Admit the <b>Broadcast Bot</b> to your Zoom room, if you have a waiting
+        room enabled.</li>
+    </ol>
+  </p>
+
+</details>
+
+{% if currently_authorized and not zoom_is_running %}
+  {# Show form if the user is authorized and Zoom isn't currently running #}
+  {{ block.super}}
+{% else %}
+  {{ form.errors }}
+{% endif %}
+
 {% endblock %}

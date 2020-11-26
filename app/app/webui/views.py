@@ -1,5 +1,11 @@
 import datetime
+from io import StringIO
+import json
 import logging
+import shlex
+
+from dotenv import dotenv_values
+from huey.exceptions import TaskLockedException
 
 from django.conf import settings
 from django.contrib import messages
@@ -12,13 +18,14 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.formats import date_format
+from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, ListView, TemplateView, UpdateView
 
 from constance import config
+from django_redis import get_redis_connection
 from huey.contrib.djhuey import lock_task
-from huey.exceptions import TaskLockedException
 
 from carb import constants
 from common.models import User
@@ -26,7 +33,7 @@ from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
 
-from .forms import FirstRunForm, UserProfileForm
+from .forms import FirstRunForm, UserProfileForm, ZoomForm
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -107,37 +114,89 @@ class BanListView(PermissionRequiredMixin, TemplateView):
         return redirect('banlist')
 
 
-class ZoomView(LoginRequiredMixin, TemplateView):
+class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
     template_name = 'webui/zoom.html'
+    form_class = ZoomForm
+    success_url = reverse_lazy('zoom')
+    success_message = ('A Zoom broadcast has been succesfully started. (If applicable, please admit the '
+                       'Broadcast Bot into your room.)')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.redis = get_redis_connection()
+        self.room_env = self.redis.get(constants.REDIS_KEY_ROOM_INFO)
+        self.room_ttl = max(self.redis.ttl(constants.REDIS_KEY_ROOM_INFO), 0)
+
+        if self.room_env:
+            self.room_env = dotenv_values(stream=StringIO(self.room_env.decode('utf-8')))
+        else:
+            self.room_env = {}
+
+        self.zoom_user = None
         self.service = ZoomService()
 
     def dispatch(self, request, *args, **kwargs):
         if not settings.ZOOM_ENABLED:
             return redirect('status')
-        else:
-            return super().dispatch(request, *args, **kwargs)
+
+        try:
+            self.zoom_user = User.objects.get(id=self.room_env.get('MEETING_USER_ID'))
+        except User.DoesNotExist:
+            pass
+
+        return super().dispatch(request, *args, **kwargs)
+
+    @cached_property
+    def zoom_is_running_cached(self):
+        return self.service.is_zoom_running()
 
     def post(self, request):
         try:
-            with lock_task('zoom-lock'):
-                if self.service.is_zoom_running():
-                    self.service.supervisorctl('stop', 'zoom')
-                else:
-                    self.service.supervisorctl('start', 'zoom')
+            with lock_task('zoom-edit-lock'):
+                if request.POST.get('stop_zoom'):
+                    if request.user.is_superuser or self.zoom_user == self.request.user:
+                        self.service.supervisorctl('stop', 'zoom-runner')
+                        self.service.supervisorctl('stop', 'zoom')
+                        self.redis.delete(constants.REDIS_KEY_ROOM_INFO)
+                        messages.add_message(request, messages.INFO, 'Zoom broadcast was stopped.')
+                        return redirect('zoom')
+                return super().post(request)
         except TaskLockedException:
-            messages.warning(request, 'Another user using at this time. Please try again later.')
+            messages.add_message(request, messages.WARNING,
+                                 'Zoom action blocked. Multiple users editing configuration. Please try again.')
+            return redirect('zoom')
 
-        return redirect('zoom')
+    def get_form_kwargs(self):
+        return {'user': self.request.user, 'zoom_is_running': self.zoom_is_running_cached,
+                'room_env': self.room_env, **super().get_form_kwargs()}
+
+    def form_valid(self, form):
+        meeting_id, meeting_pwd = form.cleaned_data['zoom_room']
+        room_env = {'MEETING_ID': meeting_id, 'MEETING_USER_ID': str(self.request.user.id),
+                    'MEETING_USER_FULL_NAME': self.request.user.get_full_name(), 'MEETING_PWD': meeting_pwd}
+        room_env_str = ''.join(f'{key}={shlex.quote(value)}\n' for key, value in room_env.items())
+
+        harbor.zoom_metadata(json.dumps(form.cleaned_data['show_name'] or 'Live Broadcast'))
+
+        self.redis.set(constants.REDIS_KEY_ROOM_INFO, room_env_str, ex=form.cleaned_data['ttl'])
+        self.service.supervisorctl('restart', 'zoom-runner')
+
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
-        # TODO do this a little more reliably
+        current_auth = self.request.user.currently_harbor_authorized(should_log=False)
         return {
             **super().get_context_data(**kwargs),
+            'authorization_time_bound': current_auth if isinstance(current_auth, datetime.datetime) else None,
+            'currently_authorized': bool(current_auth),
+            # convert TTL to an end time.
+            'room_ttl_hours': self.room_ttl // (60 * 60) if self.room_ttl else None,
+            'room_ttl_minutes': (self.room_ttl % (60 * 60)) // 60 if self.room_ttl else None,
+            'submit_text': 'Start Zoom Broadcast Now',
             'title': 'Zoom Broadcasting',
-            'is_running': self.service.is_zoom_running(),
+            'zoom_is_running': self.zoom_is_running_cached,
+            'zoom_belongs_to_current_user': self.zoom_user == self.request.user,
+            'zoom_user': self.zoom_user,
         }
 
 

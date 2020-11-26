@@ -138,12 +138,14 @@ class ZoomService(ServiceBase):
     service_name = 'zoom'
 
     def is_zoom_running(self):
-        status = self.supervisorctl('status', 'zoom').split()
+        status = self.supervisorctl('status', 'zoom-runner').split()
         return len(status) >= 2 and status[1] == 'RUNNING'
 
     def render_conf(self):
         kwargs = {'environment': f'TZ="{settings.TIME_ZONE}",HOME="/home/user",DISPLAY=":0",PULSE_SERVER="harbor"',
                   'user': 'user'}
+
+        # Windowing manager and VNC
         self.render_supervisor_conf_file(
             program_name='xvfb-icewm',
             command='xvfb-run --auth-file=/home/user/.Xauthority --server-num=0 '
@@ -154,8 +156,12 @@ class ZoomService(ServiceBase):
             program_name='x11vnc', command='x11vnc -shared -forever -nopw', **kwargs)
         self.render_supervisor_conf_file(
             program_name='websockify', command='websockify 0.0.0.0:6080 localhost:5900', **kwargs)
+
+        # Zoom and the room runner script
+        # TODO: is there a way to kill Zoom more cleanly so broadcast bot leaves
         self.render_supervisor_conf_file(
             program_name='zoom', command='sh -c "killall -q zoom; zoom"', start=False, **kwargs)
+        self.render_supervisor_conf_file(program_name='zoom-runner', command='zoom-runner.sh', start=False)
 
 
 SERVICES = {service_cls.service_name: service_cls for service_cls in ServiceBase.__subclasses__()}

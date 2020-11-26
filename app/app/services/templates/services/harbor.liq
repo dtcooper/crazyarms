@@ -141,7 +141,7 @@ end
 # Our "reaper" internal function
 add_timeout(fast=false, LIVE_DJ_KICKOFF_INTERVAL, fun() -> begin
     if !live_user_connected then
-        let (username, full_name, kickoff_time, user_id, _) = !live_user
+        let (username, _, kickoff_time, user_id, _) = !live_user
         # 1.5s of buffer to be sure backend will refuse DJ in the event of immediately trying to log in again
         if kickoff_time > 0. and time() - 1.5 > kickoff_time then
             log('kicking off #{username} for streaming past kickoff time')
@@ -184,6 +184,14 @@ dj_harbor = strip_blank(
     #  * Show name as metadata? Could be entered in UI
     #  * Have switch with variable set in terminal to turn Zoom (zoom-runner.sh in the
     #    zoom container could do this.)
+    zoom_metadata = ref 'Live Broadcast'
+    server.register(
+        usage='zoom_metadata [<json-str>]', description='Set metadata for Zoom broadcast (JSON string)', 'zoom_metadata', fun(data) -> begin
+            if data != '' then
+                zoom_metadata := of_json(default=!zoom_metadata, data)
+            end
+            'Metadata: #{!zoom_metadata}'
+        end)
 
     # Use a pulseaudio input for Zoom
     zoom = input.pulseaudio(id='zoom')
@@ -198,7 +206,7 @@ dj_harbor = strip_blank(
         zoom,
     )
     zoom = map_metadata(update=false, strip=true, fun(_) -> begin
-        [('title', 'Live Broadcast')]
+        [('title', !zoom_metadata)]
     end, zoom)
 {% endif %}
 

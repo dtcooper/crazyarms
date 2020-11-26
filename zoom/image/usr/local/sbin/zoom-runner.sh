@@ -2,9 +2,8 @@
 
 # Constants
 ROOM_INFO_KEY='zoom-runner:room-info'
-SLEEP_INTERVAL=2.5
-ZOOM_ROOM_OPEN_WAIT=5
-MEETING_USER='SHARE+YOUR+SOUND'
+SLEEP_INTERVAL=3.5
+MEETING_USER='Broadcast+Bot'
 ROOT_WINDOW_NAME='Zoom Cloud Meetings'
 AUDIO_CONFERENCE_OPTIONS_WINDOW_NAME='audio conference options'
 AUDIO_CONFERENCE_OPTIONS_CLICK_X=290
@@ -15,6 +14,7 @@ MEETING_WINDOW_NAME='Zoom Meeting'
 ZOOM_INFO=
 MEETING_ID=
 MEETING_PWD=
+MEETING_USER_ID=
 
 zoom_service_running() {
     supervisorctl status zoom | grep -q 'STARTING\|RUNNING\|BACKOFF'
@@ -31,7 +31,6 @@ xdo() {
 echo "Waiting on redis key $ROOM_INFO_KEY"
 
 while true; do
-    PREV_ZOOM_INFO="$ZOOM_INFO"
     ROOM_INFO="$(redis-cli -h redis get $ROOM_INFO_KEY)"
 
     if [ "$ROOM_INFO" ]; then
@@ -43,7 +42,7 @@ while true; do
         fi
 
         if ! zoom_service_running; then
-            echo 'Starting Zoom.'
+            echo "Starting Zoom."
             supervisorctl start zoom
 
             # Wait for Zoom to boot
@@ -56,9 +55,10 @@ while true; do
 
         MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
         if [ -z "$MEETING_WINDOW" ]; then
-            echo "Meeting not running. Opening Meet ID $MEETING_ID."
+            echo "Opening Meet ID $MEETING_ID by request from user $MEETING_USER_FULL_NAME (id = $MEETING_USER_ID)."
+            # TODO: seems to join multiple times when using a waiting room, need to confirm + fix that
             as_user xdg-open "zoommtg://zoom.us/join?action=join&confno=$MEETING_ID&uname=$MEETING_USER&pwd=$MEETING_PWD"
-            sleep 5
+            sleep 10
             MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
         fi
 
@@ -87,13 +87,8 @@ while true; do
             sleep 1
         fi
 
-    elif [ "$PREV_ZOOM_INFO" ]; then
-        # Was previously found running
-        echo "No zoom room info found at redis key $ROOM_INFO_KEY. Sleeping."
-        if zoom_service_running; then
-            echo 'Zoom room found running. Stopping.'
-            supervisorctl stop zoom
-        fi
+    else
+        echo "No zoom room info found at redis key $ROOM_INFO_KEY."
     fi
 
     sleep "$SLEEP_INTERVAL"

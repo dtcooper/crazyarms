@@ -29,12 +29,12 @@
           {% endif %}
           {% if user.is_authenticated %}
             <a href="{% url 'status' %}">Stream Status</a> /
+            {% if settings.ZOOM_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
+              <a href="{% url 'zoom' %}">Zoom Broadcasting</a> /
+            {% endif %}
             <a href="{% url 'playout_log' %}">Playout Log</a> /
             {% if config.GOOGLE_CALENDAR_ENABLED %}
               <a href="{% url 'gcal' %}">My Scheduled Shows</a> /
-            {% endif %}
-            {% if settings.ZOOM_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
-              <a href="{% url 'zoom' %}">Zoom</a> /
             {% endif %}
             {% if perms.common.can_boot %}
               <a href="{% url 'banlist' %}">DJ Ban List</a> /

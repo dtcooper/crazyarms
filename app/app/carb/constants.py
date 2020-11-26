@@ -5,3 +5,4 @@ CACHE_KEY_HARBOR_CONFIG_CONTEXT = 'harbor:config-context'
 CACHE_KEY_HARBOR_BAN_PREFIX = 'harbor:ban:'  # + user.id
 CACHE_KEY_AUTODJ_NO_REPEAT_IDS = 'autodj:no-repeat-ids'
 CACHE_KEY_AUTODJ_NO_REPEAT_ARTISTS = 'autodj:no-repeat-artists'
+REDIS_KEY_ROOM_INFO = 'zoom-runner:room-info'

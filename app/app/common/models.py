@@ -78,6 +78,12 @@ class User(AbstractUser):
         s = ' '.join(filter(None, (self.first_name, self.last_name))).strip()
         return s or self.username
 
+    def harbor_auth_actual(self):
+        if self.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR and not config.GOOGLE_CALENDAR_ENABLED:
+            return User.HarborAuth.ALWAYS
+        else:
+            return self.harbor_auth
+
     def harbor_auth_pretty(self):
         if self.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
             if config.GOOGLE_CALENDAR_ENABLED:
@@ -113,16 +119,20 @@ class User(AbstractUser):
                 upcoming_show_times.append(show_time)
         return upcoming_show_times
 
-    def currently_harbor_authorized(self, now=None):
+    def currently_harbor_authorized(self, now=None, should_log=True):
         auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
         ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')
 
+        def log(s):
+            if should_log:
+                logger.info(s)
+
         if ban_seconds > 0:
-            logger.info(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)')
+            log(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)')
             return False
 
         elif self.harbor_auth == self.HarborAuth.ALWAYS:
-            logger.info(f'auth requested by {self}: allowed ({auth_log})')
+            log(f'auth requested by {self}: allowed ({auth_log})')
             return True
 
         elif self.harbor_auth == self.HarborAuth.GOOGLE_CALENDAR:
@@ -135,23 +145,23 @@ class User(AbstractUser):
                     for show_time in self.show_times:
                         upper_bound = show_time.upper + exit_grace
                         if (show_time.lower - entry_grace) <= now <= upper_bound:
-                            logger.info(f'auth requested by {self}: allowed ({auth_log} and {now} in time bounds - '
-                                        f'{timezone.localtime(show_time.lower)} [{entry_grace} entry grace] - '
-                                        f'{timezone.localtime(show_time.upper)} [{exit_grace} exit grace])')
+                            log(f'auth requested by {self}: allowed ({auth_log} and {now} in time bounds - '
+                                f'{timezone.localtime(show_time.lower)} [{entry_grace} entry grace] - '
+                                f'{timezone.localtime(show_time.upper)} [{exit_grace} exit grace])')
                             return upper_bound
                     else:
-                        logger.info(f'auth requested by {self}: denied ({auth_log} with {now} not in time bounds for '
-                                    f'{len(self.show_times)} show times)')
+                        log(f'auth requested by {self}: denied ({auth_log} with {now} not in time bounds for '
+                            f'{len(self.show_times)} show times)')
                         return False
                 else:
-                    logger.info(f'auth requested by {self}: denied ({auth_log} with no show times)')
+                    log(f'auth requested by {self}: denied ({auth_log} with no show times)')
                     return False
             else:
-                logger.info(f'auth requested by {self}: allowed ({auth_log}, however GOOGLE_CALENDAR_ENABLED = False, '
-                            f'so treating this like harbor_auth = {self.HarborAuth.ALWAYS.label})')
+                log(f'auth requested by {self}: allowed ({auth_log}, however GOOGLE_CALENDAR_ENABLED = False, '
+                    f'so treating this like harbor_auth = {self.HarborAuth.ALWAYS.label})')
                 return True
         else:
-            logger.info(f'auth requested by {self}: denied ({auth_log})')
+            log(f'auth requested by {self}: denied ({auth_log})')
             return False
 
 

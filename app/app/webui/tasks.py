@@ -49,3 +49,8 @@ def generate_sample_assets(uploader=None):
             audio_asset.save()
 
     logger.info(f'Done downloading {NUM_SAMPLE_ASSETS} sample assets from ccMixter')
+
+
+@djhuey.db_task()
+def stop_zoom_broadcast():
+    print('would stop broadcast')
