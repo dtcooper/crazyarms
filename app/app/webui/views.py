@@ -173,6 +173,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
                 'room_env': self.room_env, **super().get_form_kwargs()}
 
     def form_valid(self, form):
+        logger.info(f'User {self.request.user} starting Zoom show')
         meeting_id, meeting_pwd = form.cleaned_data['zoom_room']
 
         stop_task = stop_zoom_broadcast.schedule(delay=form.cleaned_data['ttl'])
