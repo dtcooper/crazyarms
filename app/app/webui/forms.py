@@ -6,20 +6,16 @@ from urllib.parse import parse_qs, urlparse
 
 from django import forms
 from django.conf import settings
-from django.core.cache import cache
 from django.contrib.auth.forms import UserCreationForm
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
-from django.template.defaultfilters import pluralize
 
 from constance import config
 
-from carb import constants
 from common.models import User
 from services import init_services
 from services.models import UpstreamServer
-from services.services import ZoomService
 
 from .tasks import generate_sample_assets, NUM_SAMPLE_ASSETS
 
@@ -106,7 +102,8 @@ class ZoomForm(forms.Form):
     show_name = forms.CharField(label='Show Name', required=False,
                                 help_text="The name of your show for the stream's metadata. Can be left blank.")
     ttl = forms.CharField(label='Show Length', help_text=mark_safe(
-        'In <code>HOUR:MINUTE</code> or<code>HOUR</code> format, ie <code>2:00</code> or <code>2</code> for two hours.'),
+        # TODO use a datetime picker, I think for show end.
+        'In <code>HH:MM</code> or<code>HH</code> format, ie <code>2:00</code> or <code>2</code> for two hours.'),
         widget=forms.TextInput(attrs={'placeholder': '2:00'}))
     zoom_room = forms.URLField(label='Room Link', help_text='Pasted from Zoom. See broadcasting instructions above.',
                                widget=forms.TextInput(attrs={
