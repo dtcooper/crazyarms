@@ -6,6 +6,7 @@
   <meta charset="utf-8">
   <title>{% block title %}{% if title %}{{ title }} - {% endif %}{{ station_name_override|default:config.STATION_NAME }}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="{% static 'common/favicon.svg' %}">
   <link rel="stylesheet" href="{% static 'webui/css/new.css' %}">
   <link rel="stylesheet" href="{% static 'webui/css/base.css' %}">
   <script src="{% static 'webui/js/jquery.min.js' %}"></script>
