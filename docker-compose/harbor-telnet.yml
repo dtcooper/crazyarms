@@ -4,6 +4,7 @@ services:
       - harbor-telnet
   harbor-telnet:
     container_name: harbor-telnet
+    image: dtcooper/carb-harbor-telnet:${CARB_VERSION:-latest}
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile.harbor-telnet
