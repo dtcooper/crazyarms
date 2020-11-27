@@ -43,7 +43,7 @@ while true; do
         fi
 
         if ! zoom_service_running; then
-            echo "Starting Zoom."
+            echo "Starting Zoom and enabling it on the harbor."
             supervisorctl start zoom
 
             # Wait for Zoom to boot
@@ -53,6 +53,15 @@ while true; do
 
             sleep 2.5
         fi
+
+        # Enable Zoom source on harbor
+        # TODO: is there a better way to do this + save state on harbor restart during a Zoom show?
+        #       is this script the best place to execute this? (for one it pollutes harbor logs)
+        # Maybe this can happen at:
+        #   1. Show start time
+        #   2. Show end time
+        #   3. When harbor boots it can check if redis key is set
+        echo 'var.set zoom_enabled = true\nquit' | nc -w 2 harbor 1234 > /dev/null
 
         MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
         if [ -z "$MEETING_WINDOW" ]; then
@@ -81,6 +90,7 @@ while true; do
             sleep 1
         fi
 
+        # Minimize the Window, likely improves performance
         MEETING_WINDOW_VISIBLE="$(xdo search --onlyvisible --name "$MEETING_WINDOW_NAME")"
         if [ "$MEETING_WINDOW_VISIBLE" ]; then
             echo 'Meeting found maximized. Minimizing window.'
@@ -89,7 +99,9 @@ while true; do
         fi
 
     else
-        echo "No zoom room info found at redis key $ROOM_INFO_KEY."
+        echo "No zoom room info found at redis key $ROOM_INFO_KEY. Disabling Zoom broadcasting on harbor."
+        echo 'var.set zoom_enabled = false\nquit' | nc -w 2 harbor 1234 > /dev/null
+
         MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
         if [ "$MEETING_WINDOW" ]; then
             echo 'Closing meeting window.'

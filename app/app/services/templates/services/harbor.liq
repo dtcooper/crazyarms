@@ -180,10 +180,6 @@ dj_harbor = strip_blank(
 )
 
 {% if settings.ZOOM_ENABLED %}
-    # TODOs:
-    #  * Show name as metadata? Could be entered in UI
-    #  * Have switch with variable set in terminal to turn Zoom (zoom-runner.sh in the
-    #    zoom container could do this.)
     zoom_metadata = ref 'Live Broadcast'
     server.register(
         usage='zoom_metadata [<json-str>]', description='Set metadata for Zoom broadcast (JSON string)', 'zoom_metadata', fun(data) -> begin
@@ -192,10 +188,13 @@ dj_harbor = strip_blank(
             end
             'Metadata: #{!zoom_metadata}'
         end)
+    zoom_enabled = interactive.bool('zoom_enabled', false)
 
     # Use a pulseaudio input for Zoom
     zoom = input.pulseaudio(id='zoom')
     ignore(output.dummy(id='zoom_dummy', zoom))
+
+    zoom = switch(id='zoom_switch', track_sensitive=false, [(zoom_enabled, zoom)])
 
     # Treat silence on pulseaudio as if it weren't connected
     zoom = strip_blank(
