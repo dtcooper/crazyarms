@@ -31,12 +31,12 @@ def create_groups(sender, **kwargs):
     from django.contrib.auth.models import Group, Permission
 
     from broadcast.models import Broadcast, BroadcastAsset
-    from autodj.models import AudioAsset
+    from autodj.models import AudioAsset, Playlist
     from services.models import PlayoutLogEntry
 
     create_perm_group_for_models((Broadcast, BroadcastAsset), 'Add prerecorded broadcasts')
     create_perm_group_for_models(PlayoutLogEntry, 'Advanced view of the playout log in admin site')
-    create_perm_group_for_models(AudioAsset, 'Program the AutoDJ')
+    create_perm_group_for_models((AudioAsset, Playlist), 'Program the AutoDJ')
 
     create_user_perm_group('view_telnet', 'Access Liquidsoap harbor over telnet (experimental)')
     create_user_perm_group('view_websockify', 'Can configure and administrate Zoom over VNC')

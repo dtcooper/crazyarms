@@ -174,8 +174,6 @@ class ZoomService(ServiceBase):
             program_name='websockify', command='websockify 0.0.0.0:6080 localhost:5900', **kwargs)
 
         # Zoom and the room runner script
-        # Is there a way to kill Zoom more cleanly so broadcast bot leaves?
-        # SIGHUP, SIGINT don't seem to do the trick
         self.render_supervisor_conf_file(
             program_name='zoom', command='sh -c "killall -q zoom; zoom"', start=False, **kwargs)
         self.render_supervisor_conf_file(program_name='zoom-runner', command='zoom-runner.sh', start=False)

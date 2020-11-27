@@ -21,8 +21,8 @@ from .tasks import generate_sample_assets, NUM_SAMPLE_ASSETS
 
 class FirstRunForm(UserCreationForm):
     if settings.ICECAST_ENABLED:
-        icecast_admin_password = forms.CharField(label='Icecast Password', help_text='The password for Icecast admin. '
-                                                 '(WARNING: Stored in plain text that administrators can see.)')
+        icecast_admin_password = forms.CharField(label='Icecast Admin Password', help_text='The password for the '
+                                                 'Icecast admin (WARNING: Stored as configuration in plain text.)')
     email = forms.EmailField(label='Email Address')
     generate_sample_assets = forms.BooleanField(
         label='Preload AutoDJ', required=False,

@@ -2,7 +2,7 @@
 
 # Constants
 ROOM_INFO_KEY='zoom-runner:room-info'
-SLEEP_INTERVAL=3.5
+SLEEP_INTERVAL=3
 MEETING_USER='Broadcast+Bot'
 ROOT_WINDOW_NAME='Zoom Cloud Meetings'
 AUDIO_CONFERENCE_OPTIONS_WINDOW_NAME='audio conference options'
@@ -90,6 +90,16 @@ while true; do
 
     else
         echo "No zoom room info found at redis key $ROOM_INFO_KEY."
+        MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
+        if [ "$MEETING_WINDOW" ]; then
+            echo 'Closing meeting window.'
+            xdo windowactivate "$MEETING_WINDOW"
+            sleep 1
+            xdo key --window "$MEETING_WINDOW" --clearmodifiers 'alt+F4'
+            sleep 1
+            xdo key --window "$MEETING_WINDOW" --clearmodifiers Return
+            sleep 1
+        fi
     fi
 
     sleep "$SLEEP_INTERVAL"

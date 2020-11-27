@@ -9,7 +9,7 @@ import subprocess
 import pytz
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.core.cache import cache
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db import models
@@ -68,6 +68,8 @@ class User(AbstractUser):
     google_calender_exit_grace_minutes = models.PositiveIntegerField(
         'harbor exit grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>after</strong> a scheduled show that the user is kicked off the harbor.'))
+    groups = models.ManyToManyField(
+        Group, verbose_name='permissions', blank=True, related_name='user_set', related_query_name='user')
 
     def __init__(self, *args, **kwargs):
         if 'is_staff' in kwargs:

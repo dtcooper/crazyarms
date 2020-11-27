@@ -22,6 +22,13 @@ class PlaylistAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_active', 'weight', 'audio_assets_list_display')
     filter_horizontal = ('audio_assets',)
 
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if request.GET.get('_popup'):
+            # A bit messy to include this in the popup window
+            fields.remove('audio_assets')
+        return fields
+
     def audio_assets_list_display(self, obj):
         return obj.audio_assets.count()
     audio_assets_list_display.short_description = 'Number of audio assets(s)'

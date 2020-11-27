@@ -1,6 +1,7 @@
 import logging
 import os
 from urllib.parse import urlsplit
+import time
 
 import requests
 
@@ -60,9 +61,13 @@ def generate_sample_assets(uploader=None):
 @djhuey.db_task()
 def stop_zoom_broadcast():
     logger.info('Stopping Zoom broadcast')
-    service = ZoomService()
-    service.supervisorctl('stop', 'zoom-runner')
-    service.supervisorctl('stop', 'zoom')
 
     redis = get_redis_connection()
     redis.delete(constants.REDIS_KEY_ROOM_INFO)
+    # Wait for zoom-runner to cleanedly quit room once redis key deleted
+    # Don't feel good about tying up a Huey thread for 10 seconds, but stopping
+    # Zoom is a rare enough occurrence that it's okay.
+    time.sleep(10)
+
+    service = ZoomService()
+    service.supervisorctl('stop', 'zoom', 'zoom-runner')
