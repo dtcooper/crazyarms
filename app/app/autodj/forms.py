@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.admin.helpers import ActionForm
 
-from common.forms import AudioAssetCreateFormBase
+from common.forms import AudioAssetDownloadableCreateFormBase
 
 from .models import AudioAsset, Playlist
 
@@ -10,16 +10,9 @@ class PlaylistActionForm(ActionForm):
     playlist = forms.ModelChoiceField(Playlist.objects.all(), required=False, label=' ', empty_label='--- Playlist ---')
 
 
-class AudioAssetCreateForm(AudioAssetCreateFormBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        title_attrs = self.fields['title'].widget.attrs
-        self.fields['artist'].widget.attrs.update(title_attrs)
-        self.fields['album'].widget.attrs.update(title_attrs)
-
-    class Meta:
+class AudioAssetCreateForm(AudioAssetDownloadableCreateFormBase):
+    class Meta(AudioAssetDownloadableCreateFormBase.Meta):
         model = AudioAsset
-        fields = '__all__'
 
 
 class AudioAssetUploadForm(forms.Form):

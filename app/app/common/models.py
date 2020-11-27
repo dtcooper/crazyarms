@@ -15,6 +15,7 @@ from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db import models
 from django.db.transaction import on_commit
 from django.utils.functional import cached_property
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils import timezone
 
@@ -176,33 +177,20 @@ class AudioAssetBase(TimestampedModel):
     UPLOAD_DIR = 'assets'
     TITLE_FIELDS = ('title',)
 
-    class Status(models.TextChoices):
-        PENDING = '-', 'upload pending'
-        UPLOADED = 'u', 'uploaded'
-        QUEUED = 'q', 'download queued'
-        RUNNING = 'r', 'download running'
-        FAILED = 'f', 'download failed'
-
     title = TruncatingCharField('title', max_length=255, blank=True,
                                 help_text="If left empty, a title will be generated from the file's metadata.")
     uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
-    file = models.FileField('audio file', blank=True, upload_to=audio_asset_file_upload_to,
-                            help_text='You can provide either an uploaded audio file or a URL to an external asset.')
+    file = models.FileField('audio file', upload_to=audio_asset_file_upload_to)
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
-    status = models.CharField('upload status', max_length=1, choices=Status.choices, default=Status.PENDING,
-                              db_index=True)
-    task_id = models.UUIDField(null=True)
 
     class Meta:
         abstract = True
 
-    @cached_property
-    def task_log_line(self):
-        # TODO clean up a bit, here and in BroadcastAssetAdmin.get_fields()
-        # This is cached for the lifetime of the object so it isn't read twice with different values
-        # by admin
-        if self.status == self.Status.RUNNING:
-            return cache.get(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}{self.task_id}')
+    def audio_player_html(self):
+        if self.file:
+            return format_html('<audio src="{}" style="width: 100%" preload="auto" controls />', self.file.url)
+        return mark_safe('<em>None</em>')
+    audio_player_html.short_description = 'Audio'
 
     @property
     def file_path(self):
@@ -239,8 +227,36 @@ class AudioAssetBase(TimestampedModel):
             self.set_fields_from_exiftool()
             if self.duration == datetime.timedelta(0):
                 self.set_duration_from_ffprobe()
-            self.status = self.Status.UPLOADED
+            if isinstance(self, AudioAssetDownloadbleBase):
+                self.status = self.Status.UPLOADED
         super().save(*args, **kwargs)
+
+    def __str__(self, s=None):
+        if s is None:
+            s = self.title
+        if not s:
+            s = self.UNNAMED_TRACK
+        if self.duration != datetime.timedelta(0):
+            s = f'{s} [{self.duration}]'
+        return s
+
+
+class AudioAssetDownloadbleBase(AudioAssetBase):
+    class Status(models.TextChoices):
+        PENDING = '-', 'upload pending'
+        UPLOADED = 'u', 'uploaded'
+        QUEUED = 'q', 'download queued'
+        RUNNING = 'r', 'download running'
+        FAILED = 'f', 'download failed'
+    # Changes to blank=True + help_text
+    file = models.FileField('audio file', blank=True, upload_to=audio_asset_file_upload_to,
+                            help_text='You can provide either an uploaded audio file or a URL to an external asset.')
+    status = models.CharField('upload status', max_length=1, choices=Status.choices,
+                              default=Status.PENDING, db_index=True)
+    task_id = models.UUIDField(null=True)
+
+    class Meta:
+        abstract = True
 
     @after_db_commit
     def queue_download(self, url, set_title=''):
@@ -252,11 +268,10 @@ class AudioAssetBase(TimestampedModel):
         model_cls.objects.filter(id=self.id, status=model_cls.Status.PENDING).update(status=model_cls.Status.QUEUED)
         cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}{task.id}', f'Starting download for {url}')
 
-    def __str__(self, s=None):
-        if s is None:
-            s = self.title
-        if not s:
-            s = self.UNNAMED_TRACK
-        if self.duration != datetime.timedelta(0):
-            s = f'{s} [{self.duration}]'
-        return s
+    @cached_property
+    def task_log_line(self):
+        # TODO clean up a bit, here and in BroadcastAssetAdmin.get_fields()
+        # This is property cached for the lifetime of the object so it isn't read twice with
+        # different values by admin
+        if self.status == self.Status.RUNNING:
+            return cache.get(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}{self.task_id}')

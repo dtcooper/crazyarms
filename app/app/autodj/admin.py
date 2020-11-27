@@ -10,10 +10,10 @@ from django.utils.safestring import mark_safe
 
 from constance import config
 
-from common.admin import AssetAdminBase
+from common.admin import AudioAssetDownloadableAdminBase
 
 from .forms import AudioAssetCreateForm, AudioAssetUploadForm, PlaylistActionForm
-from .models import AudioAsset, Playlist
+from .models import AudioAsset, Playlist, RotatorAsset
 
 
 class PlaylistAdmin(admin.ModelAdmin):
@@ -42,14 +42,14 @@ class PlaylistInline(admin.StackedInline):
     extra = 1
 
 
-class AudioAssetAdmin(AssetAdminBase):
+class AudioAssetAdmin(AudioAssetDownloadableAdminBase):
     inlines = (PlaylistInline,)
     action_form = PlaylistActionForm
     create_form = AudioAssetCreateForm
     # title gets swapped to include artist and album
     list_display = ('title', 'playlists_list_display', 'duration', 'status')
     actions = ('add_playlist_action', 'remove_playlist_action')
-    list_filter = ('playlists',) + AssetAdminBase.list_filter
+    list_filter = ('playlists',) + AudioAssetDownloadableAdminBase.list_filter
 
     def playlists_list_display(self, obj):
         return format_html_join(mark_safe(',<br>'), '{}', obj.playlists.values_list('name'))
@@ -145,5 +145,23 @@ class AudioAssetAdmin(AssetAdminBase):
         })
 
 
+class RotatorAssetAdmin(admin.ModelAdmin):
+    add_fields = ('title', 'file')
+    change_fields = ('title', 'file', 'audio_player_html', 'duration', 'uploader')
+    change_readonly_fields = ('file', 'audio_player_html', 'duration', 'uploader')
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.uploader = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_fields(self, request, obj=None):
+        return self.add_fields if obj is None else self.change_fields
+
+    def get_readonly_fields(self, request, obj=None):
+        return () if obj is None else self.change_readonly_fields
+
+
 admin.site.register(Playlist, PlaylistAdmin)
 admin.site.register(AudioAsset, AudioAssetAdmin)
+admin.site.register(RotatorAsset, RotatorAssetAdmin)

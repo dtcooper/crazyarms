@@ -13,7 +13,7 @@ from gcal.tasks import sync_google_calendar_api
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-class AudioAssetCreateFormBase(forms.ModelForm):
+class AudioAssetDownloadableCreateFormBase(forms.ModelForm):
     url = forms.URLField(label='External URL', required=False, help_text=mark_safe(
         'URL on an external service like SoundCloud, Mixcloud, YouTube, direct link, etc. If provided, it will be '
         'downloaded. (Complete list of supported services <a href="https://ytdl-org.github.io/youtube-dl/supported'
@@ -22,10 +22,14 @@ class AudioAssetCreateFormBase(forms.ModelForm):
     source = forms.ChoiceField(label='Source type', choices=(('file', 'Uploaded file'), ('url', 'External URL')),
                                initial='file')
 
+    class Meta:
+        fields = '__all__'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['title'].widget.attrs.update({'placeholder': "Leave empty to extract from file's metadata",
-                                                  'class': 'vLargeTextField'})
+        for field in self._meta.model.TITLE_FIELDS:
+            self.fields[field].widget.attrs.update({'placeholder': "Leave empty to extract from file's metadata",
+                                                    'class': 'vLargeTextField'})
 
     def clean(self):
         cleaned_data = super().clean()

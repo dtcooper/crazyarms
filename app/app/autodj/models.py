@@ -10,13 +10,13 @@ from django.db import models
 from constance import config
 
 from carb.constants import CACHE_KEY_AUTODJ_NO_REPEAT_ARTISTS, CACHE_KEY_AUTODJ_NO_REPEAT_IDS
-from common.models import AudioAssetBase, TruncatingCharField
+from common.models import AudioAssetBase, AudioAssetDownloadbleBase, TruncatingCharField
 
 
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-class AudioAsset(AudioAssetBase):
+class AudioAsset(AudioAssetDownloadbleBase):
     TITLE_FIELDS = ('title', 'artist', 'album')
     RANDOM_CHUNK_TRIES = 10
     RANDOM_CHUNK_SIZE = 25
@@ -184,7 +184,11 @@ class Playlist(models.Model):
         return self.name
 
 
-# For prettier admin display
+# For prettier admin text displays
 Playlist.audio_assets.through.__str__ = lambda self: f'{self.audioasset.title} in playlist {self.playlist}'
 Playlist.audio_assets.through._meta.verbose_name = 'audio asset in playlist relationship'
 Playlist.audio_assets.through._meta.verbose_name_plural = 'audio asset in playlist relationships'
+
+
+class RotatorAsset(AudioAssetBase):
+    UNNAMED_TRACK = 'Untitled Asset'

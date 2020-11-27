@@ -4,10 +4,11 @@ from django.utils import timezone
 from huey.contrib.djhuey import revoke_by_id
 
 
-from common.models import after_db_commit, AudioAssetBase, TimestampedModel
+from common.models import after_db_commit, AudioAssetDownloadbleBase, TimestampedModel
 
 
-class BroadcastAsset(AudioAssetBase):
+class BroadcastAsset(AudioAssetDownloadbleBase):
+    UNNAMED_TRACK = 'Unnamed Broadcast'
     UPLOAD_DIR = 'scheduled'
 
     class Meta:

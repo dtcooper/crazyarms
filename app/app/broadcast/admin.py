@@ -1,13 +1,13 @@
 from django.contrib import admin
 from django.contrib import messages
 
-from common.admin import AssetAdminBase
+from common.admin import AudioAssetDownloadableAdminBase
 
 from .forms import BroadcastAssetCreateForm
 from .models import BroadcastAsset, Broadcast
 
 
-class BroadcastAssetAdmin(AssetAdminBase):
+class BroadcastAssetAdmin(AudioAssetDownloadableAdminBase):
     create_form = BroadcastAssetCreateForm
 
     def get_search_results(self, request, queryset, search_term):
