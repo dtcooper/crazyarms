@@ -61,14 +61,19 @@ output.icecast(
     broadcast,
     on_connect=fun() -> begin
         connected := true
+        log_event('#{SCRIPT_NAME} successfully connected')
         start_time := time()
         error := UNKNOWN_ERROR_STR
     end,
     on_disconnect=fun() -> begin
         connected := false
+        log_event('#{SCRIPT_NAME} disconnected')
         error := UNKNOWN_ERROR_STR
     end,
     on_error=fun(e) -> begin
+        if !error != e then
+            log_event('#{SCRIPT_NAME} connection error: #{e}')
+        end
         error := e
         1.  # Re-try connection every second
     end,
