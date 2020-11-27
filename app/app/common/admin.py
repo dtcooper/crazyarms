@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group
+from django.utils.html import format_html
 
 from constance import config
 from constance import admin as constance_admin
@@ -32,7 +33,7 @@ class AssetAdminBase(admin.ModelAdmin):
     add_fields = ('source', 'file', 'url', 'title', 'status', 'uploader')
     change_fields = ('title', 'file', 'duration', 'status', 'uploader', 'task_log_line')
     add_readonly_fields = ('uploader', 'status')
-    change_readonly_field = add_readonly_fields + ('duration', 'file', 'task_log_line')
+    change_readonly_field = add_readonly_fields + ('duration', 'file', 'audio_player', 'task_log_line')
     search_fields = ('title',)
     list_display = ('title', 'duration', 'status')
     list_filter = (('uploader', admin.RelatedOnlyFieldListFilter), 'status')
@@ -40,12 +41,20 @@ class AssetAdminBase(admin.ModelAdmin):
     class Media:
         js = ('common/admin/js/asset_source.js',)
 
+    def audio_player(self, obj):
+        return format_html('<audio src="{}" style="width: 100%" preload="auto" controls />', obj.file.url)
+    audio_player.short_description = 'Audio'
+
     @swap_title_fields
     def get_fields(self, request, obj=None):
         if obj is None:
             return self.add_fields
         else:
             fields = list(self.change_fields)
+            if obj.file:
+                file_index = fields.index('file')
+                fields.insert(file_index, 'audio_player')
+
             # Remove these if they're falsey
             for field in ('file', 'duration', 'task_log_line'):
                 if not getattr(obj, field):

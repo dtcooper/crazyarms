@@ -32,5 +32,6 @@ class AudioAssetUploadForm(forms.Form):
             # Needs to be in base_fields because of the way AudioAssetAdmin.upload_view() passes context to template
             self.base_fields['playlists'] = forms.ModelMultipleChoiceField(
                 Playlist.objects.all(), required=False, widget=forms.CheckboxSelectMultiple(),
-                label='Playlist(s)', help_text='Optionally select playlists to these audio assets to.')
+                label='Playlist(s)', help_text="Optionally select playlists to these audio assets to. If you don't "
+                'select a playlist, this asset will not be scheduled for playout by the AutoDJ')
         super().__init__(*args, **kwargs)

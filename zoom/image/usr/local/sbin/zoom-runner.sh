@@ -37,11 +37,12 @@ while true; do
     if [ "$ROOM_INFO" ]; then
         eval "$ROOM_INFO"
         if [ -z "$MEETING_ID" ]; then
-            echo "Meeting ID not found at redis key $ROOM_INFO_KEY. Not starting."
+            echo "Meeting ID not found at redis key $ROOM_INFO_KEY. Possibly a bad redis key. Not starting."
             sleep "$SLEEP_INTERVAL"
             continue
         fi
 
+        # Start up Zoom service
         if ! zoom_service_running; then
             echo "Starting Zoom and enabling it on the harbor."
             supervisorctl start zoom
@@ -63,29 +64,34 @@ while true; do
         #   3. When harbor boots it can check if redis key is set
         echo 'var.set zoom_enabled = true\nquit' | nc -w 2 harbor 1234 > /dev/null
 
+        # Open meeting window
         MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
         if [ -z "$MEETING_WINDOW" ]; then
             echo "Opening Meeting ID $MEETING_ID by request from user $MEETING_USERNAME (id = $MEETING_USER_ID)."
             # TODO: seems to join multiple times when using a waiting room, need to confirm + fix that
             as_user xdg-open "zoommtg://zoom.us/join?action=join&confno=$MEETING_ID&uname=$MEETING_USER&pwd=$MEETING_PWD"
             sleep 10
+
+            # Make sure meeting window exists
             MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
+            if [ -z "$MEETING_WINDOW" ]; then
+                echo "Error finding window named '$MEETING_WINDOW_NAME'. Meeting window did not open."
+                sleep "$SLEEP_INTERVAL"
+                continue
+            fi
         fi
 
-        if [ -z "$MEETING_WINDOW" ]; then
-            echo "Error finding window named '$MEETING_WINDOW_NAME'."
-            sleep "$SLEEP_INTERVAL"
-            continue
-        fi
-
+        # Select Audio pesky conference options popup that occasionally appears
         AUDIO_CONFERENCE_OPTIONS_WINDOW="$(xdo search --onlyvisible --name "$AUDIO_CONFERENCE_OPTIONS_WINDOW_NAME")"
         if [ "$AUDIO_CONFERENCE_OPTIONS_WINDOW" ]; then
             echo 'Found audio conference options. Selecting default.'
             sleep 1
+            # Move mouse to the spot correct spot selects computer speakers
             xdo mousemove --window "$AUDIO_CONFERENCE_OPTIONS_WINDOW" \
                 "$AUDIO_CONFERENCE_OPTIONS_CLICK_X" \
                 "$AUDIO_CONFERENCE_OPTIONS_CLICK_Y"
             sleep 0.25
+            # Click it
             xdo click --window "$AUDIO_CONFERENCE_OPTIONS_WINDOW" 1
             sleep 1
         fi
@@ -102,13 +108,17 @@ while true; do
         echo "No zoom room info found at redis key $ROOM_INFO_KEY. Disabling Zoom broadcasting on harbor."
         echo 'var.set zoom_enabled = false\nquit' | nc -w 2 harbor 1234 > /dev/null
 
+        # If room is running, close it
         MEETING_WINDOW="$(xdo search --name "$MEETING_WINDOW_NAME")"
         if [ "$MEETING_WINDOW" ]; then
             echo 'Closing meeting window.'
+            # Focus it
             xdo windowactivate "$MEETING_WINDOW"
             sleep 1
+            # Send a close window key combo
             xdo key --window "$MEETING_WINDOW" --clearmodifiers 'alt+F4'
             sleep 1
+            # Press enter
             xdo key --window "$MEETING_WINDOW" --clearmodifiers Return
             sleep 1
         fi
