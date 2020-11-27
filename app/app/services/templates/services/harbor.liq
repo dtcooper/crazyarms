@@ -258,8 +258,13 @@ add_skip_command_carb(prerecord)
 {% endif %}
 
 # Our failsafe audio, right now some silly hold music.
-# TODO: make this configurable using constance
-failsafe = single(id='failsafe', '/assets/hold-music.mp3')
+failsafe = single(id='failsafe',
+{% if config.HARBOR_FAILSAFE_AUDIO_FILE %}
+    {{ settings.MEDIA_ROOT|add:'/'|add:config.HARBOR_FAILSAFE_AUDIO_FILE|liqval }}
+{% else %}
+    '/assets/hold-music.mp3'
+{% endif %}
+)
 
 # If you add a source that has timed tracks, they should be added to this list
 # in your user defined code below
@@ -388,8 +393,13 @@ ignore(list.map(fun(src) -> begin
 
 # Our transition function used for logging, playing the "swoosh", and fadeouts
 {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
-    # TODO: make configurable by constance
-    swoosh = single('/assets/transition.mp3')
+    swoosh = single(
+    {% if config.HARBOR_SWOOSH_AUDIO_FILE %}
+        {{ settings.MEDIA_ROOT|add:'/'|add:config.HARBOR_SWOOSH_AUDIO_FILE|liqval }}
+    {% else %}
+        '/assets/transition.mp3'
+    {% endif %}
+    )
 {% endif %}
 def transition(~source, one, two)
     last_source_name = !current_source_name

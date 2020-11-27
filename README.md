@@ -106,7 +106,7 @@ broadcasting scripts.
     - Weighting similar to [Tomato](https://github.com/dtcooper/tomato)
     - [select2](https://django-easy-select2.readthedocs.io/) AutoDJ requests in
       webui (add a new list redis that gets popped from
-1. Finish Zoom broadcasting
+1. ~~Finish Zoom broadcasting~~ - _done!_
 1. Potential for S3 as a storage source using
    [django-storages](https://django-storages.readthedocs.io/)
 1. Clean up Dockerfiles stripping dev stuff

@@ -178,39 +178,52 @@ CONSTANCE_REDIS_CONNECTION_CLASS = 'django_redis.get_redis_connection'
 CONSTANCE_SUPERUSER_ONLY = False
 
 CONSTANCE_ADDITIONAL_FIELDS = {
-    'EXTERNAL_ASSET_ENCODING': ['django.forms.fields.ChoiceField', {
+    'external_asset_encoding_choices': ['django.forms.fields.ChoiceField', {
         'widget': 'django.forms.Select',
         'choices': (('mp3', 'MP3'), ('vorbis', 'Ogg Vorbis'), ('flac', 'FLAC'))
     }],
-    'EXTERNAL_ASSET_BITRATE': ['django.forms.fields.ChoiceField', {
+    'external_asset_bitrate_choices': ['django.forms.fields.ChoiceField', {
         'widget': 'django.forms.Select',
         'choices': (('64K', '64kbit'), ('128K', '128kbit'), ('192K', '192kbit'), ('256K', '256kbit'),
                     ('320K', '320kbit')),
     }],
+    'file': ['django.forms.FileField', {'widget': 'common.widgets.AlwaysClearableFileInput', 'required': False}],
+    'email': ['django.forms.EmailField', {}],
+    'char': ['django.forms.CharField', {'required': False}],
+    'positive_integer': ['django.forms.IntegerField', {'min_value': 0}],
+    'positive_float': ['django.forms.FloatField', {'min_value': 0.0}],
 }
 
 CONSTANCE_CONFIG = OrderedDict((
-    ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.')),
+    ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.', 'char')),
     ('PLAYOUT_LOG_PURGE_DAYS', (14, "The number of days to keep playout log entries after which they're purged. "
-                                'Set to 0 to keep playout log entries forever.')),
+                                'Set to 0 to keep playout log entries forever.', 'positive_integer')),
     ('HARBOR_COMPRESSION_NORMALIZATION', (True, 'Enable compression and normalization on harbor stream.')),
     ('HARBOR_TRANSITION_SECONDS', (2.5, 'Fadeout time in seconds when transitioning between harbor sources. '
-                                        'Set to 0 for no fadeout.')),
+                                   'Set to 0 for no fadeout.', 'positive_float')),
     ('HARBOR_TRANSITION_WITH_SWOOSH', (False, 'Transition between harbor sources with a ~1 second swoosh effect.')),
+    ('HARBOR_SWOOSH_AUDIO_FILE', (False, 'Audio file for the swoosh (if enabled). Sound be short, ie under 3-4 '
+                                  'seconds.', 'file')),
     ('HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION', (15, 'The maximum number of seconds of silence on a live source '
-                                                      '(eg. Zoom or live DJs) until it will be considered inactive.')),
+                                                      '(eg. Zoom or live DJs) until it will be considered inactive.',
+                                                      'positive_integer')),
+    ('HARBOR_FAILSAFE_AUDIO_FILE', (False, "Failsafe audio file that the harbor should play if there's nothing else to "
+                                    'stream.', 'file')),
+    ('UPSTREAM_FAILSAFE_AUDIO_FILE', (False, 'Failsafe audio file that should be broadcast to upstream servers if we '
+                                      "can't connect to the harbor, ie the harbor failed to start.", 'file')),
     ('AUTODJ_ENABLED', (True, 'Whether or not to run an AutoDJ on the harbor.')),
     ('AUTODJ_ANTI_REPEAT', (True, 'Whether or not the AutoDJ should attempt its anti-repeat algorithm. Note if you '
                             "have too few tracks, this won't work.")),
     ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
-        (50, 'Number of tracks to avoid to avoid repeating (if possible). Set to 0 to disable.')),
+        (50, 'Number of tracks to avoid to avoid repeating (if possible). Set to 0 to disable.', 'positive_integer')),
     ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST',
-        (15, 'Number of tracks to avoid playing the same artist (if possible). Set to 0 to disable.')),
-    ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets.', 'EXTERNAL_ASSET_ENCODING')),
+        (15, 'Number of tracks to avoid playing the same artist (if possible). Set to 0 to disable.',
+         'positive_integer')),
+    ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets.', 'external_asset_encoding_choices')),
     ('EXTERNAL_ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
-                                'EXTERNAL_ASSET_BITRATE')),
+                                'external_asset_bitrate_choices')),
     ('GOOGLE_CALENDAR_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs.')),
-    ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID.')),
+    ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID.', 'char')),
     ('GOOGLE_CALENDAR_CREDENTIALS_JSON', (
         '', mark_safe('Past the contents of your Google Service JSON Account Key here (a <code>credentials.json</code> '
                       'file).<br>For more info from Google about this please <a href="https://cloud.google.com/docs'
@@ -219,22 +232,26 @@ CONSTANCE_CONFIG = OrderedDict((
 
 if ICECAST_ENABLED:
     CONSTANCE_CONFIG.update(OrderedDict((
-        ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server.')),
-        ('ICECAST_ADMIN_EMAIL', (f'admin@{DOMAIN_NAME}', 'The admin email setting for the Icecast server.')),
-        ('ICECAST_ADMIN_PASSWORD', ('', 'Admin password for the Icecast server.')),
-        ('ICECAST_SOURCE_PASSWORD', ('', 'Source password for the Icecast server.')),
-        ('ICECAST_RELAY_PASSWORD', ('', 'Relay password for the Icecast server.')),
-        ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited).')),
-        ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited).')),
+        ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server.', 'char')),
+        ('ICECAST_ADMIN_EMAIL', (f'admin@{DOMAIN_NAME}', 'The admin email setting for the Icecast server.', 'email')),
+        ('ICECAST_ADMIN_PASSWORD', ('', 'Admin password for the Icecast server.', 'char')),
+        ('ICECAST_SOURCE_PASSWORD', ('', 'Source password for the Icecast server.', 'char')),
+        ('ICECAST_RELAY_PASSWORD', ('', 'Relay password for the Icecast server.', 'char')),
+        ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited).',
+                                 'positive_integer')),
+        ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited).',
+                                 'positive_integer')),
     )))
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME', 'PLAYOUT_LOG_PURGE_DAYS')),
     ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH',
-                              'HARBOR_TRANSITION_SECONDS', 'HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION')),
+                              'HARBOR_SWOOSH_AUDIO_FILE', 'HARBOR_TRANSITION_SECONDS',
+                              'HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION', 'HARBOR_FAILSAFE_AUDIO_FILE',
+                              'UPSTREAM_FAILSAFE_AUDIO_FILE')),
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
                               'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST')),
-    ('Externally Downloaded Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),
+    ('Externally Downloaded Audio Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),
 ))

@@ -22,6 +22,9 @@ logger = logging.getLogger(f'carb.{__name__}')
 
 
 class GoogleCalendarShowTimes(TimestampedModel):
+    # TODO: This could be a arrayfield on User and we could scrape the gcal module
+    #     - sync code could be a task
+
     SYNC_RANGE_DAYS_MIN = datetime.timedelta(days=60)
     SYNC_RANGE_DAYS_MAX = datetime.timedelta(days=120)
 

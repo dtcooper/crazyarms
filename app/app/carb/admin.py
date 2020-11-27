@@ -38,7 +38,7 @@ class CARBAdminSite(admin.AdminSite):
     def app_index_extra(self, request):
         return TemplateResponse(request, self.index_template or 'admin/app_index_extra.html', {
             **self.each_context(request),
-            'title': 'Additional Configuration administration',
+            'title': 'Miscellaneous Configuration administration',
             'app_list': False,
         })
 

@@ -62,13 +62,18 @@
       <li>Copy link to the Zoom by clicking <em>Copy Link</em>, show below<br>
         <img src="{% static 'webui/images/zoom-instructions-2.png' %}"></li>
       <li>Paste the link into the <em>Room Link</em> input, choose a show
-        length, and click <em>Start Zoom Broadcast Now</em> below.</li>
+        length, and click <em>{{ submit_text }}</em> below.</li>
       <li>Admit the <b>Broadcast Bot</b> to your Zoom room, if you have a waiting
         room enabled.</li>
       <li>As soon as the <b>Broadcast Bot</b> has entered your Zoom room, your show
         starts, however you must produce make noise for the stream to transition
         to your show. This way, you can set up your show a little bit early.</li>
     </ol>
+
+    Note: If a <b>Broadcast Bot</b> attendee does not enter your Zoom room about
+    15 or so seconds after you click <em>{{ submit_text }}</em>, please contact
+    the administrator or <a href="https://github.com/dtcooper/carb/issues" target="_blank">
+      report a bug</a>.
   </p>
 
 </details>

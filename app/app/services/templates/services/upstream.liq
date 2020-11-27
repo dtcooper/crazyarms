@@ -14,7 +14,13 @@ url = 'http://harbor:4000/live'
 input = input.http(id='input', max=10., poll_delay=0.5, url)
 output.dummy(input, fallible=true)
 
-failsafe = single(id='failsafe', '/assets/failsafe.mp3')
+failsafe = single(id='failsafe',
+{% if config.UPSTREAM_FAILSAFE_AUDIO_FILE %}
+    {{ settings.MEDIA_ROOT|add:'/'|add:config.UPSTREAM_FAILSAFE_AUDIO_FILE|liqval }}
+{% else %}
+    '/assets/failsafe.mp3'
+{% endif %}
+)
 broadcast = fallback(track_sensitive=false, [input, failsafe])
 
 host = {{ upstream.hostname|liqval }}

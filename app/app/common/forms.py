@@ -7,7 +7,6 @@ from django.utils.safestring import mark_safe
 from constance import admin as constance_admin, config
 
 from services import init_services
-from services.models import UpstreamServer
 from gcal.tasks import sync_google_calendar_api
 
 
@@ -42,14 +41,6 @@ class ConstanceForm(constance_admin.ConstanceForm):
     def save(self):
         pre_save = {name: getattr(config, name) for name in settings.CONSTANCE_CONFIG}
         super().save()
-
-        # Force numeric types to >= 0
-        for name in settings.CONSTANCE_CONFIG:
-            value = getattr(config, name)
-            if isinstance(value, (float, int)):
-                zero = type(value)(0)  # Make sure it's the correct type
-                setattr(config, name, max(value, zero))
-
         post_save = {name: getattr(config, name) for name in settings.CONSTANCE_CONFIG}
         config_changes = [name for name in settings.CONSTANCE_CONFIG if pre_save[name] != post_save[name]]
         if config_changes:
@@ -71,5 +62,7 @@ class ConstanceForm(constance_admin.ConstanceForm):
             init_services(services='harbor', restart_specific_services='harbor')
         if 'ICECAST_SOURCE_PASSWORD' in changes:
             logger.info('Got ICECAST_SOURCE_PASSWORD config change. Setting local-icecast upstream password.')
-            UpstreamServer.objects.filter(name='local-icecast').update(password=config.ICECAST_SOURCE_PASSWORD)
             init_services(services='upstream', restart_specific_services='local-icecast')
+        if any(change.startswith('UPSTREAM_') for change in changes):
+            logger.info('Got UPSTREAM_* config change. Restarting upstreams.')
+            init_services(services='upstream', restart_services=True)

@@ -1,0 +1,58 @@
+{% extends 'admin/base_site_extra.html' %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  button.restart {
+    background: #ba2121;
+    border-radius: 4px;
+    padding: 10px 15px;
+    color: #fff;
+  }
+
+  button.restart:active,
+  button.restart:focus,
+  button.restart:hover {
+      background: #a41515;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main delete-confirmation">
+
+  <p>This view is not yet complete.
+    {% if user.is_superuser %}
+      Be careful when restarting services. (Zoom ones shouldn't be messed with.)
+    {% endif %}
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <table width="100%">
+      <tr>
+        <th>Service Class</th>
+        <th>Service Name</th>
+        <th>Status</th>
+        {% if user.is_superuser %}
+          <th>Action</th>
+        {% endif %}
+      </tr>
+      {% for class, name, status in services %}
+        <tr>
+          <td>{{ class }}</td>
+          <td>{{ name }}</td>
+          <td>{{ status }}</td>
+          {% if user.is_superuser %}
+            <td>
+              <button type="submit" class="button restart" name="restart" value="{{ class }} {{ name}}">
+                RESTART
+              </button>
+            </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </table>
+  </form>
+</div>
+{% endblock %}

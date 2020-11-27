@@ -112,6 +112,7 @@ services:
       - db
     volumes:
       - services_config:/config:ro
+      - ./media:/media_root:ro
     environment:
       CONTAINER_NAME: upstream
       TZ: ${TIMEZONE:-US/Pacific}

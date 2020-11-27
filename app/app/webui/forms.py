@@ -15,7 +15,6 @@ from constance import config
 
 from common.models import User
 from services import init_services
-from services.models import UpstreamServer
 
 from .tasks import generate_sample_assets, NUM_SAMPLE_ASSETS
 
@@ -57,14 +56,6 @@ class FirstRunForm(UserCreationForm):
             config.ICECAST_ADMIN_PASSWORD = self.cleaned_data['icecast_admin_password']
             config.ICECAST_SOURCE_PASSWORD = self.random_password()
             config.ICECAST_RELAY_PASSWORD = self.random_password()
-            UpstreamServer.objects.create(
-                name='local-icecast',  # Special read-only name
-                hostname='icecast',
-                port=8000,
-                username='source',
-                password=config.ICECAST_SOURCE_PASSWORD,
-                mount='live',
-            )
 
         if self.cleaned_data['generate_sample_assets']:
             generate_sample_assets(uploader=user)
@@ -97,12 +88,13 @@ class UserProfileForm(forms.ModelForm):
 
 class ZoomForm(forms.Form):
     TTL_RE = re.compile(r'^(?:(\d+):)?(\d+)$')
-    MAX_SHOW_LENGTH_HOURS = 5
+    MAX_SHOW_LENGTH_HOURS = 4
 
     show_name = forms.CharField(label='Show Name', required=False,
                                 help_text="The name of your show for the stream's metadata. Can be left blank.")
     ttl = forms.CharField(label='Show Length', help_text=mark_safe(
-        # TODO use a datetime picker, I think for show end.
+        # Use dropdown with choices. Make util/template filter to convert seconds to a pretty duration
+        # and use that in zoom.html
         'In <code>HH:MM</code> or<code>HH</code> format, ie <code>2:00</code> or <code>2</code> for two hours.'),
         widget=forms.TextInput(attrs={'placeholder': '2:00'}))
     zoom_room = forms.URLField(label='Room Link', help_text='Pasted from Zoom. See broadcasting instructions above.',

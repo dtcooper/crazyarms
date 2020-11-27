@@ -44,7 +44,7 @@
   <div class="module{% if is_extra_url %} current-app{% endif %}">
     <table>
       <caption>
-        <a href="{% url 'admin:app_index_extra' %}" class="section">Additional Configuration</a>
+        <a href="{% url 'admin:app_index_extra' %}" class="section">Miscellaneous Configuration</a>
       </caption>
       {% for title, url, is_external in extra_urls %}
         <tr{% if request.path == url %} class="current-model"{% endif %}>

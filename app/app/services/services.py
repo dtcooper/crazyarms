@@ -123,6 +123,21 @@ class UpstreamService(ServiceBase):
     def render_conf(self):
         from .models import PlayoutLogEntry, UpstreamServer
 
+        # Make sure there's a local Icecast upstream
+        local_icecast = UpstreamServer.objects.filter(name='local-icecast')
+        if settings.ICECAST_ENABLED:
+            if not local_icecast.exists():
+                UpstreamServer.objects.create(
+                    name='local-icecast',  # Special read-only name
+                    hostname='icecast',
+                    port=8000,
+                    username='source',
+                    mount='live',
+                )
+            local_icecast.update(password=config.ICECAST_SOURCE_PASSWORD)
+        else:
+            local_icecast.delete()
+
         if UpstreamServer.objects.exists():
             self.render_conf_file('library.liq', context={
                 'table_name': PlayoutLogEntry._meta.db_table,
@@ -137,6 +152,7 @@ class UpstreamService(ServiceBase):
 class ZoomService(ServiceBase):
     service_name = 'zoom'
 
+    # TODO move to ServiceBase with name as arg, and provide @cached_property version
     def is_zoom_running(self):
         status = self.supervisorctl('status', 'zoom-runner').split()
         return len(status) >= 2 and status[1] == 'RUNNING'
