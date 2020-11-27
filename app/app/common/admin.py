@@ -29,13 +29,13 @@ def swap_title_fields(method):
 class AssetAdminBase(admin.ModelAdmin):
     save_on_top = True
     create_form = None
-    add_fields = ('title', 'source', 'file', 'url', 'status', 'uploader')
+    add_fields = ('source', 'file', 'url', 'title', 'status', 'uploader')
     change_fields = ('title', 'file', 'duration', 'status', 'uploader', 'task_log_line')
     add_readonly_fields = ('uploader', 'status')
     change_readonly_field = add_readonly_fields + ('duration', 'file', 'task_log_line')
     search_fields = ('title',)
-    list_display = ('title', 'uploader', 'duration', 'status')
-    list_filter = (('uploader', admin.RelatedOnlyFieldListFilter),)
+    list_display = ('title', 'duration', 'status')
+    list_filter = (('uploader', admin.RelatedOnlyFieldListFilter), 'status')
 
     class Media:
         js = ('common/admin/js/asset_source.js',)

@@ -9,7 +9,7 @@ from django.conf import settings
 from huey.contrib import djhuey
 from django_redis import get_redis_connection
 
-from autodj.models import AudioAsset
+from autodj.models import AudioAsset, Playlist
 from carb import constants
 from services.services import ZoomService
 
@@ -27,6 +27,8 @@ def generate_sample_assets(uploader=None):
     logger.info(f'Downloading {NUM_SAMPLE_ASSETS} sample assets from ccMixter')
     tracks_json = requests.get(CCMIXTER_API_URL, params=CCMIXTER_API_PARAMS).json()
     num_downloaded = 0
+
+    playlist, _ = Playlist.objects.get_or_create(name='ccMixter Sample Music')
 
     for track in tracks_json:
         try:
@@ -50,6 +52,7 @@ def generate_sample_assets(uploader=None):
             audio_asset = AudioAsset(uploader=uploader)
             audio_asset.file = mp3_path.removeprefix(f'{settings.MEDIA_ROOT}/')
             audio_asset.save()
+            audio_asset.playlists.add(playlist)
 
     logger.info(f'Done downloading {NUM_SAMPLE_ASSETS} sample assets from ccMixter')
 
