@@ -101,9 +101,10 @@ broadcasting scripts.
     - env file
     - docker build process + describing `./compose.sh` + `overrides.yml`
 1. ~~AutoDJ~~ - _done!_
-    - Playlists
+    - ~~Playlists~~
     - Ad rotators
-    - Weighting similar to [Tomato](https://github.com/dtcooper/tomato)
+    - ~~Weighting similar to [Tomato](https://github.com/dtcooper/tomato)~~ -
+      playlists are weighted, which should be enough
     - [select2](https://django-easy-select2.readthedocs.io/) AutoDJ requests in
       webui (add a new list redis that gets popped from
 1. ~~Finish Zoom broadcasting~~ - _done!_
