@@ -81,8 +81,9 @@ class StatusView(LoginRequiredMixin, TemplateView):
             return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        status = harbor.status(safe=True)
         return {**super().get_context_data(**kwargs),
-                'title': 'Stream Status (Realtime)', 'liquidsoap_status': harbor.status(safe=True)}
+                'title': 'Stream Status (Realtime)', 'liquidsoap_status': json.loads(status) if status else None}
 
 
 class BanListView(PermissionRequiredMixin, TemplateView):
@@ -191,6 +192,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
+        # TODO: Enforce harbor auth windows better
         current_auth = self.request.user.currently_harbor_authorized(should_log=False)
         return {
             **super().get_context_data(**kwargs),

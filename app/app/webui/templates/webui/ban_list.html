@@ -18,8 +18,7 @@
           <tr>
             <td>{{ username }}</td>
             <td>{{ banned_until }}</td>
-            {# TODO: implement left ban button #}
-            <td><button type="submit" class="bg-green" name="user_id" value="{{ user_id }}">Lift Ban Now</button></td>
+            <td><button type="submit" class="bg-green confirm-btn" data-confirm-text="Are you sure you want to lift the ban on {{ username }}?" name="user_id" value="{{ user_id }}">Lift Ban Now</button></td>
           </tr>
         {% endfor %}
       </tbody>

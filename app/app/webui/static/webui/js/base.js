@@ -46,4 +46,10 @@ $(function() {
         }
         isPlaying = !isPlaying
     })
+
+    $('.confirm-btn').click(function(event) {
+        if (!confirm($(this).data('confirm-text'))) {
+            event.preventDefault()
+        }
+    });
 })

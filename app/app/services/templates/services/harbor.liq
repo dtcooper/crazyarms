@@ -357,7 +357,7 @@ server.register(usage='status_pretty', description='Get status of sources in JSO
 
 # Push notifications of status (using the SSE service)
 def update_status()
-    # Do this asynchronously (100ms to give things time to settle.)
+    # Do this asynchronously (100ms to give things time to settle, ie DJs being kicked off, etc.)
     add_timeout(fast=false, 0.1, fun() -> begin
         status = status_json()
         log('update_status: hitting SSE service')

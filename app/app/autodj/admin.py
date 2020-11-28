@@ -190,6 +190,8 @@ class RotatorAssetAdmin(AutoDJStopsetRelatedAdmin):
     list_display = ('title', 'rotators_list_display', 'duration')
     list_filter = ('rotators', ('uploader', admin.RelatedOnlyFieldListFilter))
 
+    # TODO bulk upload view abstracted from AudioAssets
+
     def rotators_list_display(self, obj):
         return format_html_join(mark_safe(',<br>'), '{}', obj.rotators.values_list('name')) or None
     rotators_list_display.short_description = 'Rotators(s)'
@@ -240,8 +242,7 @@ class StopsetRotatorInline(admin.TabularInline):
     def get_formset(self, request, obj, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
         widget = formset.form.base_fields['rotator'].widget
-        widget.can_add_related = False
-        widget.can_change_related = False
+        widget.can_add_related = widget.can_change_related = False
         return formset
 
 

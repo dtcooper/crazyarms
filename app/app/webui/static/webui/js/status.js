@@ -38,9 +38,10 @@ $(function() {
     var $status = $('#liquidsoap-status')
 
     function updateTemplate(data) {
-        var data = JSON.parse(data)
+        data = JSON.parse(data)
+        console.log(data)
         if (data) {
-            var context = $.extend(JSON.parse(data), perms)
+            var context = $.extend(data, perms)
             $status.html(template(context))
         } else {
             $status.html('<p class="error">The harbor appears to be down. Please check the server logs or again later.</p>')

@@ -27,8 +27,7 @@
       <br>
       <form method="post">
         {% csrf_token %}
-        {# TODO generic javascript for confirm dialog, backport to status.html #}
-        <button type="submit" class="bg-orangered" name="stop_zoom" value="1">
+        <button type="submit" class="bg-orangered" data-confirm-text="Are you sure you want to stop the current Zoom broadcast?" name="stop_zoom" value="1">
           <u><b>Click here to END
             {% if zoom_belongs_to_current_user %}your{% else %}{{ zoom_user.get_full_name }}'s{% endif %}
             current Zoom Broadcast</b></u>
