@@ -39,7 +39,6 @@ $(function() {
 
     function updateTemplate(data) {
         data = JSON.parse(data)
-        console.log(data)
         if (data) {
             var context = $.extend(data, perms)
             $status.html(template(context))
