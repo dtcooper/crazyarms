@@ -231,10 +231,10 @@ add_skip_command_carb(prerecord)
             url = '#{API_PREFIX}next-track/'
             let ((_, status_code, _), _, response) = http.get(url, headers=API_HEADERS)
             if status_code == 200 then
-                if list.assoc(default=false, 'has_audio_asset', of_json(default=[('_', false)], response)) then
-                    audio_asset_uri = list.assoc(default='', 'audio_asset_uri', of_json(default=[('_', '')], response))
-                    log('autodj: selected URI #{audio_asset_uri}')
-                    [request.create(audio_asset_uri)]
+                if list.assoc(default=false, 'has_asset', of_json(default=[('_', false)], response)) then
+                    asset_uri = list.assoc(default='', 'asset_uri', of_json(default=[('_', '')], response))
+                    log('autodj: selected URI #{asset_uri}')
+                    [request.create(asset_uri)]
                 else
                     log('ERROR: autodj returned no track')
                     []

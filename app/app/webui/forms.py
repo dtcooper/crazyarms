@@ -16,7 +16,7 @@ from constance import config
 from common.models import User
 from services import init_services
 
-from .tasks import generate_sample_audio_assets, generate_sample_stopsets, NUM_SAMPLE_ASSETS
+from .tasks import preload_sample_audio_assets, preload_sample_stopsets, NUM_SAMPLE_ASSETS
 
 
 class FirstRunForm(UserCreationForm):
@@ -60,8 +60,8 @@ class FirstRunForm(UserCreationForm):
             config.ICECAST_RELAY_PASSWORD = self.random_password()
 
         if self.cleaned_data['generate_sample_assets']:
-            generate_sample_audio_assets(uploader=user)
-            generate_sample_stopsets(uploader=user)
+            preload_sample_audio_assets(uploader=user)
+            preload_sample_stopsets(uploader=user)
 
         init_services(restart_services=True)
 

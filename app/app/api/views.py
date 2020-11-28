@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from constance import config
 
-from autodj.models import AudioAsset
+from autodj.models import AudioAsset, RotatorAsset
 from common.models import User
 
 
@@ -84,8 +84,18 @@ class NextTrackAPIView(APIView):
     def get(self, request):
         response = {'has_asset': False}
         if config.AUTODJ_ENABLED:
-            audio_asset = AudioAsset.get_next_for_autodj()
-            if audio_asset:
-                asset_uri = f'annotate:audio_asset_id="{audio_asset.id}":file://{audio_asset.file.path}'
-                response.update({'has_audio_asset': True, 'audio_asset_uri': asset_uri})
+            rotator_asset = None
+
+            if config.AUTODJ_STOPSETS_ENABLED:
+                # Will return None if we're not currently playing through a stopset
+                rotator_asset = RotatorAsset.get_next_for_autodj()
+                if rotator_asset:
+                    asset_uri = f'annotate:rotator_asset_id="{rotator_asset.id}":file://{rotator_asset.file.path}'
+                    response.update({'has_asset': True, 'asset_uri': asset_uri})
+
+            if not rotator_asset:
+                audio_asset = AudioAsset.get_next_for_autodj()
+                if audio_asset:
+                    asset_uri = f'annotate:audio_asset_id="{audio_asset.id}":file://{audio_asset.file.path}'
+                    response.update({'has_asset': True, 'asset_uri': asset_uri})
         return response

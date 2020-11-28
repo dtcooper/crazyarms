@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group
-from django.utils.html import format_html
 
 from constance import config
 from constance import admin as constance_admin

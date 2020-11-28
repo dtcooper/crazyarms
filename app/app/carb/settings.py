@@ -171,8 +171,9 @@ HUEY = {
 SHELL_PLUS_IMPORTS = [
     'from constance import config',
     'from django_redis import get_redis_connection',
+    'from carb import constants',
     'from gcal.tasks import sync_google_calendar_api',
-    'from webui.tasks import generate_sample_assets, stop_zoom_broadcast',
+    'from webui.tasks import preload_sample_audio_assets, preload_sample_stopsets, stop_zoom_broadcast',
     'from broadcast.tasks import play_broadcast',
     'from common.tasks import asset_download_external_url',
     'from services.tasks import purge_playout_log_entries',

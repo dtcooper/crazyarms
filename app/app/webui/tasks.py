@@ -28,7 +28,7 @@ CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limi
 
 
 @djhuey.db_task()
-def generate_sample_stopsets(uploader=None):
+def preload_sample_stopsets(uploader=None):
     soundcloud_dir = f'{settings.MEDIA_ROOT}/stopset-sample'
     logger.info("Download rotator assets from SoundCloud (BMIR) using youtube-dl")
 
@@ -82,7 +82,7 @@ def generate_sample_stopsets(uploader=None):
 
 
 @djhuey.db_task()
-def generate_sample_audio_assets(uploader=None):
+def preload_sample_audio_assets(uploader=None):
     logger.info(f'Downloading {NUM_SAMPLE_ASSETS} sample audio assets from ccMixter')
     tracks_json = requests.get(CCMIXTER_API_URL, params=CCMIXTER_API_PARAMS).json()
     ccmixer_dir = f'{settings.MEDIA_ROOT}/ccmixter-sample'

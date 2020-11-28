@@ -5,5 +5,7 @@ CACHE_KEY_HARBOR_CONFIG_CONTEXT = 'harbor:config-context'
 CACHE_KEY_HARBOR_BAN_PREFIX = 'harbor:ban:'  # + user.id
 CACHE_KEY_AUTODJ_NO_REPEAT_IDS = 'autodj:no-repeat-ids'
 CACHE_KEY_AUTODJ_NO_REPEAT_ARTISTS = 'autodj:no-repeat-artists'
+CACHE_KEY_AUTODJ_CURRENT_STOPSET = 'autodj:current-stopset'
+CACHE_KEY_AUTODJ_STOPSET_LAST_FINISHED_AT = 'autodj:stopset-last-finished-at'
 REDIS_KEY_ROOM_INFO = 'zoom-runner:room-info'
 REDIS_KEY_LIQUIDSOAP_STATUS = 'liquidsoap:status'
