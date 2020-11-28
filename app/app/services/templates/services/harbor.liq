@@ -18,7 +18,6 @@ LIVE_DJ_KICKOFF_INTERVAL = 5.
 HARBOR_PORT = 8001
 MAX = 10.
 MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liqval }})
-REDIS_KEY = 'liquidsoap:status'
 {% if config.AUTODJ_ENABLED %}
     REQUEST_QUEUE_LENGTH = 45.
     REQUEST_RETRY_DELAY = 5.
@@ -346,7 +345,7 @@ def status_json()
     skippable_sources = json_of(compact=true, !skippable_sources)
     dj_harbor_source = json_of(compact=true, source.id(dj_harbor))
     metadata = json_of(compact=true, !current_metadata)
-    server_info = json_of_mixed_types(floats=[('start_time', start_time)], strs=[('version', liquidsoap.version)])
+    server_info = json_of(compact=true, [('start_time', start_time)])
 
     '{"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
         ^ '"skippable_sources":#{skippable_sources},"timed_sources":#{timed_sources},"metadata":#{metadata},'
@@ -361,12 +360,7 @@ def update_status()
     # Do this asynchronously (100ms to give things time to settle.)
     add_timeout(fast=false, 0.1, fun() -> begin
         status = status_json()
-        cmd = 'redis-cli -h redis set #{string.quote(REDIS_KEY)} "$STATUS"'
-        log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')
-        if not test_process(env=[('STATUS', status)], cmd) then
-            log.severe('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd} / json = #{status})')
-        end
-        log('update_status: hitting SSE service (step 2/2)')
+        log('update_status: hitting SSE service')
         let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=status)
         if status_code != 204 then
             log.severe('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')

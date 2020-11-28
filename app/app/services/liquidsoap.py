@@ -34,16 +34,6 @@ class _Liquidsoap:
                 return 'unknown'
         return self._version
 
-    def status(self, *args, **kwargs):
-        # Use cached value for harbor
-        status = None
-        if self.host == 'harbor':
-            redis = get_redis_connection()
-            status = redis.get(constants.REDIS_KEY_LIQUIDSOAP_STATUS)
-        if status is None:
-            status = self.execute('status', *args, **kwargs)
-        return json.loads(status) if status is not None else None
-
     def execute(self, command, arg=None, splitlines=None, safe=False):
         if arg is not None:
             command += f' {arg}'
@@ -71,7 +61,7 @@ class _Liquidsoap:
 
     def __getattr__(self, command):
         command = command.replace('__', '.')
-        return lambda arg=None, splitlines=None: self.execute(command, arg, splitlines)
+        return lambda arg=None, splitlines=None, safe=False: self.execute(command, arg, splitlines, safe)
 
 
 class _UpstreamGetter:

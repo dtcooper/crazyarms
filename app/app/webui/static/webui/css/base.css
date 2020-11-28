@@ -39,6 +39,7 @@ input[type=text], input[type=password], input[type=email] { width: 100%; }
 .first-td-right th:first-child:not(:only-child) {
     text-align: right;
 }
+.form-table th { width: 25%; }
 
 .boot-btn {
   margin: 2px 0;

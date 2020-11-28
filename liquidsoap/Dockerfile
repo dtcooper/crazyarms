@@ -15,7 +15,6 @@ RUN apt-get update \
         # Do we need youtube-dl?
 #        python3 \
 #        python3-pip \
-        redis-tools \
         sox \
         supervisor \
         wget \

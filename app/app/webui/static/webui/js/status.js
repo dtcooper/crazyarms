@@ -38,8 +38,13 @@ $(function() {
     var $status = $('#liquidsoap-status')
 
     function updateTemplate(data) {
-        var context = $.extend(JSON.parse(data), perms)
-        $status.html(template(context))
+        var data = JSON.parse(data)
+        if (data) {
+            var context = $.extend(JSON.parse(data), perms)
+            $status.html(template(context))
+        } else {
+            $status.html('<p class="error">The harbor appears to be down. Please check the server logs or again later.</p>')
+        }
         updateTimers()
     }
     updateTemplate($('#liquidsoap-status-json').text())
