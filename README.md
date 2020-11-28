@@ -102,7 +102,7 @@ broadcasting scripts.
     - docker build process + describing `./compose.sh` + `overrides.yml`
 1. ~~AutoDJ~~ - _done!_
     - ~~Playlists~~
-    - Ad rotators
+    - ~~Ad rotators + stopsets~~
     - ~~Weighting similar to [Tomato](https://github.com/dtcooper/tomato)~~ -
       playlists are weighted, which should be enough
     - [select2](https://django-easy-select2.readthedocs.io/) AutoDJ requests in
