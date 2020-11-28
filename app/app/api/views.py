@@ -90,6 +90,7 @@ class NextTrackAPIView(APIView):
                 # Will return None if we're not currently playing through a stopset
                 rotator_asset = RotatorAsset.get_next_for_autodj()
                 if rotator_asset:
+                    # TODO this annotation is unused
                     asset_uri = f'annotate:rotator_asset_id="{rotator_asset.id}":file://{rotator_asset.file.path}'
                     response.update({'has_asset': True, 'asset_uri': asset_uri})
 
