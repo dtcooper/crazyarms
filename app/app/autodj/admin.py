@@ -12,7 +12,7 @@ from constance import config
 
 from common.admin import AudioAssetDownloadableAdminBase
 
-from .forms import AudioAssetCreateForm, AudioAssetUploadForm, PlaylistActionForm
+from .forms import AudioAssetCreateForm, AudioAssetUploadForm, PlaylistActionForm, RotatorActionForm
 from .models import AudioAsset, Playlist, Rotator, RotatorAsset, Stopset, StopsetRotator
 
 
@@ -81,7 +81,7 @@ class AudioAssetAdmin(AudioAssetDownloadableAdminBase, AudoDJModelAdmin):
     list_filter = ('playlists',) + AudioAssetDownloadableAdminBase.list_filter
 
     def playlists_list_display(self, obj):
-        return format_html_join(mark_safe(',<br>'), '{}', obj.playlists.values_list('name'))
+        return format_html_join(mark_safe(',<br>'), '{}', obj.playlists.values_list('name')) or None
     playlists_list_display.short_description = 'Playlist(s)'
 
     def add_playlist_action(self, request, queryset):
@@ -181,10 +181,42 @@ class RotatorInline(admin.StackedInline):
 
 class RotatorAssetAdmin(AutoDJStopsetRelatedAdmin):
     inlines = [RotatorInline]
+    action_form = RotatorActionForm
+    actions = ('add_rotator_action', 'remove_rotator_action')
     add_fields = ('title', 'file')
     change_fields = ('title', 'file', 'audio_player_html', 'duration', 'uploader')
     change_readonly_fields = ('file', 'audio_player_html', 'duration', 'uploader')
-    list_display = ('title', 'duration')
+    search_fields = ('title',)
+    list_display = ('title', 'rotators_list_display', 'duration')
+    list_filter = ('rotators', ('uploader', admin.RelatedOnlyFieldListFilter))
+
+    def rotators_list_display(self, obj):
+        return format_html_join(mark_safe(',<br>'), '{}', obj.rotators.values_list('name')) or None
+    rotators_list_display.short_description = 'Rotators(s)'
+
+    def add_rotator_action(self, request, queryset):
+        rotator_id = request.POST.get('rotator')
+        if rotator_id:
+            rotator = Rotator.objects.get(id=rotator_id)
+            for rotator_asset in queryset:
+                rotator_asset.rotators.add(rotator)
+            self.message_user(request, f'Rotator assets were added to rotator {rotator.name}.', messages.SUCCESS)
+        else:
+            self.message_user(
+                request, 'You must select a rotator to add rotator assets to.', messages.WARNING)
+    add_rotator_action.short_description = 'Add to rotator'
+
+    def remove_rotator_action(self, request, queryset):
+        rotator_id = request.POST.get('rotator')
+        if rotator_id:
+            rotator = Rotator.objects.get(id=rotator_id)
+            for rotator_asset in queryset:
+                rotator_asset.rotators.remove(rotator)
+            self.message_user(request, f'Rotator assets were removed from rotator {rotator.name}.', messages.SUCCESS)
+        else:
+            self.message_user(
+                request, 'You must select a rotator to remove rotator assets from.', messages.WARNING)
+    remove_rotator_action.short_description = 'Delete from rotator'
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -217,7 +249,12 @@ class StopsetAdmin(AutoDJStopsetRelatedAdmin):
     inlines = (StopsetRotatorInline,)
     search_fields = ('name',)
     fields = ('name', 'is_active', 'weight')
-    list_display = ('name', 'is_active', 'weight')
+    list_display = ('name', 'stopset_rotators_list_display', 'is_active', 'weight')
+
+    def stopset_rotators_list_display(self, obj):
+        rotators = StopsetRotator.objects.filter(stopset=obj).values_list('rotator__name', flat=True)
+        return format_html_join(mark_safe('<br>'), '{}. {}', enumerate(rotators, 1)) or None
+    stopset_rotators_list_display.short_description = 'Rotators(s)'
 
 
 admin.site.register(Playlist, PlaylistAdmin)

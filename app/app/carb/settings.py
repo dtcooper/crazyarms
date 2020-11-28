@@ -168,6 +168,7 @@ HUEY = {
     # 'connection_pool': ConnectionPool(host='redis', max_connections=5),
 }
 
+# XXX debug
 SHELL_PLUS_IMPORTS = [
     'from constance import config',
     'from django_redis import get_redis_connection',
