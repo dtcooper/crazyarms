@@ -16,7 +16,7 @@ from constance import config
 from common.models import User
 from services import init_services
 
-from .tasks import generate_sample_assets, NUM_SAMPLE_ASSETS
+from .tasks import generate_sample_audio_assets, generate_sample_stopsets, NUM_SAMPLE_ASSETS
 
 
 class FirstRunForm(UserCreationForm):
@@ -28,9 +28,10 @@ class FirstRunForm(UserCreationForm):
     generate_sample_assets = forms.BooleanField(
         label='Preload AutoDJ', required=False,
         widget=forms.Select(choices=((False, 'No'), (True, 'Yes (this may take a while)'))),
-        help_text=mark_safe(f'Preload {NUM_SAMPLE_ASSETS} of this month\'s most popular tracks from '
-                            '<a href="http://ccmixter.org/" target="_blank">ccMixter</a> to kick start music for the '
-                            'AutoDJ. (Creative Commons licensed)'))
+        help_text=mark_safe('Preload AutoDJ with ADs, PSDs and station IDs from <a href="https://en.wikipedia.org/wiki/'
+                            f'BMIR" target="_blank">BMIR</a> and download {NUM_SAMPLE_ASSETS} of this month\'s most '
+                            'popular tracks from <a href="http://ccmixter.org/" target="_blank">ccMixter</a> to kick '
+                            'start your station or demo Crazy Arms Radio Backend. (Creative Commons licensed)'))
     station_name = forms.CharField(label='Station Name', help_text='The name of your radio station.')
 
     def __init__(self, *args, **kwargs):
@@ -59,7 +60,8 @@ class FirstRunForm(UserCreationForm):
             config.ICECAST_RELAY_PASSWORD = self.random_password()
 
         if self.cleaned_data['generate_sample_assets']:
-            generate_sample_assets(uploader=user)
+            generate_sample_audio_assets(uploader=user)
+            generate_sample_stopsets(uploader=user)
 
         init_services(restart_services=True)
 

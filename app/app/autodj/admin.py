@@ -13,21 +13,51 @@ from constance import config
 from common.admin import AudioAssetDownloadableAdminBase
 
 from .forms import AudioAssetCreateForm, AudioAssetUploadForm, PlaylistActionForm
-from .models import AudioAsset, Playlist, RotatorAsset
+from .models import AudioAsset, Playlist, Rotator, RotatorAsset, Stopset, StopsetRotator
 
 
-class PlaylistAdmin(admin.ModelAdmin):
+class RemoveFilterHorizontalFromPopupMixin:
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if request.GET.get('_popup'):
+            for field_name in self.filter_horizontal:
+                fields.remove(field_name)
+        return fields
+
+
+class AudoDJModelAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return config.AUTODJ_ENABLED and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return config.AUTODJ_ENABLED and super().has_change_permission(request, obj=obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return config.AUTODJ_ENABLED and super().has_delete_permission(request, obj=obj)
+
+    def has_view_permission(self, request, obj=None):
+        return config.AUTODJ_ENABLED and super().has_view_permission(request, obj=obj)
+
+
+class AutoDJStopsetRelatedAdmin(AudoDJModelAdmin):
+    def has_add_permission(self, request):
+        return config.AUTODJ_STOPSETS_ENABLED and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return config.AUTODJ_STOPSETS_ENABLED and super().has_change_permission(request, obj=obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return config.AUTODJ_STOPSETS_ENABLED and super().has_delete_permission(request, obj=obj)
+
+    def has_view_permission(self, request, obj=None):
+        return config.AUTODJ_STOPSETS_ENABLED and super().has_view_permission(request, obj=obj)
+
+
+class PlaylistAdmin(RemoveFilterHorizontalFromPopupMixin, AudoDJModelAdmin):
     search_fields = ('name',)
     fields = ('name', 'is_active', 'weight', 'audio_assets')
     list_display = ('name', 'is_active', 'weight', 'audio_assets_list_display')
     filter_horizontal = ('audio_assets',)
-
-    def get_fields(self, request, obj=None):
-        fields = list(super().get_fields(request, obj))
-        if request.GET.get('_popup'):
-            # A bit messy to include this in the popup window
-            fields.remove('audio_assets')
-        return fields
 
     def audio_assets_list_display(self, obj):
         return obj.audio_assets.count()
@@ -36,13 +66,12 @@ class PlaylistAdmin(admin.ModelAdmin):
 
 class PlaylistInline(admin.StackedInline):
     model = Playlist.audio_assets.through
-    can_delete = False
     verbose_name = 'playlist'
     verbose_name_plural = 'playlists'
     extra = 1
 
 
-class AudioAssetAdmin(AudioAssetDownloadableAdminBase):
+class AudioAssetAdmin(AudioAssetDownloadableAdminBase, AudoDJModelAdmin):
     inlines = (PlaylistInline,)
     action_form = PlaylistActionForm
     create_form = AudioAssetCreateForm
@@ -82,18 +111,6 @@ class AudioAssetAdmin(AudioAssetDownloadableAdminBase):
     def get_urls(self):
         return [path('upload/', self.admin_site.admin_view(self.upload_view),
                 name='autodj_audioasset_upload')] + super().get_urls()
-
-    def has_add_permission(self, request):
-        return config.AUTODJ_ENABLED and super().has_add_permission(request)
-
-    def has_change_permission(self, request, obj=None):
-        return config.AUTODJ_ENABLED and super().has_change_permission(request, obj=obj)
-
-    def has_delete_permission(self, request, obj=None):
-        return config.AUTODJ_ENABLED and super().has_delete_permission(request, obj=obj)
-
-    def has_view_permission(self, request, obj=None):
-        return config.AUTODJ_ENABLED and super().has_view_permission(request, obj=obj)
 
     def upload_view(self, request):
         if not self.has_add_permission(request):
@@ -145,10 +162,29 @@ class AudioAssetAdmin(AudioAssetDownloadableAdminBase):
         })
 
 
-class RotatorAssetAdmin(admin.ModelAdmin):
+class RotatorAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJStopsetRelatedAdmin):
+    fields = ('name', 'rotator_assets')
+    filter_horizontal = ('rotator_assets',)
+    list_display = ('name', 'rotator_assets_list_display')
+
+    def rotator_assets_list_display(self, obj):
+        return obj.rotator_assets.count()
+    rotator_assets_list_display.short_description = 'Number of rotator assets(s)'
+
+
+class RotatorInline(admin.StackedInline):
+    model = Rotator.rotator_assets.through
+    verbose_name = 'rotator'
+    verbose_name_plural = 'rotators'
+    extra = 1
+
+
+class RotatorAssetAdmin(AutoDJStopsetRelatedAdmin):
+    inlines = [RotatorInline]
     add_fields = ('title', 'file')
     change_fields = ('title', 'file', 'audio_player_html', 'duration', 'uploader')
     change_readonly_fields = ('file', 'audio_player_html', 'duration', 'uploader')
+    list_display = ('title', 'duration')
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -162,6 +198,30 @@ class RotatorAssetAdmin(admin.ModelAdmin):
         return () if obj is None else self.change_readonly_fields
 
 
+class StopsetRotatorInline(admin.TabularInline):
+    min_num = 1
+    extra = 0
+    model = StopsetRotator
+    verbose_name = 'rotator entry'
+    verbose_name_plural = 'rotator entries'
+
+    def get_formset(self, request, obj, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        widget = formset.form.base_fields['rotator'].widget
+        widget.can_add_related = False
+        widget.can_change_related = False
+        return formset
+
+
+class StopsetAdmin(AutoDJStopsetRelatedAdmin):
+    inlines = (StopsetRotatorInline,)
+    search_fields = ('name',)
+    fields = ('name', 'is_active', 'weight')
+    list_display = ('name', 'is_active', 'weight')
+
+
 admin.site.register(Playlist, PlaylistAdmin)
 admin.site.register(AudioAsset, AudioAssetAdmin)
+admin.site.register(Rotator, RotatorAdmin)
 admin.site.register(RotatorAsset, RotatorAssetAdmin)
+admin.site.register(Stopset, StopsetAdmin)

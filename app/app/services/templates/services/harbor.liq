@@ -18,7 +18,7 @@ LIVE_DJ_KICKOFF_INTERVAL = 5.
 HARBOR_PORT = 8001
 MAX = 10.
 MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liqval }})
-REDIS_KEY = 'liquidsoap:source-status'
+REDIS_KEY = 'liquidsoap:status'
 {% if config.AUTODJ_ENABLED %}
     REQUEST_QUEUE_LENGTH = 45.
     REQUEST_RETRY_DELAY = 5.
@@ -361,7 +361,7 @@ def update_status()
     # Do this asynchronously (100ms to give things time to settle.)
     add_timeout(fast=false, 0.1, fun() -> begin
         status = status_json()
-        cmd = 'redis-cli -h redis set "liquidsoap:status" "$STATUS"'
+        cmd = 'redis-cli -h redis set #{string.quote(REDIS_KEY)} "$STATUS"'
         log('update_status: updating redis key: #{REDIS_KEY} (step 1/2)')
         if not test_process(env=[('STATUS', status)], cmd) then
             log.severe('ERROR: failed to update redis key: #{REDIS_KEY} (cmd = #{cmd} / json = #{status})')

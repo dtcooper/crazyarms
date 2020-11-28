@@ -177,7 +177,7 @@ class AudioAssetBase(TimestampedModel):
     UPLOAD_DIR = 'assets'
     TITLE_FIELDS = ('title',)
 
-    title = TruncatingCharField('title', max_length=255, blank=True,
+    title = TruncatingCharField('title', max_length=255, blank=True, db_index=True,
                                 help_text="If left empty, a title will be generated from the file's metadata.")
     uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
     file = models.FileField('audio file', upload_to=audio_asset_file_upload_to)
@@ -185,6 +185,7 @@ class AudioAssetBase(TimestampedModel):
 
     class Meta:
         abstract = True
+        ordering = ('title', 'id')
 
     def audio_player_html(self):
         if self.file:

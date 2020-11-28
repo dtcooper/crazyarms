@@ -25,18 +25,22 @@ YDL_PKG = 'https://github.com/blackjack4494/yt-dlc/archive/master.zip'
 YDL_CMD = 'youtube-dlc'
 
 
+def confirm_youtube_dl():
+    # Upgrade / install youtube-dl once per day
+    if not cache.get(constants.CACHE_KEY_YTDL_UP2DATE) or not shutil.which(YDL_CMD):
+        logger.info('youtube-dl: not updated in last 24 hours. Updating.')
+        subprocess.run(['pip', 'install', '--no-cache-dir', '--upgrade', YDL_PKG], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cache.set(constants.CACHE_KEY_YTDL_UP2DATE, True, timeout=60 * 60 * 24)
+
+
 @djhuey.db_task(context=True, retries=3, retry_delay=5)
 def asset_download_external_url(asset, url, title='', task=None):
     asset_cls = type(asset)
     asset_cls.objects.filter(id=asset.id).update(status=asset_cls.Status.RUNNING)
 
     try:
-        # Upgrade / install youtube-dl once per day
-        if not cache.get(constants.CACHE_KEY_YTDL_UP2DATE) or not shutil.which(YDL_CMD):
-            logger.info('youtube-dl: not updated in last 24 hours. Updating.')
-            subprocess.run(['pip', 'install', '--no-cache-dir', '--upgrade', YDL_PKG], check=True,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            cache.set(constants.CACHE_KEY_YTDL_UP2DATE, True, timeout=60 * 60 * 24)
+        confirm_youtube_dl()
 
         unique_filename_suffix = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
         args = [YDL_CMD, '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',

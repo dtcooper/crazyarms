@@ -4,6 +4,8 @@ from threading import Lock
 
 from django_redis import get_redis_connection
 
+from carb import constants
+
 END_PREFIX = b'\r\nEND\r\n'
 
 
@@ -37,7 +39,7 @@ class _Liquidsoap:
         status = None
         if self.host == 'harbor':
             redis = get_redis_connection()
-            status = redis.get('liquidsoap:status')
+            status = redis.get(constants.REDIS_KEY_LIQUIDSOAP_STATUS)
         if status is None:
             status = self.execute('status', *args, **kwargs)
         return json.loads(status) if status is not None else None

@@ -165,17 +165,37 @@ class AudioAsset(AudioAssetDownloadbleBase):
         verbose_name_plural = 'audio assets'
 
 
-class Playlist(models.Model):
+class PlaylistStopsetBase(models.Model):
     name = models.CharField('name', max_length=100, unique=True)
     weight = models.FloatField('random weight', validators=[MinValueValidator(0.0)], default=1., help_text='The weight '
-                               "(ie selection bias) for how likely random selection from this playlist occurs, eg "
-                               "'1.0' is just as likely as all others, '2.0' is 2x as likely, '3.0' is 3x as likely, "
-                               "'0.5' half as likely, and so on. If unsure, leave as '1.0'.")
-    is_active = models.BooleanField('currently active', default=True, help_text='Whether tracks from this playlist '
-                                    'will are be selected. You may want to enable special playlists at certain times, '
-                                    'for example during the holidays.')
+                               '(ie selection bias) for how likely random selection from this playlist/stopset occurs, '
+                               "eg '1.0' is just as likely as all others, '2.0' is 2x as likely, '3.0' is 3x as "
+                               "likely, '0.5' half as likely, and so on. If unsure, leave as '1.0'.")
+    is_active = models.BooleanField('currently active', default=True, help_text='Whether tracks from this playlist/'
+                                    'stopset will be selected. You may want to enable special playlists/stopsets at '
+                                    'certain times, for example during the holidays.')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        abstract = True
+        ordering = ('name',)
+
+
+class Playlist(PlaylistStopsetBase):
     audio_assets = models.ManyToManyField(AudioAsset, related_name='playlists', db_index=True,
                                           verbose_name='audio assets', blank=True)
+
+
+class RotatorAsset(AudioAssetBase):
+    UNNAMED_TRACK = 'Untitled Asset'
+
+
+class Rotator(models.Model):
+    name = models.CharField('name', max_length=100, unique=True)
+    rotator_assets = models.ManyToManyField(RotatorAsset, related_name='rotators', db_index=True,
+                                            verbose_name='rotator assets', blank=True)
 
     class Meta:
         ordering = ('name',)
@@ -184,11 +204,31 @@ class Playlist(models.Model):
         return self.name
 
 
+class Stopset(PlaylistStopsetBase):
+    pass
+
+
+class StopsetRotator(models.Model):
+    rotator = models.ForeignKey(Rotator, on_delete=models.CASCADE)
+    stopset = models.ForeignKey(Stopset, on_delete=models.CASCADE)
+
+    def __str__(self):
+        s = f'{self.rotator.name} in {self.stopset.name}'
+        if self.id:
+            num = StopsetRotator.objects.filter(stopset=self.stopset, id__lte=self.id).count()
+            s = f'Entry #{num}: {s}'
+        return s
+
+    class Meta:
+        verbose_name = 'rotator in stop set relationship'
+        verbose_name_plural = 'rotator in stop set relationships'
+        ordering = ('id',)
+
+
 # For prettier admin text displays
 Playlist.audio_assets.through.__str__ = lambda self: f'{self.audioasset.title} in playlist {self.playlist}'
 Playlist.audio_assets.through._meta.verbose_name = 'audio asset in playlist relationship'
 Playlist.audio_assets.through._meta.verbose_name_plural = 'audio asset in playlist relationships'
-
-
-class RotatorAsset(AudioAssetBase):
-    UNNAMED_TRACK = 'Untitled Asset'
+Rotator.rotator_assets.through.__str__ = lambda self: f'{self.rotatorasset.title} in rotator {self.rotator}'
+Rotator.rotator_assets.through._meta.verbose_name = 'rotator asset in rotator relationship'
+Rotator.rotator_assets.through._meta.verbose_name_plural = 'rotator asset in rotator relationship'

@@ -2,7 +2,7 @@
 
 # Constants
 ROOM_INFO_KEY='zoom-runner:room-info'
-SLEEP_INTERVAL=3
+SLEEP_INTERVAL=2.5
 MEETING_USER='Broadcast+Bot'
 ROOT_WINDOW_NAME='Zoom Cloud Meetings'
 AUDIO_CONFERENCE_OPTIONS_WINDOW_NAME='audio conference options'
