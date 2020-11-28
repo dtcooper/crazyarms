@@ -91,6 +91,7 @@ class ServiceStatusAdminView(admin.site.AdminBaseContextMixin, TemplateView):
 
 class UpstreamServerAdmin(admin.ModelAdmin):
     list_display = ('name', '__str__', 'is_online')
+    exclude = ('telnet_port',)
 
     def is_online(self, obj):
         connected = False

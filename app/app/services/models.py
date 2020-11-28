@@ -17,24 +17,6 @@ class UpstreamServer(models.Model):
         HTTP = 'http', 'http'
         HTTPS = 'https', 'https (secure)'
 
-    class Meta:
-        ordering = ('id',)
-        unique_together = ('hostname', 'port', 'mount')
-
-    def __str__(self):
-        s = f'{self.protocol}://{self.username}@{self.hostname}:{self.port}/{self.mount} ({self.get_encoding_display()}'
-        if self.bitrate:
-            s += f' @ {self.bitrate} kbit/s'
-        return f'{s})'
-
-    def save(self, *args, **kwargs):
-        self.mount = self.mount.removeprefix('/')
-        return super().save(*args, **kwargs)
-
-    @cached_property
-    def telnet_port(self):
-        return 1234 + type(self).objects.filter(id__lt=self.id).count()
-
     name = models.SlugField('name', max_length=20, unique=True,
                             help_text='Unique codename to identify this upstream server.')
     hostname = models.CharField('hostname', max_length=255,
@@ -42,6 +24,7 @@ class UpstreamServer(models.Model):
     protocol = models.CharField('protocol', max_length=5, choices=Protocol.choices, default=Protocol.HTTP,
                                 help_text="The protocol for the server, if unsure it's likely http")
     port = models.PositiveSmallIntegerField('port', help_text='Port for this server, eg. 8000')
+    telnet_port = models.PositiveIntegerField()
     username = models.CharField('username', max_length=255, default='source')
     password = models.CharField('password', max_length=255)
     mount = models.CharField('mount point', max_length=255,
@@ -57,6 +40,32 @@ class UpstreamServer(models.Model):
             'Enter any additional arguments for the encoder here. Advanced use cases only, see the '
             '<a href="https://www.liquidsoap.info/doc-1.4.3/encoding_formats.html" target="_blank">Liquidsoap docs '
             'here</a> for more info. Leave empty or <code>null</code> for none.'))
+
+    class Meta:
+        ordering = ('id',)
+        unique_together = ('hostname', 'port', 'mount')
+
+    def __str__(self):
+        s = f'{self.protocol}://{self.username}@{self.hostname}:{self.port}/{self.mount} ({self.get_encoding_display()}'
+        if self.bitrate:
+            s += f' @ {self.bitrate} kbit/s'
+        return f'{s})'
+
+    def save(self, *args, **kwargs):
+        self.mount = self.mount.removeprefix('/')
+
+        if not self.telnet_port:
+            # Find a free port
+            port, used_ports = 1234, set(UpstreamServer.objects.values_list('telnet_port', flat=True))
+            while port in used_ports:
+                port += 1
+            self.telnet_port = port
+
+        return super().save(*args, **kwargs)
+
+    # @cached_property
+    # def telnet_port(self):
+    #     return 1234 + type(self).objects.filter(id__lt=self.id).count()
 
 
 class PlayoutLogEntry(models.Model):
