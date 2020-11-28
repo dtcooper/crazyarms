@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import pytz
 
@@ -96,6 +97,7 @@ class UpstreamServerAdmin(admin.ModelAdmin):
         message = 'Error: upstream failed to start (see upstream logs)'
         status = upstream(obj).status(safe=True)
         if status:
+            status = json.loads(status)
             connected = status['online']
             if connected:
                 uptime = timezone.now() - pytz.utc.localize(datetime.datetime.utcfromtimestamp(status['start_time']))

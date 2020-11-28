@@ -297,10 +297,11 @@ def status_boot(request):
 
 def status_skip(request):
     if request.method == 'POST':
-        status = harbor.status()
+        status = harbor.status(safe=True)
         if status is None:
             response = 'Invalid response from harbor'
         else:
+            status = json.loads(status)
             response = "You don't have permission to do that."
             skippable_sources = status['skippable_sources']
             if request.user.has_perm('broadcast.change_broadcast'):
