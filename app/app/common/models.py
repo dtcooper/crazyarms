@@ -58,7 +58,8 @@ class User(AbstractUser):
 
     is_staff = True  # All users can access admin site.
     modified = models.DateTimeField('last modified', auto_now=True)
-    email = models.EmailField('email address', unique=True)
+    email = models.EmailField('email address', unique=True, help_text='This is needed to match Google Calendar events '
+                                                                      'for calendar based harbor authorization.')
     harbor_auth = models.CharField('harbor access type', max_length=1,
                                    choices=HarborAuth.choices, default=HarborAuth.ALWAYS)
     timezone = models.CharField('timezone', choices=[

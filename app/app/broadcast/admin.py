@@ -25,6 +25,7 @@ class BroadcastAdmin(admin.ModelAdmin):
     fields = ('asset', 'scheduled_time', 'status')
     readonly_fields = ('status',)
     autocomplete_fields = ('asset',)
+    list_display = ('asset', 'scheduled_time', 'status')
 
     def has_change_permission(self, request, obj=None):
         return False

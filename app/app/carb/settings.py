@@ -220,7 +220,8 @@ CONSTANCE_CONFIG = OrderedDict((
                                       "can't connect to the harbor, ie the harbor failed to start.", 'file')),
     ('AUTODJ_ENABLED', (True, 'Whether or not to run an AutoDJ on the harbor.')),
     ('AUTODJ_STOPSETS_ENABLED', (False, 'Whether or not the AutoDJ plays stop sets (for ADs, PSAs, Station IDs, etc)')),
-    ('AUTODJ_STOPSETS_ONCE_PER_MINUTES', (20, 'How often a stop set should be played (in minutes)', 'positive_int')),
+    ('AUTODJ_STOPSETS_ONCE_PER_MINUTES', (20, mark_safe(
+        'How often a stop set should <em>approximately</em> be played (in minutes)'), 'positive_int')),
     ('AUTODJ_PLAYLISTS_ENABLED', (True, 'Whether or not the AutoDJ should use playlists')),
     ('AUTODJ_ANTI_REPEAT_ENABLED', (True, 'Whether or not the AutoDJ should attempt its anti-repeat algorithm. Note if '
                                           "you have too few tracks, this won't work.")),  # unneeded if artists+tracks=0

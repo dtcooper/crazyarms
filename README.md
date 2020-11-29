@@ -53,6 +53,10 @@ one is best to broadcast based on the rules you see on the status page.
 Scheduling of live DJs using Google Calendar. An invite to a calendar event means
 a DJ is authorized to play. Simple as that.
 
+Rather than re-invent the wheel, I chose Google Calendar because of its wide
+adoption and east of use &mdash; and implementation of recurring events.. Your
+web front-end can integrate with that, rather than a complex, custom API.
+
 ### Scheduled playout of long-format audio files, ie prerecorded shows.
 
 A major use case is taking long-format audio files (ie two hours) and scheduling
