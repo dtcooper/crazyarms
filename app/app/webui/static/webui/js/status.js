@@ -67,8 +67,6 @@ $(function() {
             }).fail(function() {
                 addMessage('error', 'An error occurred while skipping ' + sourceName)
             })
-        } else {
-            alert('Operation canceled.')
         }
     });
 
@@ -97,8 +95,6 @@ $(function() {
             }).fail(function() {
                 addMessage('error', 'An error occurred while banning ' + user)
             })
-        } else {
-            alert('Operation canceled.')
         }
     })
 })

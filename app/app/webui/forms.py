@@ -27,11 +27,11 @@ class FirstRunForm(UserCreationForm):
     email = forms.EmailField(label='Email Address')
     generate_sample_assets = forms.BooleanField(
         label='Preload AutoDJ', required=False,
-        widget=forms.Select(choices=((False, 'No'), (True, 'Yes (this may take a while)'))),
-        help_text=mark_safe('Preload AutoDJ with ADs, PSDs and station IDs from <a href="https://en.wikipedia.org/wiki/'
-                            f'BMIR" target="_blank">BMIR</a> and download {NUM_SAMPLE_ASSETS} of this month\'s most '
-                            'popular tracks from <a href="http://ccmixter.org/" target="_blank">ccMixter</a> to kick '
-                            'start your station or demo Crazy Arms Radio Backend. (Creative Commons licensed)'))
+        widget=forms.Select(choices=((False, 'No'), (True, 'Yes'))),
+        help_text=mark_safe('Preload the AutoDJ with ADs, PSDs and station IDs from <a href="https://en.wikipedia.org/'
+                            f'wiki/BMIR" target="_blank">BMIR</a> and download {NUM_SAMPLE_ASSETS} of this month\'s '
+                            'most popular tracks from <a href="http://ccmixter.org/" target="_blank">ccMixter</a> to '
+                            'kick start your station or to try out Crazy Arms. (Creative Commons licensed)'))
     station_name = forms.CharField(label='Station Name', help_text='The name of your radio station.')
 
     def __init__(self, *args, **kwargs):

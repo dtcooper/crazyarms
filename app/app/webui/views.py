@@ -44,7 +44,7 @@ class FirstRunView(SuccessMessageMixin, FormView):
     template_name = 'webui/form.html'
     form_class = FirstRunForm
     success_url = reverse_lazy('status')
-    success_message = ('Crazy Arms Radio Backend has successfully been setup! You can change any of '
+    success_message = ('Crazy Arms Radio has successfully been setup! You can change any of '
                        'the settings that you chose in the admin section.')
 
     def dispatch(self, request, *args, **kwargs):
@@ -63,8 +63,8 @@ class FirstRunView(SuccessMessageMixin, FormView):
         context.update({
             'station_name_override': 'Crazy Arms Radio Backend',
             'hide_nav': True,
-            'form_description': "Welcome to Crazy Arms Radio Backend! Since no account has been created, you'll need "
-                                'to create a new administrator and specify some settings below before proceeding.',
+            'form_description': "Welcome to Crazy Arms! Since no account has been created, you'll need to create "
+                                'a new administrator and specify some settings below before proceeding.',
             'submit_text': 'Run Initial Setup',
             'title': 'Initial Setup',
         })
