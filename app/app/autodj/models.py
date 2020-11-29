@@ -73,7 +73,7 @@ class AudioAsset(AudioAssetDownloadbleBase):
 
     @classmethod
     def process_anti_repeat_autodj(cls, audio_asset):
-        if config.AUTODJ_ANTI_REPEAT:
+        if config.AUTODJ_ANTI_REPEAT_ENABLED:
             for conf_amount, cache_key, attr in (
                 (config.AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT, constants.CACHE_KEY_AUTODJ_NO_REPEAT_IDS, 'id'),
                 (config.AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST, constants.CACHE_KEY_AUTODJ_NO_REPEAT_ARTISTS,
@@ -93,39 +93,43 @@ class AudioAsset(AudioAssetDownloadbleBase):
     def get_next_for_autodj(cls, run_with_playlist=True, run_no_repeat_artists=True, run_no_repeat_track_ids=True):
         audio_asset = playlist = None
 
-        if not config.AUTODJ_ANTI_REPEAT:
+        if not config.AUTODJ_ANTI_REPEAT_ENABLED:
             # If anti-repeat is enabled, we don't run these things
             run_no_repeat_artists = run_no_repeat_track_ids = False
+
         # Or if they're set to 0
         if run_no_repeat_artists and config.AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST <= 0:
             run_no_repeat_artists = False
         if run_no_repeat_track_ids and config.AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT <= 0:
             run_no_repeat_track_ids = False
 
-        # Only select from active playlists with at least one uploaded audio asset in them
-        playlists_with_assets = list(Playlist.objects.filter(
-            is_active=True, audio_assets__status=AudioAsset.Status.UPLOADED).distinct())
-        if run_with_playlist and not playlists_with_assets:
-            run_with_playlist = False
-
         queryset = cls.objects.filter(status=AudioAsset.Status.UPLOADED)
         if not queryset.exists():
             logger.warning('no assets exist, giving up early')
             return None
 
-        if run_with_playlist:
-            # Select a playlist at random, applying its weighting
-            playlists = list(playlists_with_assets)
-            playlist = random.choices(playlists, weights=[p.weight for p in playlists], k=1)[0]
-            queryset = queryset.filter(playlists=playlist)
+        if config.AUTODJ_PLAYLISTS_ENABLED:
+            # Only select from active playlists with at least one uploaded audio asset in them
+            playlists_with_assets = list(Playlist.objects.filter(
+                is_active=True, audio_assets__status=AudioAsset.Status.UPLOADED).distinct())
+            if run_with_playlist and not playlists_with_assets:
+                run_with_playlist = False
 
-        elif playlists_with_assets:
-            # Otherwise select from all playlists (this excludes assets not in playlists)
-            queryset = queryset.filter(playlists__in=playlists_with_assets)
+            if run_with_playlist:
+                # Select a playlist at random, applying its weighting
+                playlists = list(playlists_with_assets)
+                playlist = random.choices(playlists, weights=[p.weight for p in playlists], k=1)[0]
+                queryset = queryset.filter(playlists=playlist)
 
+            elif playlists_with_assets:
+                # Otherwise select from all playlists (this excludes assets not in playlists)
+                queryset = queryset.filter(playlists__in=playlists_with_assets)
+
+            else:
+                # If no playlists with assets exist, we don't filter by them
+                logger.warning('no playlist with assets exists, so not filtering by playlist')
         else:
-            # If no playlists with assets exist, we don't filter by them
-            logger.warning('no playlist with assets exists, so not filtering by playlist')
+            run_with_playlist = False
 
         if run_no_repeat_artists:
             # Exclude from repeated artists
@@ -151,7 +155,7 @@ class AudioAsset(AudioAssetDownloadbleBase):
         # There are if/elif clauses. We're recursing and we need to hit the base case
         if run_with_playlist:
             # First recurse, use all playlists instead of filtering by chosen one
-            logger.warning('no track found, attempting to run with all playlists')
+            logger.warning(f'no track found in {playlist}, attempting to run with all playlists')
             audio_asset = cls.get_next_for_autodj(run_with_playlist=False, run_no_repeat_artists=run_no_repeat_artists,
                                                   run_no_repeat_track_ids=run_no_repeat_track_ids)
 

@@ -33,7 +33,7 @@ if [ "$#" = 0 ]; then
                 GUNICORN_WORKERS="$(python -c 'import multiprocessing as m; print(max(round(m.cpu_count() * 1.5 + 1), 3))')"
             fi
 
-            exec gunicorn $GUNICORN_ARGS -b 0.0.0.0:8000 -w $GUNICORN_WORKERS --capture-output --access-logfile - carb.wsgi
+            exec gunicorn $GUNICORN_ARGS --forwarded-allow-ips '*' -b 0.0.0.0:8000 -w $GUNICORN_WORKERS --capture-output --access-logfile - carb.wsgi
         fi
     fi
 else

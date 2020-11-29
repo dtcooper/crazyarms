@@ -221,9 +221,9 @@ CONSTANCE_CONFIG = OrderedDict((
     ('AUTODJ_ENABLED', (True, 'Whether or not to run an AutoDJ on the harbor.')),
     ('AUTODJ_STOPSETS_ENABLED', (False, 'Whether or not the AutoDJ plays stop sets (for ADs, PSAs, Station IDs, etc)')),
     ('AUTODJ_STOPSETS_ONCE_PER_MINUTES', (20, 'How often a stop set should be played (in minutes)', 'positive_int')),
-    # TODO: create an PLAYLISTS_ENABLED feature, make sure to set it in sample assets huey task
-    ('AUTODJ_ANTI_REPEAT', (True, 'Whether or not the AutoDJ should attempt its anti-repeat algorithm. Note if you '
-                            "have too few tracks, this won't work.")),
+    ('AUTODJ_PLAYLISTS_ENABLED', (True, 'Whether or not the AutoDJ should use playlists')),
+    ('AUTODJ_ANTI_REPEAT_ENABLED', (True, 'Whether or not the AutoDJ should attempt its anti-repeat algorithm. Note if '
+                                          "you have too few tracks, this won't work.")),  # unneeded if artists+tracks=0
     ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
         (50, 'Number of tracks to avoid to avoid repeating (if possible). Set to 0 to disable.', 'positive_int')),
     ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST',
@@ -259,9 +259,9 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
                               'HARBOR_SWOOSH_AUDIO_FILE', 'HARBOR_TRANSITION_SECONDS',
                               'HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION', 'HARBOR_FAILSAFE_AUDIO_FILE',
                               'UPSTREAM_FAILSAFE_AUDIO_FILE')),
-    ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
-                              'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST', 'AUTODJ_STOPSETS_ENABLED',
-                              'AUTODJ_STOPSETS_ONCE_PER_MINUTES')),
+    ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT_ENABLED', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
+                              'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST', 'AUTODJ_PLAYLISTS_ENABLED',
+                              'AUTODJ_STOPSETS_ENABLED', 'AUTODJ_STOPSETS_ONCE_PER_MINUTES')),
     ('Externally Downloaded Audio Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),

@@ -59,6 +59,18 @@ class PlaylistAdmin(RemoveFilterHorizontalFromPopupMixin, AudoDJModelAdmin):
     list_display = ('name', 'is_active', 'weight', 'audio_assets_list_display')
     filter_horizontal = ('audio_assets',)
 
+    def has_add_permission(self, request):
+        return config.AUTODJ_PLAYLISTS_ENABLED and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return config.AUTODJ_PLAYLISTS_ENABLED and super().has_change_permission(request, obj=obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return config.AUTODJ_PLAYLISTS_ENABLED and super().has_delete_permission(request, obj=obj)
+
+    def has_view_permission(self, request, obj=None):
+        return config.AUTODJ_PLAYLISTS_ENABLED and super().has_view_permission(request, obj=obj)
+
     def audio_assets_list_display(self, obj):
         return obj.audio_assets.count()
     audio_assets_list_display.short_description = 'Number of audio assets(s)'
@@ -72,13 +84,36 @@ class PlaylistInline(admin.StackedInline):
 
 
 class AudioAssetAdmin(AudioAssetDownloadableAdminBase, AudoDJModelAdmin):
-    inlines = (PlaylistInline,)
-    action_form = PlaylistActionForm
+    playlist_inlines = (PlaylistInline,)
+    playlist_actions = ('add_playlist_action', 'remove_playlist_action')
+    playlist_action_form = PlaylistActionForm
     create_form = AudioAssetCreateForm
     # title gets swapped to include artist and album
     list_display = ('title', 'playlists_list_display', 'duration', 'status')
-    actions = ('add_playlist_action', 'remove_playlist_action')
     list_filter = ('playlists',) + AudioAssetDownloadableAdminBase.list_filter
+
+    @property
+    def action_form(self):
+        return self.playlist_action_form if config.AUTODJ_PLAYLISTS_ENABLED else super().action_form
+
+    @property
+    def actions(self):
+        return self.playlist_actions if config.AUTODJ_PLAYLISTS_ENABLED else super().actions
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not config.AUTODJ_PLAYLISTS_ENABLED:
+            list_display.remove('playlists_list_display')
+        return list_display
+
+    def get_list_filter(self, request):
+        list_filter = list(self.list_filter)
+        if not config.AUTODJ_PLAYLISTS_ENABLED:
+            list_filter.remove('playlists')
+        return list_filter
+
+    def get_inlines(self, request, obj):
+        return self.playlist_inlines if config.AUTODJ_PLAYLISTS_ENABLED else super().inlines
 
     def playlists_list_display(self, obj):
         return format_html_join(mark_safe(',<br>'), '{}', obj.playlists.values_list('name')) or None
