@@ -9,9 +9,9 @@ TABLE_NAME = {{ table_name|liqval }}
 
 is_shutting_down = ref false
 current_source_name = ref 'N/A'
-def log_event(~extras=[], ~type=EVENT_GENERAL, description)
+def log_event(~extras=[], ~type=EVENT_GENERAL, ~async=true, description)
     if not !is_shutting_down then
-        add_timeout(fast=false, 0., fun() -> begin
+        def log_event_func()
             log('Logging playout event (#{type}): #{description}')
 
             # Add description, active source and default event type
@@ -28,14 +28,21 @@ def log_event(~extras=[], ~type=EVENT_GENERAL, description)
             if not test_process(env=[('SQL', sql)], cmd) then
                 log("ERROR: couldn't log playout event with command: #{cmd} / sql: #{sql}")
             end
-            -1.
-        end)
+        end
+        if async then
+            add_timeout(fast=false, 0., fun() -> begin
+                log_event_func()
+                -1.
+            end)
+        else
+            log_event_func()
+        end
     end
 end
 
 on_shutdown(fun() -> begin
-    log_event('#{SCRIPT_NAME} is shutting down')
+    log_event(async=false, '#{SCRIPT_NAME} is shutting down')
     is_shutting_down := true
 end)
 
-log_event('#{SCRIPT_NAME} came online')
+log_event(async=false, '#{SCRIPT_NAME} came online')

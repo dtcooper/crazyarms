@@ -356,15 +356,19 @@ server.register(usage='status_pretty', description='Get status of sources in JSO
                 fun(_) -> get_process_output(env=[('JSON', status_json())], 'echo "$JSON" | python3 -m json.tool --sort-keys'))
 
 # Push notifications of status (using the SSE service)
+def post_to_sse(json)
+    status = status_json()
+    log('update_status: hitting SSE service')
+    let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=json)
+    if status_code != 204 then
+        log.severe('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
+    end
+end
+
 def update_status()
     # Do this asynchronously (100ms to give things time to settle, ie DJs being kicked off, etc.)
     add_timeout(fast=false, 0.1, fun() -> begin
-        status = status_json()
-        log('update_status: hitting SSE service')
-        let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=status)
-        if status_code != 204 then
-            log.severe('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
-        end
+        post_to_sse(status_json())
         -1.
     end)
 end
@@ -374,6 +378,8 @@ server.register(usage='status_update', description='Force a status update push t
     update_status()
     'Done!'
 end)
+
+on_shutdown(fun() -> post_to_sse('null'))
 
 # Register callbacks on start/stop of all sources for sse (push) notifications
 ignore(list.map(fun(src) -> begin
