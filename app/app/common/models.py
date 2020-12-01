@@ -196,7 +196,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
     title = TruncatingCharField('title', max_length=255, blank=True, db_index=True,
                                 help_text="If left empty, a title will be generated from the file's metadata.")
     uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
-    file = models.FileField('audio file', upload_to=audio_asset_file_upload_to)
+    file = models.FileField('audio file', max_length=512, upload_to=audio_asset_file_upload_to)
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
     fingerprint = models.UUIDField(null=True, unique=True)  # 32 byte md5 = a UUID
 
@@ -328,6 +328,8 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             self.file = self.fingerprint = None
             self.duration = datetime.timedelta(0)
 
+        # TODO: make file name safe-ish for liquidsoap, similar to what youtube-dl does with --restrict-filenames
+
         # re-normalize title fields before save
         for field_name in self.TITLE_FIELDS:
             try:
@@ -363,7 +365,7 @@ class AudioAssetDownloadbleBase(AudioAssetBase):
         RUNNING = 'r', 'download running'
         FAILED = 'f', 'download failed'
     # Changes to blank=True + help_text
-    file = models.FileField('audio file', blank=True, upload_to=audio_asset_file_upload_to,
+    file = models.FileField('audio file', max_length=512, blank=True, upload_to=audio_asset_file_upload_to,
                             help_text='You can provide either an uploaded audio file or a URL to an external asset.')
     status = models.CharField('upload status', max_length=1, choices=Status.choices,
                               default=Status.PENDING, db_index=True)
