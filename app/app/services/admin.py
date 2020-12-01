@@ -51,7 +51,7 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
 
         else:
             cache.set(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT, custom_config, timeout=None)
-            init_services(services='harbor', restart_specific_services='harbor')
+            init_services(services='harbor', subservices='harbor')
             messages.success(self.request, 'Liquidsoap source code changed. Harbor was restarted.')
 
         return super().form_valid(form)
@@ -74,7 +74,7 @@ class ServiceStatusAdminView(admin.site.AdminBaseContextMixin, TemplateView):
     def post(self, request):
         if request.user.is_superuser:
             service, specific_service = request.POST.get('restart').split()
-            init_services(service, restart_specific_services=specific_service)
+            init_services(service, subservices=specific_service)
         return redirect('admin:service_status')
 
     def get_context_data(self, **kwargs):
@@ -121,7 +121,7 @@ class UpstreamServerAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         saved = super().save_model(request, obj, form, change)
-        init_services('upstream', restart_specific_services=obj.name)
+        init_services('upstream', subservices=obj.name)
         return saved
 
     def delete_model(self, request, obj):

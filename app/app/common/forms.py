@@ -63,10 +63,10 @@ class ConstanceForm(constance_admin.ConstanceForm):
             or 'AUTODJ_ENABLED' in changes
         ):
             logger.info('Got HARBOR_* or AUTODJ_ENABLED config change. Restarting harbor.')
-            init_services(services='harbor', restart_specific_services='harbor')
+            init_services(services='harbor', subservices='harbor')
         if 'ICECAST_SOURCE_PASSWORD' in changes:
             logger.info('Got ICECAST_SOURCE_PASSWORD config change. Setting local-icecast upstream password.')
-            init_services(services='upstream', restart_specific_services='local-icecast')
+            init_services(services='upstream', subservices='local-icecast')
         if any(change.startswith('UPSTREAM_') for change in changes):
             logger.info('Got UPSTREAM_* config change. Restarting upstreams.')
             init_services(services='upstream', restart_services=True)

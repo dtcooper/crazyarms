@@ -18,7 +18,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.utils.functional import cached_property
+from django.utils.functional import cached_property, lazy
 from django.utils.html import format_html
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, ListView, TemplateView, UpdateView
@@ -83,7 +83,7 @@ class StatusView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         status = harbor.status(safe=True)
         return {**super().get_context_data(**kwargs),
-                'title': 'Stream Status (Realtime)', 'liquidsoap_status': json.loads(status) if status else None}
+                'title': 'Stream Status', 'liquidsoap_status': json.loads(status) if status else None}
 
 
 class BanListView(PermissionRequiredMixin, TemplateView):
@@ -214,19 +214,13 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_message = 'Your user profile was successfully updated.'
     success_url = reverse_lazy('user_profile')
     template_name = 'webui/form.html'
+    extra_context = {'title': 'Edit Your User Profile', 'submit_text': 'Update User Profile',
+                     'form_description': lazy(lambda: format_html(
+                        'Update your user profile below. <a href="{}">Click here</a> to change your password.',
+                        reverse('password_change')))}
 
     def get_object(self, **kwargs):
         return self.request.user
-
-    def get_context_data(self, **kwargs):
-        return {
-            **super().get_context_data(**kwargs),
-            'title': 'Edit Your User Profile',
-            'submit_text': 'Update User Profile',
-            'form_description': format_html(
-                'Update your user profile below. <a href="{}">Click here</a> to change your password.',
-                reverse('password_change'))
-        }
 
 
 class GCalView(LoginRequiredMixin, TemplateView):

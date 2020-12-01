@@ -2,6 +2,7 @@ argh
 dateutils
 django-cleanup
 django-constance[redis]
+django-dirtyfields
 django-environ
 django-extensions
 django-redis

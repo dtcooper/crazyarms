@@ -187,7 +187,7 @@ if not settings.ZOOM_ENABLED:
     del SERVICES[ZoomService.service_name]
 
 
-def init_services(services=None, restart_services=False, restart_specific_services=(), render_only=False):
+def init_services(services=None, restart_services=False, subservices=(), render_only=False):
     if isinstance(services, str):
         services = (services,)
 
@@ -207,7 +207,7 @@ def init_services(services=None, restart_services=False, restart_specific_servic
         if service.supervisor_enabled and not render_only:
             service.reload_supervisor(restart_services=restart_services)
 
-            if restart_specific_services:
-                if isinstance(restart_specific_services, str):
-                    restart_specific_services = (restart_specific_services,)
-                service.supervisorctl('restart', *restart_specific_services)
+            if subservices:
+                if isinstance(subservices, str):
+                    subservices = (subservices,)
+                service.supervisorctl('restart', *subservices)

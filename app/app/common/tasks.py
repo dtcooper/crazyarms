@@ -36,18 +36,20 @@ def confirm_youtube_dl():
 
 @djhuey.db_task(context=True, retries=3, retry_delay=5)
 def asset_download_external_url(asset, url, title='', task=None):
-    asset_cls = type(asset)
+    asset.clear_ffprobe_cache()
+
+    asset_cls = asset._meta.model
     asset_cls.objects.filter(id=asset.id).update(status=asset_cls.Status.RUNNING)
 
     try:
         confirm_youtube_dl()
 
-        unique_filename_suffix = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
+        unique_filename_suffix = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(7))
         args = [YDL_CMD, '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
-                config.EXTERNAL_ASSET_ENCODING, '--no-continue', '--add-metadata', '--exec', 'echo {}', '--output',
-                f'{settings.MEDIA_ROOT}/external/%(title)s-{unique_filename_suffix}.%(ext)s', '--restrict-filenames']
-        if config.EXTERNAL_ASSET_ENCODING != 'flac':
-            args += ['--audio-quality', config.EXTERNAL_ASSET_BITRATE]
+                config.ASSET_ENCODING, '--no-continue', '--add-metadata', '--exec', 'echo {}', '--output',
+                f'{settings.MEDIA_ROOT}external/%(title)s_{unique_filename_suffix}.%(ext)s', '--restrict-filenames']
+        if config.ASSET_ENCODING != 'flac':
+            args += ['--audio-quality', config.ASSET_BITRATE]
 
         args += ['--', url]
         logger.info(f'youtube-dl: running: {shlex.join(args)}')
@@ -68,7 +70,7 @@ def asset_download_external_url(asset, url, title='', task=None):
 
         if os.path.exists(line):
             asset.title = title
-            asset.file = line.removeprefix(f'{settings.MEDIA_ROOT}/')
+            asset.file = line.removeprefix(settings.MEDIA_ROOT)
             asset.status = asset_cls.Status.UPLOADED
             asset.save()
             logger.info(f'youtube-dl: {url} successfully downloaded to {line}')

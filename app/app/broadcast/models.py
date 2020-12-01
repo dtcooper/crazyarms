@@ -14,6 +14,7 @@ class BroadcastAsset(AudioAssetDownloadbleBase):
     class Meta:
         verbose_name = 'scheduled broadcast asset'
         verbose_name_plural = 'scheduled broadcast assets'
+        ordering = ('title', 'id')
 
 
 class Broadcast(TimestampedModel):

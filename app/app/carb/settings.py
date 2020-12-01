@@ -157,9 +157,9 @@ DATETIME_FORMAT = 'N j, Y, g:i:s a'
 AUTH_USER_MODEL = 'common.User'
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/static_root'
+STATIC_ROOT = '/static_root/'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/media_root'
+MEDIA_ROOT = '/media_root/'
 
 HUEY = {
     'name': 'carb',
@@ -185,11 +185,12 @@ CONSTANCE_REDIS_CONNECTION_CLASS = 'django_redis.get_redis_connection'
 CONSTANCE_SUPERUSER_ONLY = False
 
 CONSTANCE_ADDITIONAL_FIELDS = {
-    'external_asset_encoding_choices': ['django.forms.fields.ChoiceField', {
+    # in youtube-dl format, converted or ffmpeg in common/models.py:AudioAssetBase
+    'asset_encoding_choices': ['django.forms.fields.ChoiceField', {
         'widget': 'django.forms.Select',
         'choices': (('mp3', 'MP3'), ('vorbis', 'Ogg Vorbis'), ('flac', 'FLAC'))
     }],
-    'external_asset_bitrate_choices': ['django.forms.fields.ChoiceField', {
+    'asset_bitrate_choices': ['django.forms.fields.ChoiceField', {
         'widget': 'django.forms.Select',
         'choices': (('64K', '64kbit'), ('128K', '128kbit'), ('192K', '192kbit'), ('256K', '256kbit'),
                     ('320K', '320kbit')),
@@ -230,9 +231,10 @@ CONSTANCE_CONFIG = OrderedDict((
     ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST',
         (15, 'Number of tracks to avoid playing the same artist (if possible). Set to 0 to disable.',
          'positive_int')),
-    ('EXTERNAL_ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets.', 'external_asset_encoding_choices')),
-    ('EXTERNAL_ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
-                                'external_asset_bitrate_choices')),
+    ('ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets, and non-standard input files.',
+                        'asset_encoding_choices')),
+    ('ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
+                       'asset_bitrate_choices')),
     ('GOOGLE_CALENDAR_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs.')),
     ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID.', 'char')),
     ('GOOGLE_CALENDAR_CREDENTIALS_JSON', (
@@ -263,7 +265,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT_ENABLED', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
                               'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST', 'AUTODJ_PLAYLISTS_ENABLED',
                               'AUTODJ_STOPSETS_ENABLED', 'AUTODJ_STOPSETS_ONCE_PER_MINUTES')),
-    ('Externally Downloaded Audio Assets', ('EXTERNAL_ASSET_ENCODING', 'EXTERNAL_ASSET_BITRATE')),
+    ('Externally Downloaded Audio Assets', ('ASSET_ENCODING', 'ASSET_BITRATE')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),
 ))

@@ -29,7 +29,7 @@ CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limi
 
 @djhuey.db_task()
 def preload_sample_stopsets(uploader=None):
-    soundcloud_dir = f'{settings.MEDIA_ROOT}/stopset-sample'
+    soundcloud_dir = f'{settings.MEDIA_ROOT}stopset-sample'
     logger.info("Download rotator assets from SoundCloud (BMIR) using youtube-dl")
 
     confirm_youtube_dl()
@@ -58,7 +58,7 @@ def preload_sample_stopsets(uploader=None):
 
         logger.info(f'Got {sample_file} from SoundCloud')
         rotator_asset = RotatorAsset(uploader=uploader)
-        rotator_asset.file = f'{soundcloud_dir}/{sample_file}'.removeprefix(f'{settings.MEDIA_ROOT}/')
+        rotator_asset.file = f'{soundcloud_dir}/{sample_file}'.removeprefix(settings.MEDIA_ROOT)
         rotator_asset.save()
         rotator = rotators[rotator]
         rotator.rotator_assets.add(rotator_asset)
@@ -83,9 +83,10 @@ def preload_sample_stopsets(uploader=None):
 
 @djhuey.db_task()
 def preload_sample_audio_assets(uploader=None):
+    # TODO download using youtube-dl task?
     logger.info(f'Downloading {NUM_SAMPLE_ASSETS} sample audio assets from ccMixter')
     tracks_json = requests.get(CCMIXTER_API_URL, params=CCMIXTER_API_PARAMS).json()
-    ccmixer_dir = f'{settings.MEDIA_ROOT}/ccmixter-sample'
+    ccmixer_dir = f'{settings.MEDIA_ROOT}ccmixter-sample'
 
     # get_or_create since name is unique
     playlist = Playlist.objects.get_or_create(name='ccMixter Sample Music')[0]
@@ -111,7 +112,7 @@ def preload_sample_audio_assets(uploader=None):
                     mp3_file.write(chunk)
 
             audio_asset = AudioAsset(uploader=uploader)
-            audio_asset.file = mp3_path.removeprefix(f'{settings.MEDIA_ROOT}/')
+            audio_asset.file = mp3_path.removeprefix(settings.MEDIA_ROOT)
             audio_asset.save()
             audio_asset.playlists.add(playlist)
     logger.info(f'Done downloading {NUM_SAMPLE_ASSETS} sample audio assets from ccMixter')

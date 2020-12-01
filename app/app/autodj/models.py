@@ -2,8 +2,6 @@ import datetime
 import logging
 import random
 
-import unidecode
-
 from django.core.cache import cache
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -52,24 +50,20 @@ class AudioAsset(AudioAssetDownloadbleBase):
     TITLE_FIELDS = ('title', 'artist', 'album')
     artist = TruncatingCharField('artist', max_length=255, blank=True,
                                  help_text="If left empty, an artist will be generated from the file's metadata.")
-    artist_normalized = TruncatingCharField('artist', max_length=255, db_index=True)
     album = TruncatingCharField('album', max_length=255, blank=True,
                                 help_text="If left empty, an album will be generated from the file's metadata.")
+    title_normalized = TruncatingCharField(max_length=255, db_index=True)
+    artist_normalized = TruncatingCharField(max_length=255, db_index=True)
+    album_normalized = TruncatingCharField(max_length=255, db_index=True)
+
+    class Meta:
+        ordering = ('title', 'artist', 'album', 'id')
+        verbose_name = 'audio asset'
+        verbose_name_plural = 'audio assets'
 
     def __str__(self):
         s = ' - '.join(filter(None, (getattr(self, field_name, None) for field_name in ('artist', 'album', 'title'))))
         return super().__str__(s)
-
-    @staticmethod
-    def normalize_artist(artist):
-        return (' '.join(unidecode.unidecode(artist).strip().split())).lower()
-
-    def save(self, *args, **kwargs):
-        artist_normalized_before_save = self.artist_normalized
-        super().save(*args, **kwargs)
-        if self.artist_normalized == '' or artist_normalized_before_save != self.artist_normalized:
-            self.artist_normalized = self.normalize_artist(self.artist)
-            super().save(*args, **kwargs)
 
     @classmethod
     def process_anti_repeat_autodj(cls, audio_asset):
@@ -176,10 +170,6 @@ class AudioAsset(AudioAssetDownloadbleBase):
 
         return audio_asset
 
-    class Meta:
-        verbose_name = 'audio asset'
-        verbose_name_plural = 'audio assets'
-
 
 class PlaylistStopsetBase(models.Model):
     name = models.CharField('name', max_length=100, unique=True)
@@ -206,6 +196,11 @@ class Playlist(PlaylistStopsetBase):
 
 class RotatorAsset(AudioAssetBase):
     UNNAMED_TRACK = 'Untitled Asset'
+
+    class Meta:
+        ordering = ('title', 'id')
+        verbose_name = 'rotator asset'
+        verbose_name_plural = 'rotator assets'
 
     @classmethod
     def get_next_for_autodj(cls, now=None):

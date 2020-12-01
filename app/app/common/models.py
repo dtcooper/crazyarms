@@ -1,16 +1,22 @@
+from collections import namedtuple
 import datetime
 from functools import wraps
 import json
 import logging
 import math
 import os
+import random
+import string
 import subprocess
+import uuid
 
 import pytz
+import unidecode
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group
 from django.core.cache import cache
+from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db import models
 from django.db.transaction import on_commit
@@ -20,6 +26,7 @@ from django.utils.safestring import mark_safe
 from django.utils import timezone
 
 from constance import config
+from dirtyfields import DirtyFieldsMixin
 
 from carb import constants
 
@@ -169,20 +176,29 @@ class User(AbstractUser):
             return False
 
 
+def normalize_title_field(value):
+    return (' '.join(unidecode.unidecode(value).strip().split())).lower()
+
+
 def audio_asset_file_upload_to(instance, filename):
     return f'{instance.UPLOAD_DIR}/{filename}'
 
 
-class AudioAssetBase(TimestampedModel):
+FFProbe = namedtuple('FFProbe', ('format', 'duration', 'artist', 'album', 'title'))
+
+
+class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
     UNNAMED_TRACK = 'Untitled Track'
     UPLOAD_DIR = 'assets'
     TITLE_FIELDS = ('title',)
+    FFMPEG_ACCEPTABLE_FORMATS = ('mp3', 'ogg', 'flac')
 
     title = TruncatingCharField('title', max_length=255, blank=True, db_index=True,
                                 help_text="If left empty, a title will be generated from the file's metadata.")
     uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
     file = models.FileField('audio file', upload_to=audio_asset_file_upload_to)
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
+    fingerprint = models.UUIDField(null=True, unique=True)  # 32 byte md5 = a UUID
 
     class Meta:
         abstract = True
@@ -201,36 +217,132 @@ class AudioAssetBase(TimestampedModel):
         else:
             return self.file.path
 
-    def set_fields_from_exiftool(self):
-        cmd = subprocess.run(['exiftool', '-json', self.file_path], capture_output=True)
+    def clear_ffprobe_cache(self):
+        try:
+            del self.ffprobe
+        except AttributeError:
+            pass
 
-        if cmd.returncode == 0:
-            exif_data = json.loads(cmd.stdout)[0]
-            fields = {field_name: exif_data.get(field_name.title(), '') for field_name in self.TITLE_FIELDS}
-            # Special case if there's no artist field, update title to be "artist - title"
-            if not fields['title'] and 'artist' not in self.TITLE_FIELDS:
-                fields['title'] = ' - '.join(filter(None, (exif_data.get('Artist'), self.title)))
+    def set_fields_from_ffprobe(self):
+        for field_name in self.TITLE_FIELDS:
+            if not getattr(self, field_name):
+                setattr(self, field_name, getattr(self.ffprobe, field_name) or '')
 
-            for field_name, value in fields.items():
-                if not getattr(self, field_name):
-                    setattr(self, field_name, value)
+        # Special case if there's no artist field, update title to be "artist - title"
+        if self.title and 'artist' not in self.TITLE_FIELDS:
+            self.title = ' - '.join(filter(None, (self.ffprobe.artist, self.ffprobe.title)))
 
         if not self.title:
+            logger.warning('ffprobe returned an empty title. Setting title from file name.')
             self.title = os.path.splitext(os.path.basename(self.file.name))[0].replace('_', ' ')
 
-    def set_duration_from_ffprobe(self):
-        cmd = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of',
-                              'default=noprint_wrappers=1:nokey=1', self.file_path], capture_output=True)
-        if cmd.returncode == 0:
-            self.duration = datetime.timedelta(seconds=math.ceil(float(cmd.stdout.decode().strip())))
-
-    def save(self, *args, **kwargs):
+    @cached_property
+    def ffprobe(self):
         if self.file:
-            self.set_fields_from_exiftool()
-            if self.duration == datetime.timedelta(0):
-                self.set_duration_from_ffprobe()
+            cmd = subprocess.run(['ffprobe', '-i', self.file_path, '-print_format', 'json', '-hide_banner', '-loglevel',
+                                  'error', '-show_format', '-show_error', '-show_streams', '-select_streams', 'a:0'],
+                                 text=True, capture_output=True)
+            if cmd.returncode == 0:
+                data = json.loads(cmd.stdout)
+                if data:
+                    if data['streams'] and data['format']:
+                        tags = data['format'].get('tags', {})
+                        return FFProbe(
+                            artist=tags.get('artist'), album=tags.get('album'), title=tags.get('title'),
+                            format=data['format']['format_name'], duration=datetime.timedelta(
+                                seconds=math.ceil(float(data['streams'][0].get('duration') or 0))),
+                        )
+
+                logger.warning(f'ffprobe returned a bad or empty response: {cmd.stdout}')
+            else:
+                logger.warning(f'ffprobe returned {cmd.returncode}: {cmd.stderr}')
+
+        return None
+
+    def convert_to_acceptable_format(self):
+        new_ext = config.ASSET_ENCODING
+        if new_ext == 'vorbis':
+            new_ext = 'ogg'
+
+        outfile = os.path.splitext(f'{settings.MEDIA_ROOT}{audio_asset_file_upload_to(self, self.file.name)}')[0]
+        if os.path.exists(f'{outfile}.{new_ext}'):
+            outfile += '_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(7))
+        outfile += f'.{new_ext}'
+
+        cmd_args = ['ffmpeg', '-v', 'error', '-y', '-i', self.file_path, '-map', '0:a:0']
+        if config.ASSET_ENCODING != 'flac':
+            cmd_args.extend(['-b:a', config.ASSET_BITRATE.lower()])
+        cmd_args.append(outfile)
+
+        cmd = subprocess.run(cmd_args, text=True, capture_output=True)
+        if cmd.returncode == 0 and os.path.exists(outfile):
+            logger.info(f'ffmpeg converted {self.file_path} to {outfile}.')
+            os.remove(self.file_path)  # Remove old file
+            self.file = outfile.removeprefix(settings.MEDIA_ROOT)
+            self.clear_ffprobe_cache()
+        else:
+            logger.warning(f"ffmpeg (conversion) returned {cmd.returncode} or {outfile} doesn't exist: {cmd.stderr}")
+
+    @cached_property
+    def computed_fingerprint(self):
+        cmd = subprocess.run(['ffmpeg', '-v', 'error',  '-i', self.file_path, '-map', '0:a:0', '-f', 'md5', '-'],
+                             text=True, capture_output=True)
+        if cmd.returncode == 0 and cmd.stdout.startswith('MD5='):
+            return uuid.UUID(cmd.stdout.removeprefix('MD5=').strip())
+        else:
+            logger.warning(f'ffmpeg (md5) return {cmd.returncode}: {cmd.stderr}')
+            return None
+
+    def clean(self):
+        if self.file:
+            if not self.ffprobe:
+                raise ValidationError("Failed to extract audio info from the file you've uploaded. Try another?")
+
+            if self.computed_fingerprint:
+                match = self._meta.model.objects.exclude(id=self.id).filter(
+                    fingerprint=self.computed_fingerprint).first()
+                if match:
+                    raise ValidationError(f'A track already exists with the same audio content: {match}')
+
+    def presave(self):
+        # We don't allow files that are unrecognized by ffprobe. Shouldn't happen because of clean()
+        if not (self.ffprobe and os.path.exists(self.file_path)):
+            self.file = None
+
+        if self.file:
+            if 'file' in self.get_dirty_fields():
+                if not self.fingerprint:
+                    self.fingerprint = self.computed_fingerprint  # Pre-conversion to acceptable format
+
+                if self.ffprobe.format not in self.FFMPEG_ACCEPTABLE_FORMATS:
+                    self.convert_to_acceptable_format()
+
+                self.duration = self.ffprobe.duration
+
+            if not any(getattr(self, field) for field in self.TITLE_FIELDS):
+                self.set_fields_from_ffprobe()
+
             if isinstance(self, AudioAssetDownloadbleBase):
                 self.status = self.Status.UPLOADED
+        else:
+            self.file = self.fingerprint = None
+            self.duration = datetime.timedelta(0)
+
+        # re-normalize title fields before save
+        for field_name in self.TITLE_FIELDS:
+            try:
+                self._meta.get_field(f'{field_name}_normalized')
+            except FieldDoesNotExist:
+                pass
+            else:
+                value = getattr(self, field_name)
+                normalized_field_name = f'{field_name}_normalized'
+                if field_name in self.get_dirty_fields() or value and not getattr(self, normalized_field_name):
+                    setattr(self, normalized_field_name, normalize_title_field(value))
+
+    def save(self, run_presave=True, *args, **kwargs):
+        if run_presave:
+            self.presave()
         super().save(*args, **kwargs)
 
     def __str__(self, s=None):
@@ -265,7 +377,7 @@ class AudioAssetDownloadbleBase(AudioAssetBase):
         from .tasks import asset_download_external_url
 
         task = asset_download_external_url(self, url, title=set_title)
-        model_cls = type(self)
+        model_cls = self._meta.model
         model_cls.objects.filter(id=self.id).update(task_id=task.id)
         model_cls.objects.filter(id=self.id, status=model_cls.Status.PENDING).update(status=model_cls.Status.QUEUED)
         cache.set(f'{constants.CACHE_KEY_YTDL_TASK_LOG_PREFIX}{task.id}', f'Starting download for {url}')

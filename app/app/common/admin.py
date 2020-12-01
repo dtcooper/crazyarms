@@ -29,9 +29,9 @@ def swap_title_fields(method):
 class AudioAssetDownloadableAdminBase(admin.ModelAdmin):
     save_on_top = True
     create_form = None
-    add_fields = ('source', 'file', 'url', 'title', 'status')
+    add_fields = ('source', 'file', 'url', 'title')
     change_fields = ('title', 'file', 'duration', 'status', 'uploader', 'task_log_line')
-    add_readonly_fields = ('uploader', 'status')
+    add_readonly_fields = ('uploader',)
     change_readonly_fields = add_readonly_fields + ('duration', 'file', 'audio_player_html', 'task_log_line')
     search_fields = ('title',)
     list_display = ('title', 'duration', 'status')

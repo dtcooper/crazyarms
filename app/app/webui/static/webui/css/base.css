@@ -47,7 +47,7 @@ input[type=text], input[type=password], input[type=email] { width: 100%; }
 }
 
 td, th { border: 1px solid #666666; }
-th { text-align: center; text-decoration: underline; }
+th { text-align: center; }
 table.even-columns { table-layout: fixed; }
 
 .current-page {
