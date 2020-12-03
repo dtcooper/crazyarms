@@ -1,4 +1,4 @@
-import logging
+import logging  # TODO disable logging
 import os
 
 from django.conf import settings
@@ -20,7 +20,8 @@ class Command(BaseCommand):
         group.add_argument('-p', '--playlist', help='Add to existing playlist by name')
         group.add_argument('-P', '--create-playlist', help="Add to playlist by name, creating it if it doesn't exist")
         parser.add_argument('-d', '--dedupe', action='store_true', help=(
-            'Attempt to de-dupe by not saving assets with the same artist, album, and title as an existing one.'))
+            'Attempt to de-dupe by not saving assets with the same artist, album, and title as an existing one. '
+            '(Artist and title must exist.)'))
 
     def handle(self, *args, **options):
         uploader = playlist = None
@@ -50,8 +51,8 @@ class Command(BaseCommand):
 
         for path in options['paths']:
             media_root_path = f'{settings.MEDIA_ROOT}{path}'
-            if os.path.isfile(str(media_root_path)):
-                asset_paths.append(str(media_root_path))
+            if os.path.isfile(media_root_path):
+                asset_paths.append(path)
 
             elif os.path.isdir(media_root_path):
                 for root, dirs, files in os.walk(media_root_path):
@@ -77,12 +78,15 @@ class Command(BaseCommand):
                 print(f'... skipping, validation error: {e.message}')
                 continue
 
-            audio_asset.presave()
+            audio_asset.pre_save()
 
             if options['dedupe']:
-                if AudioAsset.objects.filter(artist_normalized=audio_asset.artist_normalized,
-                                             album_normalized=audio_asset.album_normalized,
-                                             title_normalized=audio_asset.title_normalized).exists():
+                if (
+                    audio_asset.title_normalized and audio_asset.artist_normalized
+                    and AudioAsset.objects.filter(artist_normalized=audio_asset.artist_normalized,
+                                                  album_normalized=audio_asset.album_normalized,
+                                                  title_normalized=audio_asset.title_normalized).exists()
+                ):
                     print('... skipping, found an existing asset with the same artist, album, and title')
                     continue
 
@@ -90,7 +94,7 @@ class Command(BaseCommand):
                 print('... skipping, invalid file')
                 continue
 
-            audio_asset.save(run_presave=False)
+            audio_asset.save(run_pre_save=False)
             if playlist:
                 audio_asset.playlists.add(playlist)
             print('... imported!')

@@ -198,7 +198,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
     uploader = models.ForeignKey(User, verbose_name='uploader', on_delete=models.SET_NULL, null=True)
     file = models.FileField('audio file', max_length=512, upload_to=audio_asset_file_upload_to)
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
-    fingerprint = models.UUIDField(null=True, unique=True)  # 32 byte md5 = a UUID
+    fingerprint = models.UUIDField(null=True, db_index=True)  # 32 byte md5 = a UUID
 
     class Meta:
         abstract = True
@@ -212,10 +212,11 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
 
     @property
     def file_path(self):
-        if isinstance(self.file.file, TemporaryUploadedFile):
-            return self.file.file.temporary_file_path()
-        else:
-            return self.file.path
+        if self.file:
+            if isinstance(self.file.file, TemporaryUploadedFile):
+                return self.file.file.temporary_file_path()
+            else:
+                return self.file.path
 
     def clear_ffprobe_cache(self):
         try:
@@ -224,6 +225,8 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             pass
 
     def set_fields_from_ffprobe(self):
+        # TODO: switch back to exiftool due to apparent id3v2.4 bug in ffmpeg @ https://superuser.com/q/1282809
+
         for field_name in self.TITLE_FIELDS:
             if not getattr(self, field_name):
                 setattr(self, field_name, getattr(self.ffprobe, field_name) or '')
@@ -257,13 +260,12 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             else:
                 logger.warning(f'ffprobe returned {cmd.returncode}: {cmd.stderr}')
 
-        return None
-
-    def convert_to_acceptable_format(self):
+    def convert_to_acceptable_format(self, pre_save_delete=True):
         new_ext = config.ASSET_ENCODING
         if new_ext == 'vorbis':
             new_ext = 'ogg'
 
+        # DODO change this to MEDIA_ROOT/imports/ prefix
         outfile = os.path.splitext(f'{settings.MEDIA_ROOT}{audio_asset_file_upload_to(self, self.file.name)}')[0]
         if os.path.exists(f'{outfile}.{new_ext}'):
             outfile += '_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(7))
@@ -276,12 +278,17 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
 
         cmd = subprocess.run(cmd_args, text=True, capture_output=True)
         if cmd.returncode == 0 and os.path.exists(outfile):
-            logger.info(f'ffmpeg converted {self.file_path} to {outfile}.')
-            os.remove(self.file_path)  # Remove old file
+            logger.info(f'ffmpeg removed {self.file_path} and converted to {outfile}. ')
+            if pre_save_delete:
+                self.file.delete(save=False)
             self.file = outfile.removeprefix(settings.MEDIA_ROOT)
-            self.clear_ffprobe_cache()
         else:
-            logger.warning(f"ffmpeg (conversion) returned {cmd.returncode} or {outfile} doesn't exist: {cmd.stderr}")
+            logger.warning(
+                f"ffmpeg (conversion) returned {cmd.returncode} (or converted {outfile} doesn't exist): {cmd.stderr}")
+            if pre_save_delete:
+                self.file.delete(save=False)
+            self.file = None
+        self.clear_ffprobe_cache()
 
     @cached_property
     def computed_fingerprint(self):
@@ -304,9 +311,11 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
                 if match:
                     raise ValidationError(f'A track already exists with the same audio content: {match}')
 
-    def presave(self):
+    def pre_save(self, pre_save_delete=True):
         # We don't allow files that are unrecognized by ffprobe. Shouldn't happen because of clean()
         if not (self.ffprobe and os.path.exists(self.file_path)):
+            if self.file and pre_save_delete:
+                self.file.delete(save=False)
             self.file = None
 
         if self.file:
@@ -315,15 +324,17 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
                     self.fingerprint = self.computed_fingerprint  # Pre-conversion to acceptable format
 
                 if self.ffprobe.format not in self.FFMPEG_ACCEPTABLE_FORMATS:
-                    self.convert_to_acceptable_format()
+                    self.convert_to_acceptable_format(pre_save_delete=pre_save_delete)
 
-                self.duration = self.ffprobe.duration
+                if self.file:  # convert_to_acceptable_format() may have set self.file = None
+                    self.duration = self.ffprobe.duration
 
-            if not any(getattr(self, field) for field in self.TITLE_FIELDS):
-                self.set_fields_from_ffprobe()
+            if self.file:  # convert_to_acceptable_format() may have set self.file = None
+                if not any(getattr(self, field) for field in self.TITLE_FIELDS):
+                    self.set_fields_from_ffprobe()
 
-            if isinstance(self, AudioAssetDownloadbleBase):
-                self.status = self.Status.UPLOADED
+                if isinstance(self, AudioAssetDownloadbleBase):
+                    self.status = self.Status.UPLOADED
         else:
             self.file = self.fingerprint = None
             self.duration = datetime.timedelta(0)
@@ -342,9 +353,9 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
                 if field_name in self.get_dirty_fields() or value and not getattr(self, normalized_field_name):
                     setattr(self, normalized_field_name, normalize_title_field(value))
 
-    def save(self, run_presave=True, *args, **kwargs):
-        if run_presave:
-            self.presave()
+    def save(self, run_pre_save=True, pre_save_delete=True, *args, **kwargs):
+        if run_pre_save:
+            self.pre_save(pre_save_delete=pre_save_delete)
         super().save(*args, **kwargs)
 
     def __str__(self, s=None):

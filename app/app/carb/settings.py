@@ -45,10 +45,10 @@ INSTALLED_APPS = [
     'gcal',
     'services',
     'webui',
-
-    # Cleanup files after model deletion, needs to go last
-    'django_cleanup',
 ]
+
+if not os.environ.get('NO_DJANGO_CLEANUP'):  # May want to disable for testing
+    INSTALLED_APPS.append('django_cleanup')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

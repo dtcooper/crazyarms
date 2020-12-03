@@ -169,12 +169,27 @@ To run the unit tests, which are currently a bit flaky, use the shell
 1. ~~Make track log a more generic playout log, with asset playing on metadata one
    particular type.~~ - _done!_
 1. Pin versions in all Dockerfiles, and Python packages
-    (using [Poetry](https://python-poetry.org/))
+  (using [Poetry](https://python-poetry.org/))
 1. ~~Convert logging to redis queue (so web server doesn't have to be up to log)~~ - _done!_
    (used `psql` to directly insert into the DB)
 1. ~~Kick off DJs outside of calendar times (with a grace period)~~
+1. TIME REMAINING of Zoom Show
+1. Add streaming instructions page for users
+1. Add make active/disable quick actions for playlists and stopsets
+1. Schedule stopsets at specific times - necessary? nice-to-have
+1. Compression and normalization on a per-DJ basis. (Add a liquidsoap `switch()` to
+  change between compressed or not). Hard part is what are the rules for triggering this?
+1. Add time to scheduled broadcasts
+1. Include this readme as part of build and link to it with HELP button
+1. Define harbor in glossary
+1. Indication about why the zoom form doesn't show for calendar based auth
+1. Hide skip track button for lower precedence sources
+1. Radio buttons for ban times
+1. Copy change: rename "precedence" -> "priority"
+1. Edit profile seems to have re-enabled harbor access type
+1. Thoroughly test new ffprobe + ffmpeg flows for audio assets + task
+1. Convert uploads into their own model.
 1. ..._and more!_
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file

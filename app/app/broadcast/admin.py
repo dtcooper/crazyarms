@@ -7,7 +7,17 @@ from .forms import BroadcastAssetCreateForm
 from .models import BroadcastAsset, Broadcast
 
 
+class BroadcastInline(admin.TabularInline):
+    model = Broadcast
+    extra = 1
+    verbose_name_plural = 'scheduled broadcast'
+    fields = ('scheduled_time',)
+
+    # TODO queue
+
+
 class BroadcastAssetAdmin(AudioAssetDownloadableAdminBase):
+    inlines = (BroadcastInline,)
     create_form = BroadcastAssetCreateForm
 
     def get_search_results(self, request, queryset, search_term):

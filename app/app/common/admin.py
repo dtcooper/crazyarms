@@ -32,7 +32,7 @@ class AudioAssetDownloadableAdminBase(admin.ModelAdmin):
     add_fields = ('source', 'file', 'url', 'title')
     change_fields = ('title', 'file', 'duration', 'status', 'uploader', 'task_log_line')
     add_readonly_fields = ('uploader',)
-    change_readonly_fields = add_readonly_fields + ('duration', 'file', 'audio_player_html', 'task_log_line')
+    change_readonly_fields = add_readonly_fields + ('duration', 'file', 'audio_player_html', 'status', 'task_log_line')
     search_fields = ('title',)
     list_display = ('title', 'duration', 'status')
     list_filter = (('uploader', admin.RelatedOnlyFieldListFilter), 'status')
