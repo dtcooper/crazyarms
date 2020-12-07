@@ -200,6 +200,10 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
     fingerprint = models.UUIDField(null=True, db_index=True)  # 32 byte md5 = a UUID
 
+    def __init__(self, *args, **kwargs):
+        self.pre_convert_filename = kwargs.pop('pre_convert_filename', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         abstract = True
         ordering = ('title', 'id')
@@ -237,7 +241,8 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
 
         if not self.title:
             logger.warning('ffprobe returned an empty title. Setting title from file name.')
-            self.title = os.path.splitext(os.path.basename(self.file.name))[0].replace('_', ' ')
+            self.title = os.path.splitext(os.path.basename(
+                self.pre_convert_filename or self.file.name))[0].replace('_', ' ')
 
     @cached_property
     def ffprobe(self):
@@ -265,16 +270,18 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
         if new_ext == 'vorbis':
             new_ext = 'ogg'
 
-        # DODO change this to MEDIA_ROOT/imports/ prefix
-        outfile = os.path.splitext(f'{settings.MEDIA_ROOT}{audio_asset_file_upload_to(self, self.file.name)}')[0]
+        self.pre_convert_filename = self.file.name
+        outfile = os.path.splitext(
+            f'{settings.MEDIA_ROOT}converted/{audio_asset_file_upload_to(self, self.file.name)}')[0]
         if os.path.exists(f'{outfile}.{new_ext}'):
             outfile += '_' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(7))
         outfile += f'.{new_ext}'
+        os.makedirs(os.path.dirname(outfile), exist_ok=True)
 
         cmd_args = ['ffmpeg', '-v', 'error', '-y', '-i', self.file_path, '-map', '0:a:0']
         if config.ASSET_ENCODING != 'flac':
             cmd_args.extend(['-b:a', config.ASSET_BITRATE.lower()])
-        cmd_args.append(outfile)
+        cmd_args.extend(['--', outfile])
 
         cmd = subprocess.run(cmd_args, text=True, capture_output=True)
         if cmd.returncode == 0 and os.path.exists(outfile):
@@ -339,7 +346,8 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             self.file = self.fingerprint = None
             self.duration = datetime.timedelta(0)
 
-        # TODO: make file name safe-ish for liquidsoap, similar to what youtube-dl does with --restrict-filenames
+        if not self.title:
+            self.title = self.UNNAMED_TRACK
 
         # re-normalize title fields before save
         for field_name in self.TITLE_FIELDS:
@@ -350,7 +358,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             else:
                 value = getattr(self, field_name)
                 normalized_field_name = f'{field_name}_normalized'
-                if field_name in self.get_dirty_fields() or value and not getattr(self, normalized_field_name):
+                if field_name in self.get_dirty_fields() or (value and not getattr(self, normalized_field_name)):
                     setattr(self, normalized_field_name, normalize_title_field(value))
 
     def save(self, run_pre_save=True, pre_save_delete=True, *args, **kwargs):

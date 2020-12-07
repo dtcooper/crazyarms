@@ -45,9 +45,10 @@ def asset_download_external_url(asset, url, title='', task=None):
         confirm_youtube_dl()
 
         unique_filename_suffix = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(7))
-        args = [YDL_CMD, '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--audio-format',
-                config.ASSET_ENCODING, '--no-continue', '--add-metadata', '--exec', 'echo {}', '--output',
-                f'{settings.MEDIA_ROOT}external/%(title)s_{unique_filename_suffix}.%(ext)s', '--restrict-filenames']
+        args = [YDL_CMD, '--newline', '--extract-audio', '--no-playlist', '--max-downloads', '1', '--no-continue',
+                '--audio-format', config.ASSET_ENCODING, '--add-metadata', '--exec', 'echo {}',
+                '--socket-timeout', '10', '--restrict-filenames',
+                '--output', f'{settings.MEDIA_ROOT}external/%(title)s_{unique_filename_suffix}.%(ext)s', ]
         if config.ASSET_ENCODING != 'flac':
             args += ['--audio-quality', config.ASSET_BITRATE]
 

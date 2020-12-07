@@ -34,10 +34,10 @@ class AudioAssetDownloadableCreateFormBase(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if cleaned_data['source'] == 'url':
-            if not cleaned_data['url']:
+            if not cleaned_data.get('url'):
                 self.add_error('url', 'This field is required.')
         else:
-            if not cleaned_data['file']:
+            if not cleaned_data.get('file'):
                 self.add_error('file', 'This field is required.')
 
 

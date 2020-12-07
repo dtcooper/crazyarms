@@ -212,9 +212,10 @@ CONSTANCE_CONFIG = OrderedDict((
     ('HARBOR_TRANSITION_WITH_SWOOSH', (False, 'Transition between harbor sources with a ~1 second swoosh effect.')),
     ('HARBOR_SWOOSH_AUDIO_FILE', (False, 'Audio file for the swoosh (if enabled). Sound be short, ie under 3-4 '
                                   'seconds.', 'file')),
-    ('HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION', (15, 'The maximum number of seconds of silence on a live source '
-                                                      '(eg. Zoom or live DJs) until it will be considered inactive.',
-                                                      'positive_int')),
+    ('HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE', (15, 'The maximum number of seconds of silence on a live source '
+                                                         '(eg. Zoom or live DJs) until it will be considered inactive, '
+                                                         'ie until we would treat it as if it were offline.',
+                                                     'positive_int')),
     ('HARBOR_FAILSAFE_AUDIO_FILE', (False, "Failsafe audio file that the harbor should play if there's nothing else to "
                                     'stream.', 'file')),
     ('UPSTREAM_FAILSAFE_AUDIO_FILE', (False, 'Failsafe audio file that should be broadcast to upstream servers if we '
@@ -260,7 +261,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME', 'PLAYOUT_LOG_PURGE_DAYS')),
     ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH',
                               'HARBOR_SWOOSH_AUDIO_FILE', 'HARBOR_TRANSITION_SECONDS',
-                              'HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION', 'HARBOR_FAILSAFE_AUDIO_FILE',
+                              'HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE', 'HARBOR_FAILSAFE_AUDIO_FILE',
                               'UPSTREAM_FAILSAFE_AUDIO_FILE')),
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT_ENABLED', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
                               'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST', 'AUTODJ_PLAYLISTS_ENABLED',

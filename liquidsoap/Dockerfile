@@ -9,12 +9,10 @@ RUN apt-get update \
         festival \
         festvox-kallpc16k \
         ffmpeg \
+        jq \
         libsox-fmt-all \
         postgresql-client \
         pulseaudio \
-        # Do we need youtube-dl?
-#        python3 \
-#        python3-pip \
         sox \
         supervisor \
         wget \
@@ -25,9 +23,6 @@ RUN wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases
     && apt-get install -y --no-install-recommends \
         /tmp/liquidsoap.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/*.deb
-
-# TODO: nice-to-have but do we need youtube-dl?
-#RUN pip3 install --no-cache-dir youtube-dl
 
 RUN wget -qO /usr/local/bin/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/81b1373f/wait-for-it.sh \
     && chmod +x /usr/local/bin/wait-for-it

@@ -17,7 +17,7 @@ FAILSAFE_SOURCE_NAME = 'Failsafe Audio'
 LIVE_DJ_KICKOFF_INTERVAL = 5.
 HARBOR_PORT = 8001
 MAX = 10.
-MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_TRANSITION|liqval }})
+MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE|liqval }})
 {% if config.AUTODJ_ENABLED %}
     REQUEST_QUEUE_LENGTH = 45.
     REQUEST_RETRY_DELAY = 5.
@@ -100,7 +100,6 @@ live_user_connected = ref false
 live_user = ref ('', '', -1., 0, -1.)
 
 # Circular references, ie status_update and dj_harbor_insert_metadata, need to be defined below but called here
-status_update_ref = ref fun() -> ()
 dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()  # requires dj_harbor to be defined
 
 # Process DJ connection
@@ -117,8 +116,6 @@ def dj_connect(headers)
 
     # TODO: log show name if we have it?
     dj_harbor_insert_metadata(new_track=true, [('title', '#{full_name} LIVE on #{STATION_NAME}')])
-    status_update = !status_update_ref
-    status_update()
 end
 
 # Process DJ disconnect
@@ -131,9 +128,6 @@ def dj_disconnect()
         log_event(type=EVENT_LIVE_DJ, '#{username} disconnected from harbor', extras=[('user_id', string_of(user_id))])
         last_authorized_user := ('', '', -1., 0)
         live_user := ('', '', -1., 0, -1.)
-
-        status_update = !status_update_ref
-        status_update()
     end
 end
 
@@ -151,6 +145,9 @@ add_timeout(fast=false, LIVE_DJ_KICKOFF_INTERVAL, fun() -> begin
     end
     LIVE_DJ_KICKOFF_INTERVAL
 end)
+
+reset_status = ("", "", "", "", "", "")
+last_status_without_timed_sources = ref reset_status
 
 ### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
 {{ section1 }}
@@ -214,8 +211,8 @@ prerecord = audio_to_stereo(id='prerecord_to_stereo', prerecord)
 
 # Update status on track end
 prerecord = on_end(id='prerecord_onend', delay=0., fun(_, _) -> begin
-    status_update = !status_update_ref
-    status_update()
+    # Clear status since timed_sources may be the only thing that changed
+    last_status_without_timed_sources := reset_status
 end, prerecord)
 add_skip_command_carb(prerecord)
 
@@ -246,8 +243,8 @@ add_skip_command_carb(prerecord)
 
     autodj = audio_to_stereo(id='autodj_to_stereo', autodj)
     autodj = on_end(id='autodj_onend', delay=0., fun(_, _) -> begin
-        status_update = !status_update_ref
-        status_update()
+        # Clear status since timed_sources may be the only thing that changed
+        last_status_without_timed_sources := reset_status
     end, autodj)
 
     # Having autodj safe for a few seconds means resolution loading files won't
@@ -307,7 +304,8 @@ source_hierarchy_lookups = list.map(fun(s) -> (source.id(fst(s)), snd(s)), sourc
 
 # Server status stuff, a bit messy but it puts together mixed-type JSON
 current_metadata = ref []
-def status_json()
+
+def status_tuple()
     # List of sources
     active_sources = list.filter(fun(src) -> source.is_ready(fst(src)), source_hierarchy)
     streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(fst(src)), active_sources))
@@ -347,47 +345,49 @@ def status_json()
     metadata = json_of(compact=true, !current_metadata)
     server_info = json_of(compact=true, [('start_time', start_time)])
 
+    # timed_source constantly changes, so don't include it in comparison looking for changes in update status timeout
+    (sources, dj_harbor_source, live_user, skippable_sources, metadata, server_info, timed_sources)
+end
+
+def status_json_from_tuple(tuple)
+    let (sources, dj_harbor_source, live_user, skippable_sources, metadata, server_info, timed_sources) = tuple
     '{"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
         ^ '"skippable_sources":#{skippable_sources},"timed_sources":#{timed_sources},"metadata":#{metadata},'
         ^ '"server_info": #{server_info}}'
 end
+
+def status_json()
+    status_json_from_tuple(status_tuple())
+end
+
 server.register(usage='status', description='Get status of sources in JSON', 'status', fun(_) -> status_json())
 server.register(usage='status_pretty', description='Get status of sources in JSON (pretty-printed)', 'status_pretty',
-                fun(_) -> get_process_output(env=[('JSON', status_json())], 'echo "$JSON" | python3 -m json.tool --sort-keys'))
+                fun(_) -> get_process_output('echo #{safe_quote(status_json())} | jq -SM'))
 
 # Push notifications of status (using the SSE service)
 def post_to_sse(json)
-    status = status_json()
-    log('update_status: hitting SSE service')
+    log('hitting SSE service with status JSON')
     let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=json)
     if status_code != 204 then
         log.severe('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
     end
 end
 
-def update_status()
-    # Do this asynchronously (100ms to give things time to settle, ie DJs being kicked off, etc.)
-    add_timeout(fast=false, 0.1, fun() -> begin
-        post_to_sse(status_json())
-        -1.
-    end)
-end
-status_update_ref := update_status  # For use above
-add_timeout(fast=false, 2.5, fun() -> begin update_status(); -1. end)  # Run once after start-up
-server.register(usage='status_update', description='Force a status update push to web clients', 'status_update', fun(_) -> begin
-    update_status()
-    'Done!'
-end)
-
 on_shutdown(fun() -> post_to_sse('null'))
+post_to_sse('null')  # Empty to start
 
-# Register callbacks on start/stop of all sources for sse (push) notifications
-ignore(list.map(fun(src) -> begin
-    source = fst(src)
-    output.dummy(id='#{source.id(source)}_callback_dummy', fallible=true,
-                 on_start=update_status, on_stop=update_status, source)
-    end, source_hierarchy))
-
+STATUS_UPDATE_CHECK_INTERVAL = .1  # Check for changes to push via SSE every 100ms
+add_timeout(fast=false, STATUS_UPDATE_CHECK_INTERVAL, fun() -> begin
+    current_status_tuple = status_tuple()
+    let (a, b, c, d, e, f, _) = current_status_tuple
+    status_without_timed_sources = (a, b, c, d, e, f)
+    # See if there are any changes
+    if status_without_timed_sources != !last_status_without_timed_sources then
+        last_status_without_timed_sources := status_without_timed_sources
+        post_to_sse(status_json_from_tuple(current_status_tuple))
+    end
+    .STATUS_UPDATE_CHECK_INTERVAL
+end)
 # Radio playout below
 
 # Our transition function used for logging, playing the "swoosh", and fadeouts
@@ -448,8 +448,6 @@ radio = fallback(
 
 # Metadata change function, used for SSE pushes and logging
 radio = on_metadata(fun(m) -> begin
-    update_status()
-
     if !current_source_name == FAILSAFE_SOURCE_NAME then
         log_event(type=EVENT_TRACK, 'Played failsafe audio track')
     else

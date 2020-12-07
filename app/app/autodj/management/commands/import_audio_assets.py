@@ -1,8 +1,10 @@
-import logging  # TODO disable logging
+import logging
 import os
+import shutil
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.files.storage import DefaultStorage
 from django.core.management.base import BaseCommand
 
 from autodj.models import AudioAsset, Playlist
@@ -22,8 +24,15 @@ class Command(BaseCommand):
         parser.add_argument('-d', '--dedupe', action='store_true', help=(
             'Attempt to de-dupe by not saving assets with the same artist, album, and title as an existing one. '
             '(Artist and title must exist.)'))
+        parser.add_argument('-k', '--keep', action='store_true', help=(
+            'Keep original files, whether the can be converted to audio files or not (path still normalized).'))
+        parser.add_argument('-N', '--no-path-normalization', action='store_true', help="Don't normalize paths before "
+                                                                                       'working on them')
 
     def handle(self, *args, **options):
+        if options['verbosity'] < 2:
+            logging.disable(logging.WARNING)
+
         uploader = playlist = None
         if options['username']:
             try:
@@ -55,6 +64,7 @@ class Command(BaseCommand):
                 asset_paths.append(path)
 
             elif os.path.isdir(media_root_path):
+                media_root_path = media_root_path.removesuffix('/')
                 for root, dirs, files in os.walk(media_root_path):
                     for file in files:
                         full_asset_path = os.path.join(root, file)
@@ -62,11 +72,25 @@ class Command(BaseCommand):
                             asset_paths.append(full_asset_path.removeprefix(settings.MEDIA_ROOT))
 
         if asset_paths:
-            print(f'Found {len(asset_paths)} potential asset files in paths under {settings.MEDIA_ROOT}. Running.')
+            print(f'Found {len(asset_paths)} potential asset files in paths under MEDIA_ROOT. Running.')
         else:
-            print(f'Found no potential assets in paths under {settings.MEDIA_ROOT}. Exiting.')
+            print('Found no potential assets found with the supplied paths under MEDIA_ROOT. Exiting.')
             return
 
+        if not options['no_path_normalization']:
+            storage = DefaultStorage()
+
+            normalized_asset_paths = []
+            for path in asset_paths:
+                normalized_path = os.path.join(*map(storage.get_valid_name, os.path.split(path)))
+                if path != normalized_path:
+                    if os.path.exists(f'{settings.MEDIA_ROOT}{normalized_path}'):
+                        normalized_path = storage.get_alternative_name(*os.path.splitext(normalized_path))
+                    os.makedirs(os.path.dirname(f'{settings.MEDIA_ROOT}{normalized_path}'), exist_ok=True)
+                    print(f'Normalizing {path} -> {normalized_path}')
+                    shutil.move(f'{settings.MEDIA_ROOT}{path}', f'{settings.MEDIA_ROOT}{normalized_path}')
+                normalized_asset_paths.append(normalized_path)
+            asset_paths = normalized_asset_paths
         for asset_path in asset_paths:
             print(f'Importing {asset_path}', end='', flush=True)
 
@@ -76,27 +100,35 @@ class Command(BaseCommand):
                 audio_asset.clean()
             except ValidationError as e:
                 print(f'... skipping, validation error: {e.message}')
+                if not options['keep']:
+                    audio_asset.file.delete()
                 continue
 
-            audio_asset.pre_save()
+            audio_asset.pre_save(pre_save_delete=not options['keep'])
 
             if options['dedupe']:
                 if (
+                    # Only run if there _is_ a title
                     audio_asset.title_normalized and audio_asset.artist_normalized
                     and AudioAsset.objects.filter(artist_normalized=audio_asset.artist_normalized,
                                                   album_normalized=audio_asset.album_normalized,
                                                   title_normalized=audio_asset.title_normalized).exists()
                 ):
                     print('... skipping, found an existing asset with the same artist, album, and title')
+                    if not options['keep']:
+                        audio_asset.file.delete()
                     continue
 
             if not audio_asset.file:
                 print('... skipping, invalid file')
+                if not options['keep']:
+                    audio_asset.file.delete()
                 continue
 
             audio_asset.save(run_pre_save=False)
             if playlist:
                 audio_asset.playlists.add(playlist)
-            print('... imported!')
+
+            print(f'... imported as {audio_asset.file.name}')
 
         print()

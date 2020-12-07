@@ -75,7 +75,7 @@ class AudioAsset(AudioAssetDownloadbleBase):
             ):
                 if conf_amount > 0:
                     no_repeat_list = cache.get(cache_key) or []
-                    value = getattr(audio_asset, attr)
+                    value = getattr(audio_asset, attr)  # Skip for blank artists
                     if value:
                         no_repeat_list.insert(0, value)
                     no_repeat_list = no_repeat_list[0:conf_amount]

@@ -7,6 +7,15 @@ TABLE_NAME = {{ table_name|liqval }}
     EVENT_{{ var }} = {{ value|liqval }}
 {% endfor %}
 
+def safe_quote(s)
+    # Needed because of https://github.com/savonet/liquidsoap/issues/1215
+    if string.match(pattern='[^\\w@%+=:,./-]', s) then
+        "'" ^ string.replace(pattern="'", fun(_) -> "'\"'\"'", s) ^ "'"
+    else
+        s
+    end
+end
+
 is_shutting_down = ref false
 current_source_name = ref 'N/A'
 def log_event(~extras=[], ~type=EVENT_GENERAL, ~async=true, description)
@@ -24,9 +33,9 @@ def log_event(~extras=[], ~type=EVENT_GENERAL, ~async=true, description)
             values = string.concat(separator=', ', values)
             sql = 'INSERT INTO #{TABLE_NAME} (created, #{columns}) VALUES (NOW(), #{values});'
 
-            cmd = 'PGPASSWORD=postgres psql -U postgres -h db -c "$SQL"'
-            if not test_process(env=[('SQL', sql)], cmd) then
-                log("ERROR: couldn't log playout event with command: #{cmd} / sql: #{sql}")
+            cmd = 'PGPASSWORD=postgres psql -U postgres -h db -c #{safe_quote(sql)}'
+            if not test_process(cmd) then
+                log("ERROR: couldn't log playout event with command: #{cmd}")
             end
         end
         if async then

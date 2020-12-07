@@ -189,6 +189,10 @@ To run the unit tests, which are currently a bit flaky, use the shell
 1. Edit profile seems to have re-enabled harbor access type
 1. Thoroughly test new ffprobe + ffmpeg flows for audio assets + task
 1. Convert uploads into their own model.
+1. ~~Harbor: use an add_timeout poll to check for `status_json()` changes rather than
+  hooks `update_status[_ref]()` hooks throughout the code.~~ - _done!_
+1. GCal shows stored as `JSONField` with show name, useful for Zoom or Liquidsoap
+  metadata
 1. ..._and more!_
 ## License
 
