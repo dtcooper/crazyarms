@@ -1,0 +1,16 @@
+dev_addr: 127.0.0.1:8888  # Not used by docker-compose
+markdown_extensions:
+    - toc:
+        permalink: True
+nav:
+    - Home: index.md
+    - Live DJing:
+        - IceCast 2 or SHOUTcast: dj/icecast.md
+        - Zoom: dj/zoom.md
+    - Glossary of Terms: glossary.md
+repo_url: https://github.com/dtcooper/carb/
+site_dir: _docs
+site_favicon: img/favicon.svg
+site_name: Crazy Arms Radio Backend
+site_url: https://dtcooper.github.io/carb/
+theme: readthedocs
