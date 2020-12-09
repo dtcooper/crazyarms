@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+     <loc>https://dtcooper.github.io/carb/</loc>
+     <lastmod>2020-12-08</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://dtcooper.github.io/carb/dj/icecast/</loc>
+     <lastmod>2020-12-08</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://dtcooper.github.io/carb/dj/zoom/</loc>
+     <lastmod>2020-12-08</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://dtcooper.github.io/carb/glossary/</loc>
+     <lastmod>2020-12-08</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+</urlset>
