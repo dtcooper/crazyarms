@@ -1,175 +1,323 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="None">
-  
-  <link rel="shortcut icon" href="img/favicon.svg">
-  
-  <title>Home - Crazy Arms Radio Backend</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        
+        <link rel="canonical" href="https://dtcooper.github.io/carb/">
+        <link rel="shortcut icon" href="img/favicon.svg">
+        
+        <title>Crazy Arms Docs</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
 
-  <link rel="stylesheet" href="css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Home";
-    var mkdocs_page_input_path = "index.md";
-    var mkdocs_page_url = "/carb/";
-  </script>
-  
-  <script src="js/jquery-2.1.1.min.js" defer></script>
-  <script src="js/modernizr-2.8.3.min.js" defer></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
-  
-</head>
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
 
-<body class="wy-body-for-nav" role="document">
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href=".">Crazy Arms Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-  <div class="wy-grid-for-nav">
-
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-      <div class="wy-side-nav-search">
-        <a href="." class="icon icon-home"> Crazy Arms Radio Backend</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
-  </form>
-</div>
-      </div>
-
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1 current">
-		
-    <a class="current" href=".">Home</a>
-    <ul class="subnav">
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem active">
+                                <a href="." class="nav-link">Home</a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">User's Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+  <li class="dropdown-submenu">
+    <a href="#" class="dropdown-item">Live DJing</a>
+    <ul class="dropdown-menu">
             
-    <li class="toctree-l2"><a href="#crazy-arms-radio-backend">Crazy Arms Radio Backend</a></li>
-    
+<li>
+    <a href="users-guide/dj/icecast/" class="dropdown-item">IceCast 2 or SHOUTcast</a>
+</li>
+            
+<li>
+    <a href="users-guide/dj/zoom/" class="dropdown-item">Zoom</a>
+</li>
+    </ul>
+  </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Admin's Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="admin-guide/autodj/" class="dropdown-item">AutoDJ</a>
+</li>
+                                    
+<li>
+    <a href="admin-guide/configuration/" class="dropdown-item">Configuration</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="navitem">
+                                <a href="installation/" class="nav-link">Installation</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="glossary/" class="nav-link">Glossary of Terms</a>
+                            </li>
+                        </ul>
 
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">Live DJing</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="dj/icecast/">IceCast 2 or SHOUTcast</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="dj/zoom/">Zoom</a>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="glossary/">Glossary of Terms</a>
-	    </li>
-          
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/dtcooper/carb/" class="nav-link"><i class="fa fa-github"></i> GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#crazy-arms-radio-backend" class="nav-link">Crazy Arms Radio Backend</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#features-at-a-glance" class="nav-link">Features At a Glance</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#audio-infrastructure-overview" class="nav-link">Audio Infrastructure Overview</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#sources-harbor-and-upstreams-explained" class="nav-link">Sources, Harbor, and Upstreams Explained</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+              </ul>
+            </li>
         </ul>
-      </div>
-      &nbsp;
-    </nav>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href=".">Crazy Arms Radio Backend</a>
-      </nav>
-
-      
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href=".">Docs</a> &raquo;</li>
-    
-      
-    
-    <li>Home</li>
-    <li class="wy-breadcrumbs-aside">
-      
-        <a href="https://github.com/dtcooper/carb/edit/master/docs/index.md"
-          class="icon icon-github"> Edit on GitHub</a>
-      
-    </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main">
-            <div class="section">
-              
-                <h1 id="crazy-arms-radio-backend">Crazy Arms Radio Backend<a class="headerlink" href="#crazy-arms-radio-backend" title="Permanent link">&para;</a></h1>
+<h1 id="crazy-arms-radio-backend">Crazy Arms Radio Backend<a class="headerlink" href="#crazy-arms-radio-backend" title="Permanent link">&para;</a></h1>
 <p>Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-end
 written from the ground up.</p>
-<p>It's specifically written after its author built several <em>fully decentralized</em>
-online radio stations with varied types of scheduling and finding no existing
+<p>It's specifically written after its author built a few <em>fully decentralized</em>
+online radio stations with varying types of scheduling and finding no existing
 product fit some common needs out of the box.</p>
-              
+<p>If you're an technical user or a systems administrator wanting to install Crazy
+Arms, head over to the <a href="installation/">installation docs</a>.</p>
+<h2 id="features-at-a-glance">Features At a Glance<a class="headerlink" href="#features-at-a-glance" title="Permanent link">&para;</a></h2>
+<dl>
+<dt>Priority-based Streaming</dt>
+<dd>Crazy Arms operates on the concept of priority. This means it chooses the
+source (audio input) that is streaming, properly operating, or online with
+the highest priority. For example, a live DJ takes priority over the AutoDJ.
+See <a href="#sources-harbor-and-upstreams-explained">more info on this concept below</a>.</dd>
+<dt>Live scheduling via Google Calendar</dt>
+<dd>
+<p>Scheduling of live DJs using Google Calendar. An invite to a calendar event means
+a DJ is authorized to play. Simple as that.</p>
+<p>Rather than re-invent the wheel, Google Calendar was chosen because of its wide
+adoption and east of use &mdash; and implementation of recurring events.. Your
+web front-end can integrate with that, rather than a complex, custom API.</p>
+</dd>
+<dt>Scheduled playout of long-format audio files, ie prerecorded shows</dt>
+<dd>A major use case is taking long-format audio files (ie two hours) and scheduling
+them to play at specific times, superseding the AutoDJ.</dd>
+<dt>Broadcasting for non-technical users with <a href="https://zoom.us/">Zoom</a></dt>
+<dd>This is implemented with Zoom for Linux using a Docker container. A "runner"
+bash script does its best to connect to a user's Zoom room and listen in.
+It's inherently a bit brittle, but can be troubleshooted somewhat easily in
+a web browser running <a href="https://novnc.com/info.html">noVNC</a> by an admin.</dd>
+<dt><em>Idiot-Tolerant&trade;</em> DJing</dt>
+<dd>If a live DJ or Zoom room is broadcasting silence, Crazy Arms picks another
+input to stream from.</dd>
+<dt>Completely <a href="https://www.docker.com/">Docker</a>-ized</dt>
+<dd>Easy development and easy deployment using
+<a href="https://docs.docker.com/compose/">docker-compose</a>.</dd>
+<dt>Useful and informative station administration and status tools.</dt>
+<dd>
+<p>Leveraging <a href="https://docs.djangoproject.com/en/3.1/">Django</a>'s admin
+interface much of Crazy Arms can be managed by administrators (or users with
+the necessary permissions).</p>
+<p>A status page is also provided that uses
+<a href="https://en.wikipedia.org/wiki/Server-sent_events">server-sent events</a> in
+which the Harbor service script communicates directly with your web browser
+in real-time.</p>
+</dd>
+<dt>Uploading audio from varied sources</dt>
+<dd>
+<p>Uploading of audio files from sources like <a href="https://soundcloud.com/">SoundCloud</a>,
+<a href="https://www.mixcloud.com/">Mixcloud</a>, or <a href="https://www.youtube.com/">YouTube</a> are
+supported. Just enter a URL and the Crazy Arms downloads and processes your audio file.</p>
+<p>This utilizes the wonderful <a href="https://github.com/blackjack4494/yt-dlc">youtube-dlc</a>
+tool and supports literally
+<a href="https://github.com/blackjack4494/yt-dlc/blob/master/docs/supportedsites.md"><em>thousands of sites</em></a>!</p>
+</dd>
+<dt>An AutoDJ that plays blocks of advertisements and station IDs (stop sets)</dt>
+<dd>This feature can optionally be enabled in the <em>"Server Settings &gt; Configuration"</em>
+section.</dd>
+<dt>Fine-grained user permission structure.</dt>
+<dd>If a user is <em>not</em> a superuser, there are several permission groups to allow
+them some administrative privileges.</dd>
+<dt>Accessible Logs</dt>
+<dd>Less technical users can see server logs without <code>ssh</code> or command-line knowledge
+to help troubleshoot. Maybe a DJ got their password wrong or tried to broadcast
+at the wrong time?</dd>
+<dt>Streaming Customization</dt>
+<dd>At your own risk, you can modify <a href="https://www.liquidsoap.info/">Liquidsoap</a>
+Harbor scripts. This gives pretty high flexibility for various use cases.</dd>
+</dl>
+<h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">&para;</a></h2>
+<h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">&para;</a></h3>
+<p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> This is a
+customizable script, implemented in <a href="https://www.liquidsoap.info/">Liquidsoap</a>
+that takes care of choosing what to broadcast and when. Think of the Harbor as a
+robot taking several sources and deciding which one is best to broadcast based
+on the rules you see on the status page.</p>
+<p><i class="fa fa-camera-retro fa-lg"></i> fa-lg</p>
+<div class="mermaid">flowchart LR
+    subgraph sources ["Priority-Based Sources"]
+        prerecord("1. Pre-recorded Broadcast&lt;br&gt;(Scheduled, long-format shows)")
+        dj("2. Live DJ&lt;br&gt;(IceCast 2 / SHOUTCast)")
+        zoom("3. Zoom Room&lt;br&gt;(optional)")
+        autodj("4. AutoDJ&lt;br&gt;(optional)")
+        failsafe(5. Failsafe Audio File)
+    end
+
+    harbor{"Harbor Service&lt;br&gt;(Intelligent stream picker)"}
+
+    prerecord --&gt;|highest priority| harbor
+    dj --&gt; harbor
+    zoom --&gt; harbor
+    autodj --&gt; harbor
+    failsafe --&gt;|lowest priority| harbor
+
+    subgraph upstreams ["Upstream Services (Examples)"]
+        icecast1("Local IceCast 2 Server (mp3)")
+        icecast2("External IceCast 2 Server (aac)")
+        icecastOthers("Other IceCast 2 Servers")
+    end
+
+    harbor --&gt; icecast1
+    harbor --&gt; icecast2
+    harbor --&gt; icecastOthers
+
+    listeners(("Listeners"))
+
+    icecast1 --&gt; listeners
+    icecast2 --&gt; listeners
+    icecastOthers --&gt; listeners</div></div>
             </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dj/icecast/" class="btn btn-neutral float-right" title="IceCast 2 or SHOUTcast">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-    </div>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-    
-  </div>
-
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-</footer>
-      
         </div>
-      </div>
 
-    </section>
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="https://unpkg.com/mermaid@8.8.4/dist/mermaid.js" defer></script>
+        <script src="search/main.js" defer></script>
 
-  </div>
-
-  <div class="rst-versions" role="note" style="cursor: pointer">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-          <a href="https://github.com/dtcooper/carb/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
-      
-      
-      
-        <span style="margin-left: 15px"><a href="dj/icecast/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
-    </span>
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
 </div>
-    <script>var base_url = '.';</script>
-    <script src="js/theme.js" defer></script>
-      <script src="search/main.js" defer></script>
 
-</body>
+    </body>
 </html>
 
 <!--
-MkDocs version : 1.0.4
-Build Date UTC : 2020-12-09 02:42:14
+MkDocs version : 1.1.2
+Build Date UTC : 2020-12-11 04:32:46.710402+00:00
 -->
