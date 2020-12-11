@@ -1,16 +1,36 @@
 dev_addr: 127.0.0.1:8888  # Not used by docker-compose
+edit_uri: ""
+# Include mermaid
+extra_javascript:
+    - https://unpkg.com/mermaid@8.8.4/dist/mermaid.js
 markdown_extensions:
+    - admonition
+    - def_list
+    - pymdownx.smartsymbols
+    - pymdownx.superfences:
+        custom_fences:
+          - name: mermaid
+            class: mermaid
+            format: !!python/name:pymdownx.superfences.fence_div_format
     - toc:
         permalink: True
 nav:
     - Home: index.md
-    - Live DJing:
-        - IceCast 2 or SHOUTcast: dj/icecast.md
-        - Zoom: dj/zoom.md
+    - User's Guide:
+        - Live DJing:
+            - IceCast 2 or SHOUTcast: users-guide/dj/icecast.md
+            - Zoom: users-guide/dj/zoom.md
+    - Admin's Guide:
+        - AutoDJ: admin-guide/autodj.md
+        - Configuration: admin-guide/configuration.md
+    - Installation: installation.md
     - Glossary of Terms: glossary.md
 repo_url: https://github.com/dtcooper/carb/
 site_dir: _docs
 site_favicon: img/favicon.svg
-site_name: Crazy Arms Radio Backend
+site_name: Crazy Arms Docs
 site_url: https://dtcooper.github.io/carb/
-theme: readthedocs
+theme:
+    name: mkdocs
+    navigation_depth: 3
+    custom_dir: docs/theme/
