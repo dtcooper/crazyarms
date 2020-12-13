@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib import messages
 
-from common.admin import AudioAssetDownloadableAdminBase
+from common.admin import AudioAssetAdminBase
 
 from .forms import BroadcastAssetCreateForm
 from .models import BroadcastAsset, Broadcast
@@ -16,7 +16,7 @@ class BroadcastInline(admin.TabularInline):
     # TODO queue
 
 
-class BroadcastAssetAdmin(AudioAssetDownloadableAdminBase):
+class BroadcastAssetAdmin(AudioAssetAdminBase):
     inlines = (BroadcastInline,)
     create_form = BroadcastAssetCreateForm
 

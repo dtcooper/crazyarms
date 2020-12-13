@@ -13,7 +13,7 @@ from gcal.tasks import sync_google_calendar_api
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-class AudioAssetDownloadableCreateFormBase(forms.ModelForm):
+class AudioAssetCreateFormBase(forms.ModelForm):
     url = forms.URLField(label='External URL', required=False, help_text=mark_safe(
         'URL on an external service like SoundCloud, Mixcloud, YouTube, direct link, etc. If provided, it will be '
         'downloaded. (Complete list of supported services <a href="https://ytdl-org.github.io/youtube-dl/supported'
@@ -39,6 +39,14 @@ class AudioAssetDownloadableCreateFormBase(forms.ModelForm):
         else:
             if not cleaned_data.get('file'):
                 self.add_error('file', 'This field is required.')
+
+    def save(self, commit=True):
+        asset = super().save(commit=False)
+        if self.cleaned_data['source'] == 'url':
+            asset.run_download_after_save_url = self.cleaned_data['url']
+        if commit:
+            asset.save()
+        return asset
 
 
 class ConstanceForm(constance_admin.ConstanceForm):

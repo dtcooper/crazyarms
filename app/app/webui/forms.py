@@ -1,8 +1,13 @@
 import datetime
+import json
+import logging
 import random
 import re
 import string
+import subprocess
 from urllib.parse import parse_qs, urlparse
+
+import requests
 
 from django import forms
 from django.conf import settings
@@ -16,7 +21,18 @@ from constance import config
 from common.models import User
 from services import init_services
 
-from .tasks import preload_sample_audio_assets, preload_sample_stopsets, NUM_SAMPLE_ASSETS
+from autodj.models import AudioAsset, RotatorAsset, Rotator, Playlist
+from common.tasks import install_youtube_dl, YOUTUBE_DL_CMD
+
+
+SOUNDCLOUD_SAMPLE_ROTATOR_ASSETS_URL = 'https://soundcloud.com/dtcooper/sets/carb-sample-data/s-4Tlos8HM03B'
+NUM_SAMPLE_ASSETS = 3
+CCMIXTER_API_URL = 'http://ccmixter.org/api/query'
+# Ask for a few month, since we only want ones with mp3s
+CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limit': round(NUM_SAMPLE_ASSETS * 1.5)}
+
+
+logger = logging.getLogger(f'carb.{__name__}')
 
 
 class FirstRunForm(UserCreationForm):
@@ -45,6 +61,42 @@ class FirstRunForm(UserCreationForm):
     def random_password():
         return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
 
+    @staticmethod
+    def preload_sample_audio_assets(uploader):
+        ccmixter_urls = []
+        soundcloud_urls = []
+
+        ccmixter_json = requests.get(CCMIXTER_API_URL, params=CCMIXTER_API_PARAMS).json()
+        num_assets = 0
+        for ccmixter_track in ccmixter_json:
+            try:
+                url = next(f['download_url'] for f in ccmixter_track['files'] if f['download_url'].endswith('.mp3'))
+            except StopIteration:
+                logger.warning(f'ccMixter track track {ccmixter_track["upload_name"]} has no mp3!')
+            else:
+                num_assets += 1
+                ccmixter_urls.append(url)
+
+                if num_assets >= NUM_SAMPLE_ASSETS:
+                    break
+
+        logger.info(f'Got {len(ccmixter_urls)} sample asset URLs from ccMixter')
+
+        # TODO: use move from soundcloud when it comes back up
+        # install_youtube_dl()
+        # args = [YOUTUBE_DL_CMD, '--dump-single-json', '--flat-playlist', SOUNDCLOUD_SAMPLE_ROTATOR_ASSETS_URL]
+        # print(subprocess.check_output(args))
+        # soundcloud_json = json.loads(subprocess.check_output(args))
+        # for entry in soundcloud_json['entries']:
+        #     soundcloud_urls.append(entry['url'])
+
+        playlist = Playlist.objects.get_or_create(name='ccMixter Sample Music')[0]
+        for url in ccmixter_urls:
+            asset = AudioAsset(uploader=uploader)
+            asset.run_download_after_save_url = url
+            asset.save()
+            asset.playlists.add(playlist)
+
     def save(self):
         user = super().save(commit=False)
         user.is_superuser = True
@@ -60,8 +112,7 @@ class FirstRunForm(UserCreationForm):
             config.ICECAST_RELAY_PASSWORD = self.random_password()
 
         if self.cleaned_data['generate_sample_assets']:
-            preload_sample_audio_assets(uploader=user)
-            preload_sample_stopsets(uploader=user)
+            self.preload_sample_audio_assets(uploader=user)
 
         init_services(restart_services=True)
 

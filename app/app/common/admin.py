@@ -26,19 +26,25 @@ def swap_title_fields(method):
     return swapped
 
 
-class AudioAssetDownloadableAdminBase(admin.ModelAdmin):
-    save_on_top = True
-    create_form = None
+class AudioAssetAdminBase(admin.ModelAdmin):
     add_fields = ('source', 'file', 'url', 'title')
-    change_fields = ('title', 'file', 'duration', 'status', 'uploader', 'task_log_line')
     add_readonly_fields = ('uploader',)
-    change_readonly_fields = add_readonly_fields + ('duration', 'file', 'audio_player_html', 'status', 'task_log_line')
-    search_fields = ('title',)
-    list_display = ('title', 'duration', 'status')
+    change_fields = ('title', 'file', 'duration', 'status', 'uploader', 'created', 'modified', 'task_log_line')
+    change_readonly_fields = add_readonly_fields + ('duration', 'file', 'audio_player_html', 'status', 'created',
+                                                    'modified', 'task_log_line')
+    create_form = None
+    date_hierarchy = 'created'
+    list_display = ('title', 'created', 'duration', 'status')
     list_filter = (('uploader', admin.RelatedOnlyFieldListFilter), 'status')
+    save_as_continue = False
+    save_on_top = True
+    search_fields = ('title',)
 
     class Media:
         js = ('common/admin/js/asset_source.js',)
+
+    def has_change_permission(self, request, obj=None):
+        return not (obj and obj.status != obj.Status.UPLOADED) and super().has_change_permission(request, obj=obj)
 
     @swap_title_fields
     def get_fields(self, request, obj=None):
@@ -46,14 +52,17 @@ class AudioAssetDownloadableAdminBase(admin.ModelAdmin):
             return self.add_fields
         else:
             fields = list(self.change_fields)
-            if obj.file:
+            if obj.file and obj.status == obj.Status.UPLOADED:
                 file_index = fields.index('file')
                 fields.insert(file_index, 'audio_player_html')
+            else:
+                fields.remove('file')
 
             # Remove these if they're falsey
-            for field in ('file', 'duration', 'task_log_line'):
+            for field in ('duration', 'task_log_line'):
                 if not getattr(obj, field):
                     fields.remove(field)
+
             return fields
 
     @swap_title_fields
@@ -74,20 +83,19 @@ class AudioAssetDownloadableAdminBase(admin.ModelAdmin):
         return super().get_form(request, obj, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        download_url = None
         if not change:
             obj.uploader = request.user
-            if form.cleaned_data['source'] == 'url':
-                download_url = form.cleaned_data['url']
-                obj.title = f'Downloading {download_url}'
 
         super().save_model(request, obj, form, change)
 
-        if download_url:
+        if obj.run_download_after_save_url:
             messages.add_message(request, messages.WARNING,
-                                 f'The audio file is being downloaded from {download_url}. Please refresh the page or '
-                                 'come back later to check on its progress.')
-            obj.queue_download(url=download_url, set_title=form.cleaned_data['title'])
+                                 f'The audio file is being downloaded from {obj.run_download_after_save_url}. Please '
+                                 'refresh the page or come back later to check on its progress.')
+        elif obj.run_conversion_after_save:
+            messages.add_message(request, messages.WARNING,
+                                 f'The audio file is being converted to {config.ASSET_ENCODING} format. Please refresh '
+                                 'the page or come back later to check on its progress.')
 
 
 class HarborAuthListFilter(admin.SimpleListFilter):

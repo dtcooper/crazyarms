@@ -59,8 +59,7 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 1. Convert uploads into their own model.
 1. ~~Harbor: use an add_timeout poll to check for `status_json()` changes rather than
   hooks `update_status[_ref]()` hooks throughout the code.~~ - _done!_
-1. GCal shows stored as `JSONField` with show name, useful for Zoom or Liquidsoap
-  metadata
+1. GCal shows stored as `JSONField` with show name, useful for Zoom or Liquidsoap metadata
 1. ..._and more!_
 ## License
 

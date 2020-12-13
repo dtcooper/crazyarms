@@ -160,11 +160,14 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/static_root/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media_root/'
+AUDIO_IMPORTS_ROOT = '/imports_root/'
 
 HUEY = {
-    'name': 'carb',
-    'immediate': False,
     'connection': {'host': 'redis'},
+    'expire_time': 60 * 60,
+    'huey_class': 'huey.PriorityRedisExpireHuey',
+    'immediate': False,
+    'name': 'carb',
     # 'connection_pool': ConnectionPool(host='redis', max_connections=5),
 }
 
@@ -176,7 +179,7 @@ SHELL_PLUS_IMPORTS = [
     'from gcal.tasks import sync_google_calendar_api',
     'from webui.tasks import preload_sample_audio_assets, preload_sample_stopsets, stop_zoom_broadcast',
     'from broadcast.tasks import play_broadcast',
-    'from common.tasks import asset_download_external_url',
+    'from common.tasks import asset_download_external_url, asset_convert_to_acceptable_format',
     'from services.tasks import purge_playout_log_entries',
 ]
 
@@ -232,10 +235,11 @@ CONSTANCE_CONFIG = OrderedDict((
     ('AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST',
         (15, 'Number of tracks to avoid playing the same artist (if possible). Set to 0 to disable.',
          'positive_int')),
-    ('ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets, and non-standard input files.',
+    ('ASSET_ENCODING', ('mp3', 'Encoding of downloaded external assets and non-standard input files.',
                         'asset_encoding_choices')),
-    ('ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external assets. Unused for FLAC.',
-                       'asset_bitrate_choices')),
+    ('ASSET_BITRATE', ('128K', 'Bitrate (quality) of downloaded external and non-standard audio files. (Unused for '
+                       'FLAC.)', 'asset_bitrate_choices')),
+    ('ASSET_DEDUPING', (True, 'Enable duplicate detection for audio assets based on metadata and audio fingerprint.')),
     ('GOOGLE_CALENDAR_ENABLED', (False, 'Enabled Google Calendar based authentication for DJs.')),
     ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID.', 'char')),
     ('GOOGLE_CALENDAR_CREDENTIALS_JSON', (
@@ -266,7 +270,7 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT_ENABLED', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
                               'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST', 'AUTODJ_PLAYLISTS_ENABLED',
                               'AUTODJ_STOPSETS_ENABLED', 'AUTODJ_STOPSETS_ONCE_PER_MINUTES')),
-    ('Externally Downloaded Audio Assets', ('ASSET_ENCODING', 'ASSET_BITRATE')),
+    ('Audio Assets Configuration', ('ASSET_ENCODING', 'ASSET_BITRATE', 'ASSET_DEDUPING')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),
 ))

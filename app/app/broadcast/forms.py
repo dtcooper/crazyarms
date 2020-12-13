@@ -1,8 +1,8 @@
-from common.forms import AudioAssetDownloadableCreateFormBase
+from common.forms import AudioAssetCreateFormBase
 
 from .models import BroadcastAsset
 
 
-class BroadcastAssetCreateForm(AudioAssetDownloadableCreateFormBase):
-    class Meta(AudioAssetDownloadableCreateFormBase.Meta):
+class BroadcastAssetCreateForm(AudioAssetCreateFormBase):
+    class Meta(AudioAssetCreateFormBase.Meta):
         model = BroadcastAsset

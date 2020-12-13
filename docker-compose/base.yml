@@ -29,6 +29,7 @@ services:
     volumes:
       - ./.env:/.env:ro
       - static_root:/static_root
+      - ./imports:/imports_root
       - ./media:/media_root
       - services_config:/config
     depends_on:
@@ -47,6 +48,7 @@ services:
       context: ./app
     volumes:
       - ./.env:/.env:ro
+      - ./imports:/imports_root
       - ./media:/media_root
     depends_on:
       - db

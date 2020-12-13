@@ -1,6 +1,6 @@
 import logging
 
-import huey
+from huey import crontab
 
 from django.core.cache import cache
 from django.utils import timezone
@@ -9,6 +9,7 @@ from constance import config
 from huey.contrib import djhuey
 
 from carb import constants
+from common.tasks import once_at_startup
 
 from .models import GoogleCalendarShowTimes
 
@@ -16,22 +17,7 @@ from .models import GoogleCalendarShowTimes
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-def crontab_and_startup(*args, **kwargs):
-    needs_to_run = True
-    crontab = huey.crontab(*args, **kwargs)
-
-    def startup_crontab(dt):
-        nonlocal needs_to_run
-        if needs_to_run:
-            needs_to_run = False
-            return True
-        else:
-            return crontab(dt)
-
-    return startup_crontab
-
-
-@djhuey.db_periodic_task(crontab_and_startup(minute='*/15'))
+@djhuey.db_periodic_task(once_at_startup(crontab(minute='*/5')))
 @djhuey.lock_task('sync-google-calendar-api-lock')
 def sync_google_calendar_api():
     if config.GOOGLE_CALENDAR_ENABLED:
@@ -40,7 +26,7 @@ def sync_google_calendar_api():
             GoogleCalendarShowTimes.sync_api()
         except Exception:
             cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC,
-                      "failed, please check your settings and try again.", timeout=None)
+                      "Failed, please check your settings and try again.", timeout=None)
             raise
         else:
             cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, timezone.now(), timeout=None)

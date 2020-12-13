@@ -17,7 +17,7 @@ Prerequisite: Linux or macOS with [Docker](https://www.docker.com/) and
 In your terminal clone the repo and start the code. Building the containers may
 take several minutes.
 
-```bash
+```
 git clone git@github.com:dtcooper/carb.git
 cd carb
 
@@ -36,7 +36,7 @@ To stop, in your terminal press `CTRL+C`.
 
 ### Unit Tests
 
-```bash
+```
 ./compose.sh test
 
 # Tear down test dependent containers (postgres and redis)

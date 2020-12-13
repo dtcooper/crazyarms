@@ -16,6 +16,7 @@ psycopg2-binary
 python-dotenv
 pyyaml
 requests
+setproctitle
 supervisor
 unidecode
 watchdog

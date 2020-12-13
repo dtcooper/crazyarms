@@ -10,9 +10,10 @@ from django.utils.safestring import mark_safe
 
 from constance import config
 
-from common.admin import AudioAssetDownloadableAdminBase
+from common.admin import AudioAssetAdminBase
 
-from .forms import AudioAssetCreateForm, AudioAssetUploadForm, PlaylistActionForm, RotatorActionForm
+from .forms import (AudioAssetCreateForm, AudioAssetUploadForm, PlaylistActionForm,
+                    RotatorActionForm, RotatorAssetCreateForm)
 from .models import AudioAsset, Playlist, Rotator, RotatorAsset, Stopset, StopsetRotator
 
 
@@ -25,7 +26,7 @@ class RemoveFilterHorizontalFromPopupMixin:
         return fields
 
 
-class AudoDJModelAdmin(admin.ModelAdmin):
+class AutoDJModelAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return config.AUTODJ_ENABLED and super().has_add_permission(request)
 
@@ -39,7 +40,7 @@ class AudoDJModelAdmin(admin.ModelAdmin):
         return config.AUTODJ_ENABLED and super().has_view_permission(request, obj=obj)
 
 
-class AutoDJStopsetRelatedAdmin(AudoDJModelAdmin):
+class AutoDJStopsetRelatedAdmin(AutoDJModelAdmin):
     def has_add_permission(self, request):
         return config.AUTODJ_STOPSETS_ENABLED and super().has_add_permission(request)
 
@@ -53,7 +54,7 @@ class AutoDJStopsetRelatedAdmin(AudoDJModelAdmin):
         return config.AUTODJ_STOPSETS_ENABLED and super().has_view_permission(request, obj=obj)
 
 
-class PlaylistAdmin(RemoveFilterHorizontalFromPopupMixin, AudoDJModelAdmin):
+class PlaylistAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJModelAdmin):
     search_fields = ('name',)
     fields = ('name', 'is_active', 'weight', 'audio_assets')
     list_display = ('name', 'is_active', 'weight', 'audio_assets_list_display')
@@ -83,14 +84,14 @@ class PlaylistInline(admin.StackedInline):
     extra = 1
 
 
-class AudioAssetAdmin(AudioAssetDownloadableAdminBase, AudoDJModelAdmin):
+class AudioAssetAdmin(AudioAssetAdminBase, AutoDJModelAdmin):
     playlist_inlines = (PlaylistInline,)
     playlist_actions = ('add_playlist_action', 'remove_playlist_action')
     playlist_action_form = PlaylistActionForm
     create_form = AudioAssetCreateForm
     # title gets swapped to include artist and album
-    list_display = ('title', 'playlists_list_display', 'duration', 'status')
-    list_filter = ('playlists',) + AudioAssetDownloadableAdminBase.list_filter
+    list_display = ('title', 'created', 'playlists_list_display', 'duration', 'status')
+    list_filter = ('playlists',) + AudioAssetAdminBase.list_filter
 
     @property
     def action_form(self):
@@ -164,9 +165,8 @@ class AudioAssetAdmin(AudioAssetDownloadableAdminBase, AudoDJModelAdmin):
                     try:
                         asset.clean()
                     except forms.ValidationError as validation_error:
-                        for field, error_list in validation_error:
-                            for error in error_list:
-                                form.add_error('audios' if field == 'audio' else '__all__', error)
+                        for error in validation_error.messages:
+                            form.add_error('__all__', error)
 
             # If no errors were added
             if form.is_valid():
@@ -214,16 +214,14 @@ class RotatorInline(admin.StackedInline):
     extra = 1
 
 
-class RotatorAssetAdmin(AutoDJStopsetRelatedAdmin):
+class RotatorAssetAdmin(AudioAssetAdminBase, AutoDJStopsetRelatedAdmin):
     inlines = [RotatorInline]
     action_form = RotatorActionForm
     actions = ('add_rotator_action', 'remove_rotator_action')
-    add_fields = ('title', 'file')
-    change_fields = ('title', 'file', 'audio_player_html', 'duration', 'uploader')
-    change_readonly_fields = ('file', 'audio_player_html', 'duration', 'uploader')
+    create_form = RotatorAssetCreateForm
     search_fields = ('title',)
-    list_display = ('title', 'rotators_list_display', 'duration')
-    list_filter = ('rotators', ('uploader', admin.RelatedOnlyFieldListFilter))
+    list_display = ('title', 'created', 'rotators_list_display', 'duration')
+    list_filter = ('rotators',) + AudioAssetAdminBase.list_filter
 
     # TODO bulk upload view abstracted from AudioAssets
 
@@ -259,12 +257,6 @@ class RotatorAssetAdmin(AutoDJStopsetRelatedAdmin):
         if not change:
             obj.uploader = request.user
         super().save_model(request, obj, form, change)
-
-    def get_fields(self, request, obj=None):
-        return self.add_fields if obj is None else self.change_fields
-
-    def get_readonly_fields(self, request, obj=None):
-        return () if obj is None else self.change_readonly_fields
 
 
 class StopsetRotatorInline(admin.TabularInline):

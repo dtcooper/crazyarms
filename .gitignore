@@ -5,4 +5,5 @@ _docs/
 credentials.json
 docker-compose/overrides.yml
 htmlcov/
+imports/
 media/

@@ -2,7 +2,10 @@ import datetime
 import logging
 import random
 
+import unidecode
+
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -10,7 +13,7 @@ from django.utils import timezone
 from constance import config
 
 from carb import constants
-from common.models import AudioAssetBase, AudioAssetDownloadbleBase, TruncatingCharField
+from common.models import AudioAssetBase, TruncatingCharField
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -24,6 +27,10 @@ def random_queryset_pick(queryset):
     model_cls = queryset.model
     id_range = model_cls.objects.aggregate(min=models.Min('id'), max=models.Max('id'))
     min_id, max_id = id_range['min'], id_range['max']
+
+    if min_id is None or max_id is None:
+        logger.warning(f"AutoDJ couldn't generate a random {model_cls._meta.verbose_name}, no assets exist")
+        return None
 
     # We've got our query set, we're ready to pick our track
     # Generate chunk size * number of tries to get a set potential random IDs
@@ -46,7 +53,11 @@ def random_queryset_pick(queryset):
     return None
 
 
-class AudioAsset(AudioAssetDownloadbleBase):
+def normalize_title_field(value):
+    return (' '.join(unidecode.unidecode(value).strip().split())).lower()
+
+
+class AudioAsset(AudioAssetBase):
     TITLE_FIELDS = ('title', 'artist', 'album')
     artist = TruncatingCharField('artist', max_length=255, blank=True,
                                  help_text="If left empty, an artist will be generated from the file's metadata.")
@@ -61,9 +72,21 @@ class AudioAsset(AudioAssetDownloadbleBase):
         verbose_name = 'audio asset'
         verbose_name_plural = 'audio assets'
 
-    def __str__(self):
-        s = ' - '.join(filter(None, (getattr(self, field_name, None) for field_name in ('artist', 'album', 'title'))))
-        return super().__str__(s)
+    def clean(self):
+        super().clean()
+
+        for field in self.TITLE_FIELDS:
+            if field in self.get_dirty_fields():
+                setattr(self, f'{field}_normalized', normalize_title_field(getattr(self, field)))
+
+        # Only run if there is a title + artist
+        if config.ASSET_DEDUPING and self.title_normalized and self.artist_normalized:
+            match = AudioAsset.objects.exclude(id=self.id).filter(
+                status=self.Status.UPLOADED, artist_normalized=self.artist_normalized,
+                album_normalized=self.album_normalized, title_normalized=self.title_normalized).first()
+            if match:
+                raise ValidationError(
+                    f'A duplicate audio file already exists with the same artist, title (and album): {match}')
 
     @classmethod
     def process_anti_repeat_autodj(cls, audio_asset):

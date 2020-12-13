@@ -1,5 +1,8 @@
-CACHE_KEY_YTDL_TASK_LOG_PREFIX = 'youtube-dl:log:'  # + task.id
-CACHE_KEY_YTDL_UP2DATE = 'youtube-dl:up2date'
+import os
+
+
+CACHE_KEY_ASSET_TASK_LOG_PREFIX = 'asset:task-log:'  # + task.id
+CACHE_KEY_YTDL_UP2DATE = f'youtube-dl:up2date:{"tasks" if  os.environ.get("RUN_HUEY") else "app"}'
 CACHE_KEY_GCAL_LAST_SYNC = 'gcal:last-sync'
 CACHE_KEY_HARBOR_CONFIG_CONTEXT = 'harbor:config-context'
 CACHE_KEY_HARBOR_BAN_PREFIX = 'harbor:ban:'  # + user.id
