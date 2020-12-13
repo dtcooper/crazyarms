@@ -44,7 +44,7 @@ class AudioAssetAdminBase(admin.ModelAdmin):
         js = ('common/admin/js/asset_source.js',)
 
     def has_change_permission(self, request, obj=None):
-        return not (obj and obj.status != obj.Status.UPLOADED) and super().has_change_permission(request, obj=obj)
+        return not (obj and obj.status != obj.Status.READY) and super().has_change_permission(request, obj=obj)
 
     @swap_title_fields
     def get_fields(self, request, obj=None):
@@ -52,7 +52,7 @@ class AudioAssetAdminBase(admin.ModelAdmin):
             return self.add_fields
         else:
             fields = list(self.change_fields)
-            if obj.file and obj.status == obj.Status.UPLOADED:
+            if obj.file and obj.status == obj.Status.READY:
                 file_index = fields.index('file')
                 fields.insert(file_index, 'audio_player_html')
             else:

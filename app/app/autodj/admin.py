@@ -220,7 +220,7 @@ class RotatorAssetAdmin(AudioAssetAdminBase, AutoDJStopsetRelatedAdmin):
     actions = ('add_rotator_action', 'remove_rotator_action')
     create_form = RotatorAssetCreateForm
     search_fields = ('title',)
-    list_display = ('title', 'created', 'rotators_list_display', 'duration')
+    list_display = ('title', 'created', 'rotators_list_display', 'duration', 'status')
     list_filter = ('rotators',) + AudioAssetAdminBase.list_filter
 
     # TODO bulk upload view abstracted from AudioAssets

@@ -1,10 +1,8 @@
 import datetime
-import json
 import logging
 import random
 import re
 import string
-import subprocess
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -21,16 +19,26 @@ from constance import config
 from common.models import User
 from services import init_services
 
-from autodj.models import AudioAsset, RotatorAsset, Rotator, Playlist
-from common.tasks import install_youtube_dl, YOUTUBE_DL_CMD
+from autodj.models import AudioAsset, RotatorAsset, Rotator, Playlist, Stopset, StopsetRotator
 
 
-SOUNDCLOUD_SAMPLE_ROTATOR_ASSETS_URL = 'https://soundcloud.com/dtcooper/sets/carb-sample-data/s-4Tlos8HM03B'
-NUM_SAMPLE_ASSETS = 3
+NUM_SAMPLE_CCMIXTER_ASSETS = (10 if settings.DEBUG else 75)  # Less if running in DEBUG mode, faster testing
+
+# Sample Data
+ROTATOR_ASSETS_URL_PREFIX = 'https://crazy-arms-sample.nyc3.digitaloceanspaces.com/rotator-assets/'
+SAMPLE_ROTATOR_ASSETS_URLS = {
+    ('id', 'Sample Station IDs'): [f'{ROTATOR_ASSETS_URL_PREFIX}station-id-{n}.mp3' for n in range(1, 9)],
+    ('ad', 'Sample Advertisements'): [f'{ROTATOR_ASSETS_URL_PREFIX}ad-{n}.mp3' for n in range(1, 6)],
+    ('psa', 'Sample Public Service Announcements'): [f'{ROTATOR_ASSETS_URL_PREFIX}psa-{n}.mp3' for n in range(1, 4)],
+}
 CCMIXTER_API_URL = 'http://ccmixter.org/api/query'
 # Ask for a few month, since we only want ones with mp3s
-CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limit': round(NUM_SAMPLE_ASSETS * 1.5)}
-
+CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limit': round(NUM_SAMPLE_CCMIXTER_ASSETS * 1.5)}
+SAMPLE_STOPSETS = (
+    ('id', 'ad', 'psa', 'ad', 'id'),
+    ('id', 'ad', 'id'),
+    ('id', 'ad', 'ad', 'id', 'psa'),
+)
 
 logger = logging.getLogger(f'carb.{__name__}')
 
@@ -45,9 +53,9 @@ class FirstRunForm(UserCreationForm):
         label='Preload AutoDJ', required=False,
         widget=forms.Select(choices=((False, 'No'), (True, 'Yes'))),
         help_text=mark_safe('Preload the AutoDJ with ADs, PSDs and station IDs from <a href="https://en.wikipedia.org/'
-                            f'wiki/BMIR" target="_blank">BMIR</a> and download {NUM_SAMPLE_ASSETS} of this month\'s '
-                            'most popular tracks from <a href="http://ccmixter.org/" target="_blank">ccMixter</a> to '
-                            'kick start your station or to try out Crazy Arms. (Creative Commons licensed)'))
+                            f'wiki/BMIR" target="_blank">BMIR</a> and download {NUM_SAMPLE_CCMIXTER_ASSETS} of this '
+                            'month\'s most popular tracks from <a href="http://ccmixter.org/" target="_blank">ccMixter'
+                            '</a> to kick start your station or to try out Crazy Arms. (Creative Commons licensed)'))
     station_name = forms.CharField(label='Station Name', help_text='The name of your radio station.')
 
     def __init__(self, *args, **kwargs):
@@ -64,7 +72,6 @@ class FirstRunForm(UserCreationForm):
     @staticmethod
     def preload_sample_audio_assets(uploader):
         ccmixter_urls = []
-        soundcloud_urls = []
 
         ccmixter_json = requests.get(CCMIXTER_API_URL, params=CCMIXTER_API_PARAMS).json()
         num_assets = 0
@@ -77,18 +84,10 @@ class FirstRunForm(UserCreationForm):
                 num_assets += 1
                 ccmixter_urls.append(url)
 
-                if num_assets >= NUM_SAMPLE_ASSETS:
+                if num_assets >= NUM_SAMPLE_CCMIXTER_ASSETS:
                     break
 
         logger.info(f'Got {len(ccmixter_urls)} sample asset URLs from ccMixter')
-
-        # TODO: use move from soundcloud when it comes back up
-        # install_youtube_dl()
-        # args = [YOUTUBE_DL_CMD, '--dump-single-json', '--flat-playlist', SOUNDCLOUD_SAMPLE_ROTATOR_ASSETS_URL]
-        # print(subprocess.check_output(args))
-        # soundcloud_json = json.loads(subprocess.check_output(args))
-        # for entry in soundcloud_json['entries']:
-        #     soundcloud_urls.append(entry['url'])
 
         playlist = Playlist.objects.get_or_create(name='ccMixter Sample Music')[0]
         for url in ccmixter_urls:
@@ -96,6 +95,20 @@ class FirstRunForm(UserCreationForm):
             asset.run_download_after_save_url = url
             asset.save()
             asset.playlists.add(playlist)
+
+        rotators = {}
+        for (code, name), urls in SAMPLE_ROTATOR_ASSETS_URLS.items():
+            rotators[code] = Rotator.objects.get_or_create(name=name)[0]
+            for url in urls:
+                asset = RotatorAsset(uploader=uploader)
+                asset.run_download_after_save_url = url
+                asset.save()
+                asset.rotators.add(rotators[code])
+
+        for n, stopset_rotators in enumerate(SAMPLE_STOPSETS, 1):
+            stopset = Stopset.objects.get_or_create(name=f'Sample Stopset #{n}')[0]
+            for rotator in stopset_rotators:
+                StopsetRotator.objects.create(rotator=rotators[rotator], stopset=stopset)
 
     def save(self):
         user = super().save(commit=False)
@@ -113,6 +126,7 @@ class FirstRunForm(UserCreationForm):
 
         if self.cleaned_data['generate_sample_assets']:
             self.preload_sample_audio_assets(uploader=user)
+            config.AUTODJ_STOPSETS_ENABLED = True
 
         init_services(restart_services=True)
 

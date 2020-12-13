@@ -23,7 +23,7 @@ class AntiRepeatTests(TestCase):
         for a in range(num_artists):
             for t in range(num_tracks_per_artist):
                 asset = AudioAsset(title=f'T:{a * num_tracks_per_artist + t}',
-                                   artist=f'A:{a}', status=AudioAsset.Status.UPLOADED)
+                                   artist=f'A:{a}', status=AudioAsset.Status.READY)
                 asset.save()
                 assets.append(asset)
         return assets
@@ -88,7 +88,7 @@ class AntiRepeatTests(TestCase):
         self.assertEqual(logger.output, [
             'WARNING:carb.autodj.models:autodj: no assets exist (no min/max id), giving up early'])
 
-        # Should only work on status = UPLOADED
+        # Should only work on status = READY
         AudioAsset(status=AudioAsset.Status.PENDING).save()
         with self.assertLogs('carb.autodj.models', level='INFO') as logger:
             self.assertIsNone(AudioAsset.get_next_for_autodj())

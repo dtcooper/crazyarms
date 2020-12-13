@@ -185,7 +185,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
         PENDING = '-', 'processing queued'
         PROCESSING = 'p', 'processing'
         FAILED = 'f', 'processing failed'
-        UPLOADED = 'u', 'uploaded'
+        READY = 'r', 'ready for play'
 
     UNNAMED_TRACK = 'Untitled Track'
     UPLOAD_DIR = 'assets'
@@ -292,7 +292,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
 
                 if config.ASSET_DEDUPING and self.computed_fingerprint:
                     match = self._meta.model.objects.exclude(id=self.id, fingerprint=None).filter(
-                        status=self.Status.UPLOADED, fingerprint=self.computed_fingerprint).first()
+                        status=self.Status.READY, fingerprint=self.computed_fingerprint).first()
                     if match:
                         raise ValidationError(f'A duplicate audio file already exists with audio fingerprint: {match}.')
 
@@ -305,7 +305,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
                 if self.metadata.format not in self.FFMPEG_ACCEPTABLE_FORMATS:
                     self.run_conversion_after_save = True
                 else:
-                    self.status = self.Status.UPLOADED
+                    self.status = self.Status.READY
 
             for field in self.TITLE_FIELDS:
                 if not getattr(self, field):

@@ -25,7 +25,7 @@ class BroadcastAssetAdmin(AudioAssetAdminBase):
 
         # If it's the autocomplete view (from BroadcastAdmin), then filter by uploaded only
         if request.path.endswith('/autocomplete/'):
-            queryset = queryset.filter(status=BroadcastAsset.Status.UPLOADED)
+            queryset = queryset.filter(status=BroadcastAsset.Status.READY)
 
         return queryset, use_distinct
 

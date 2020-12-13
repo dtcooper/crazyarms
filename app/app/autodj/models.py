@@ -82,7 +82,7 @@ class AudioAsset(AudioAssetBase):
         # Only run if there is a title + artist
         if config.ASSET_DEDUPING and self.title_normalized and self.artist_normalized:
             match = AudioAsset.objects.exclude(id=self.id).filter(
-                status=self.Status.UPLOADED, artist_normalized=self.artist_normalized,
+                status=self.Status.READY, artist_normalized=self.artist_normalized,
                 album_normalized=self.album_normalized, title_normalized=self.title_normalized).first()
             if match:
                 raise ValidationError(
@@ -120,7 +120,7 @@ class AudioAsset(AudioAssetBase):
         if run_no_repeat_track_ids and config.AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT <= 0:
             run_no_repeat_track_ids = False
 
-        queryset = cls.objects.filter(status=AudioAsset.Status.UPLOADED)
+        queryset = cls.objects.filter(status=AudioAsset.Status.READY)
         if not queryset.exists():
             logger.warning('no assets exist, giving up early')
             return None
@@ -128,7 +128,7 @@ class AudioAsset(AudioAssetBase):
         if config.AUTODJ_PLAYLISTS_ENABLED:
             # Only select from active playlists with at least one uploaded audio asset in them
             playlists_with_assets = list(Playlist.objects.filter(
-                is_active=True, audio_assets__status=AudioAsset.Status.UPLOADED).distinct())
+                is_active=True, audio_assets__status=AudioAsset.Status.READY).distinct())
             if run_with_playlist and not playlists_with_assets:
                 run_with_playlist = False
 
@@ -291,7 +291,8 @@ class Stopset(PlaylistStopsetBase):
         rotator_asset_block = []
 
         for rotator in rotator_block:
-            queryset = RotatorAsset.objects.filter(rotators=rotator).exclude(id__in=exclude_asset_ids)
+            queryset = RotatorAsset.objects.filter(
+                status=RotatorAsset.Status.READY, rotators=rotator).exclude(id__in=exclude_asset_ids)
             pick = random_queryset_pick(queryset)
             if pick:
                 exclude_asset_ids.append(pick.id)
