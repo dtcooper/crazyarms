@@ -152,7 +152,7 @@ after initial development is complete.</p>
 <p>In your terminal clone the repo and start the code. Building the containers may
 take several minutes.</p>
 <div class="highlight"><pre><span></span><code>git clone git@github.com:dtcooper/carb.git
-<span class="nb">cd</span> carb
+cd carb
 
 ./compose.sh up
 </code></pre></div>
@@ -164,9 +164,9 @@ about setting up your station.</p>
 <em>"Preload the AutoDJ"</em> when setting up your station.</p>
 <p>To stop, in your terminal press <code>CTRL+C</code>.</p>
 <h3 id="unit-tests">Unit Tests<a class="headerlink" href="#unit-tests" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>./compose.sh <span class="nb">test</span>
+<div class="highlight"><pre><span></span><code>./compose.sh test
 
-<span class="c1"># Tear down test dependent containers (postgres and redis)</span>
+# Tear down test dependent containers (postgres and redis)
 ./compose --test down
 </code></pre></div>
 <h2 id="upgrading">Upgrading<a class="headerlink" href="#upgrading" title="Permanent link">&para;</a></h2>

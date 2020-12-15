@@ -202,7 +202,6 @@ customizable script, implemented in <a href="https://www.liquidsoap.info/">Liqui
 that takes care of choosing what to broadcast and when. Think of the Harbor as a
 robot taking several sources and deciding which one is best to broadcast based
 on the rules you see on the status page.</p>
-<p><i class="fa fa-camera-retro fa-lg"></i> fa-lg</p>
 <div class="mermaid">flowchart LR
     subgraph sources ["Priority-Based Sources"]
         prerecord("1. Pre-recorded Broadcast&lt;br&gt;(Scheduled, long-format shows)")
@@ -212,7 +211,7 @@ on the rules you see on the status page.</p>
         failsafe(5. Failsafe Audio File)
     end
 
-    harbor{"Harbor Service&lt;br&gt;(Intelligent stream picker)"}
+    harbor(("Harbor Service&lt;br&gt;(Intelligent stream picker)"))
 
     prerecord --&gt;|highest priority| harbor
     dj --&gt; harbor
@@ -319,5 +318,5 @@ on the rules you see on the status page.</p>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2020-12-11 04:32:46.710402+00:00
+Build Date UTC : 2020-12-15 02:02:47.534087+00:00
 -->

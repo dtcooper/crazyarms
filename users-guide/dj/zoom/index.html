@@ -106,6 +106,14 @@
             
             <li class="nav-item" data-level="1"><a href="#zoom" class="nav-link">Zoom</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#prerequisites" class="nav-link">Prerequisites</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#walkthrough" class="nav-link">Walkthrough</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
         </ul>
@@ -113,7 +121,43 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h1 id="zoom">Zoom<a class="headerlink" href="#zoom" title="Permanent link">&para;</a></h1></div>
+<h1 id="zoom">Zoom<a class="headerlink" href="#zoom" title="Permanent link">&para;</a></h1>
+<p>Here are the instructions to start <a href="https://zoom.us/">Zoom</a> broadcasting via a room.</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<ol>
+<li>The systems administrator must have enabled Zoom (In the <code>.env</code> file, set
+   <code>ZOOM_ENABLED=1</code>).</li>
+<li>You must have Zoom installed (<a href="https://zoom.us/">https://zoom.us/</a>).</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Zoom Time Limits</p>
+<p>If you're <em>not</em> using a paid Zoom account, or your systems administrator has
+not set up a paid account, there are room time limits for group meetings
+held in Zoom rooms. (40 minutes at the time of this writing.) Your show will
+be capped at that length.</p>
+</div>
+<h2 id="walkthrough">Walkthrough<a class="headerlink" href="#walkthrough" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Create and start a Zoom room.</li>
+<li>Click on the <em>Meeting Information</em> icon, shown below.
+    <img alt="Zoom Instructions Screenshot #1" src="../../../img/zoom-instructions-1.png" /></li>
+<li>In the Meeting Information pop-up, copy the link to the Zoom by clicking
+   <em>Copy Link</em>, show below.
+    <img alt="Zoom Instructions Screenshot #2" src="../../../img/zoom-instructions-2.png" /></li>
+<li>Paste the link into the <em>Room Link</em> input, choose a show length, and
+    click <em>Start Zoom Broadcast Now.</em></li>
+<li>As soon as the <strong>Broadcast Bot</strong> has entered your Zoom room, your show
+    starts, however you must produce make noise for the stream to transition
+    to your show. This way, you can set up your show a little bit early. Just
+    be quiet until you're ready!</li>
+</ol>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>If a <strong>Broadcast Bot</strong> attendee does not enter your Zoom room roughly
+15 seconds after you click <em>Start Zoom Broadcast Now</em>, please contact
+the systems administrator or
+<a href="https://github.com/dtcooper/carb/issues">report a bug with Crazy Arms</a>.</p>
+</div></div>
             </div>
         </div>
 
