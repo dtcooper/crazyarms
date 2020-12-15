@@ -25,12 +25,19 @@ nav:
         - Configuration: admin-guide/configuration.md
     - Installation: installation.md
     - Glossary of Terms: glossary.md
-repo_url: https://github.com/dtcooper/carb/
+repo_name: dtcooper/carb
+repo_url: https://github.com/dtcooper/carb
 site_dir: _docs
-site_favicon: img/favicon.svg
-site_name: Crazy Arms Docs
-site_url: https://dtcooper.github.io/carb/
+site_name: Crazy Arms Radio Backend Documentation
+site_url: https://dtcooper.github.io/carb
 theme:
-    name: mkdocs
+    favicon: img/favicon.svg
+    name: material
     navigation_depth: 3
-    custom_dir: docs/theme/
+    features:
+        - navigation.instant
+        - navigation.tabs
+    palette:
+        primary: blue
+    font: Inter
+copyright: Copyright &copy; 2020 David Cooper

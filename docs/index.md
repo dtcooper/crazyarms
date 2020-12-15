@@ -90,6 +90,15 @@ that takes care of choosing what to broadcast and when. Think of the Harbor as a
 robot taking several sources and deciding which one is best to broadcast based
 on the rules you see on the status page.
 
+The harbor has several input **sources**. These are things like pre-recorded
+broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
+source with the highest priority _that is active_ will be what the harbor chooses
+to play.
+
+!!! note "A Note About Inactive Sources"
+    When a source becomes active from inactive, the harbor will fade to it.
+    Note a connected source that is silent will usually
+
 ```mermaid
 flowchart LR
     subgraph sources ["Priority-Based Sources"]

@@ -266,7 +266,7 @@ failsafe = single(id='failsafe',
 timed_sources = [prerecord{% if config.AUTODJ_ENABLED %}, autodj{% endif %}]
 
 #
-# Our heirarchical sources. Items first in the list have higher precedence
+# Our heirarchical sources. Items first in the list have higher priority
 # Format: (actual_source, 'Pretty Source Name')
 #
 # You can add to these using custom code, see below
@@ -313,7 +313,7 @@ def status_tuple()
         let (source, name) = src
         id = source.id(source)
         json_of_mixed_types(
-            strs=[('id', id), ('name', name)], ints=[('precedence', n + 1)],
+            strs=[('id', id), ('name', name)], ints=[('priority', n + 1)],
             bools=[('is_active', source.is_ready(source)), ('is_current_stream', id == streaming_source_id)])
     end, source_hierarchy)) ^ ']'
 
@@ -433,7 +433,7 @@ def transition(~source, one, two)
     {% endif %}
 end
 
-# Our actual radio is a fallback based on source_hierarchy's precedence
+# Our actual radio is a fallback based on source_hierarchy's priority
 radio = fallback(
     id='radio',
     replay_metadata=false,

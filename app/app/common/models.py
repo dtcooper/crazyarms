@@ -200,7 +200,8 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
                             help_text='You can provide either an uploaded audio file or a URL to an external asset.')
     duration = models.DurationField('Audio duration', default=datetime.timedelta(0))
     fingerprint = models.UUIDField(null=True, db_index=True)  # 32 byte md5 = a UUID
-    status = models.CharField('status', max_length=1, choices=Status.choices, default=Status.PENDING, db_index=True)
+    status = models.CharField('status', max_length=1, choices=Status.choices, default=Status.PENDING, db_index=True,
+                              help_text='You will be able to edit this asset when status is "ready for play."')
     task_id = models.UUIDField(null=True)
 
     def __init__(self, *args, **kwargs):
@@ -368,7 +369,11 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             self.queue_download(url=run_download_url, set_title=set_title)
 
     def __str__(self, s=None):
-        s = ' - '.join(filter(None, (getattr(self, field_name, None) for field_name in self.TITLE_FIELDS)))
+        s = ' - '.join(filter(None, (getattr(self, field, None) for field in self.TITLE_FIELDS))) or self.UNNAMED_TRACK
         if self.duration != datetime.timedelta(0):
-            s = f'{s} [{self.duration}]'
+            if self.duration >= datetime.timedelta(hours=1):
+                s += f' [{self.duration}]'
+            else:
+                seconds = int(self.duration.total_seconds())
+                s += f' [{seconds // 60}:{seconds % 60:02d}]'
         return s

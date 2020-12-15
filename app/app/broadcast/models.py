@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from huey.contrib.djhuey import revoke_by_id
 
@@ -19,18 +20,24 @@ class BroadcastAsset(AudioAssetBase):
 
 class Broadcast(TimestampedModel):
     class Status(models.TextChoices):
-        PENDING = '-', 'pending'
-        QUEUED = 'q', 'queued'
+        PENDING = '-', 'to be queued'
+        QUEUED = 'q', 'queued for play'
         PLAYED = 'p', 'played'
-        FAILED = 'f', 'queuing failed'
+        FAILED = 'f', 'failed to play'
 
-    asset = models.ForeignKey(BroadcastAsset, verbose_name='audio file', on_delete=models.CASCADE)
+    asset = models.ForeignKey(BroadcastAsset, verbose_name='broadcast asset',  related_name='broadcasts',
+                              on_delete=models.CASCADE)
     scheduled_time = models.DateTimeField()
     status = models.CharField(max_length=1, choices=Status.choices, default=Status.PENDING)
     task_id = models.UUIDField(null=True)
 
+    def __init__(self, *args, **kwargs):
+        self.queue_after_save = False
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
-        return f'{self.asset} @ {timezone.localtime(self.scheduled_time)} [{self.get_status_display()}]'
+        scheduled_time = date_format(timezone.localtime(self.scheduled_time), 'SHORT_DATETIME_FORMAT')
+        return f'{self.asset} ({self.get_status_display()} at {scheduled_time})'
 
     class Meta:
         ordering = ('-scheduled_time',)
@@ -43,10 +50,16 @@ class Broadcast(TimestampedModel):
 
         task = play_broadcast.schedule(args=(self,), eta=self.scheduled_time)
         Broadcast.objects.filter(id=self.id).update(task_id=task.id)
-        # Only update the status to queued if it's still PENDING -- so we don't thrash with
-        # task if it's already updated the status
-        Broadcast.objects.filter(id=self.id, status=Broadcast.Status.PENDING).update(
-            status=Broadcast.Status.QUEUED)
+
+    def clean(self):
+        if self.status == self.Status.PENDING:
+            self.status = self.Status.QUEUED
+            self.queue_after_save = True
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.queue_after_save:
+            self.queue()
 
     def delete(self, *args, **kwargs):
         if self.task_id:

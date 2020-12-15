@@ -17,8 +17,6 @@ from huey.contrib import djhuey
 
 from carb import constants
 
-
-logger = logging.getLogger(f'carb.{__name__}')
 YOUTUBE_DL_PKG = 'youtube-dl'
 YOUTUBE_DL_CMD = 'youtube-dl'
 YOUTUBE_DL_TITLE_FIELD_MAPPINGS = {
@@ -27,6 +25,8 @@ YOUTUBE_DL_TITLE_FIELD_MAPPINGS = {
     'title': ('track', 'title'),
 }
 PROCESSING_TEMP_PREFIX = '/tmp/asset-processing'
+
+logger = logging.getLogger(f'carb.{__name__}')
 
 
 def once_at_startup(crontab):
@@ -66,6 +66,7 @@ def youtube_dl_daily_update():
 
 
 def mark_asset_failed(asset, title):
+    logger.error(title)
     asset.refresh_from_db()
     asset.file = asset.fingerprint = None
     for field in asset.TITLE_FIELDS:
@@ -125,7 +126,7 @@ def asset_download_external_url(asset, url, title='', task=None):
         # If file doesn't contain metadata for one of the title fields, try to get it from youtube-dl
         if not all(getattr(asset.metadata, field) for field in asset.TITLE_FIELDS):
             args = [YOUTUBE_DL_CMD, '--dump-json', '--no-playlist', '--max-downloads', '1', '--', url]
-            logger.info('Some metadata missing from file, using youtube-dl to set it, running: {shlex.join(args)}')
+            logger.info(f'Some metadata missing from file, using youtube-dl to set it, running: {shlex.join(args)}')
             cmd = subprocess.run(args, capture_output=True)
             if cmd.returncode == 0:
                 json_data = json.loads(cmd.stdout)
@@ -143,7 +144,7 @@ def asset_download_external_url(asset, url, title='', task=None):
                 logger.info('youtube-dl failed to get metadata. Skipping that step.')
 
     except Exception:
-        if task.retries == 0:
+        if task is None or task.retries == 0:
             mark_asset_failed(asset, f'Failed to download to {url}')
 
         raise
@@ -205,7 +206,7 @@ def asset_convert_to_acceptable_format(asset, task=None):
                 f"ffmpeg (conversion) returned {cmd.returncode} (or converted {outfile} doesn't exist)")
 
     except Exception:
-        if task.retries == 0:
+        if task is None or task.retries == 0:
             mark_asset_failed(asset, f'Failed to convert to {config.ASSET_ENCODING}: {asset.file_basename}')
 
         raise

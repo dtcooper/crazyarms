@@ -19,10 +19,14 @@ Here are the instructions to start [Zoom](https://zoom.us/) broadcasting via a r
 
 1. Create and start a Zoom room.
 2. Click on the _Meeting Information_ icon, shown below.
+
     ![Zoom Instructions Screenshot #1](../../img/zoom-instructions-1.png)
+
 1. In the Meeting Information pop-up, copy the link to the Zoom by clicking
-   _Copy Link_, show below.
+    _Copy Link_, shown below.
+
     ![Zoom Instructions Screenshot #2](../../img/zoom-instructions-2.png)
+
 1. Paste the link into the _Room Link_ input, choose a show length, and
     click _Start Zoom Broadcast Now._
 1. As soon as the **Broadcast Bot** has entered your Zoom room, your show
@@ -30,7 +34,7 @@ Here are the instructions to start [Zoom](https://zoom.us/) broadcasting via a r
     to your show. This way, you can set up your show a little bit early. Just
     be quiet until you're ready!
 
-!!! danger
+!!! danger "Problems with Zoom?"
     If a **Broadcast Bot** attendee does not enter your Zoom room roughly
     15 seconds after you click _Start Zoom Broadcast Now_, please contact
     the systems administrator or

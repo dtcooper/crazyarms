@@ -95,7 +95,7 @@
     <caption>Harbor Sources (Live)</caption>
     <thead>
       <tr>
-        <th{{#if showActions}} width="12%"{{/if}}>Precedence</th>
+        <th{{#if showActions}} width="12%"{{/if}}>Priority</th>
         <th{{#if showActions}} width="31%"{{/if}}>Source Name</th>
         <th {{#if showActions}}width="26%"{{else}}colspan="2"{{/if}}>Active</th>
         {{#if showActions}}
@@ -107,7 +107,7 @@
       {{#each sources}}
         {{#with this}}
           <tr{{#if is_current_stream}} class="green bold"{{/if}}>
-            <td>{{precedence}}</td>
+            <td>{{priority}}</td>
 
             <td>
               {{name}}
@@ -141,7 +141,7 @@
               {{#if is_active}}
                 class="orange">
                 Active, not streaming<br>
-                (precedence too low)
+                (priority too low)
               {{else}}
                 class="red">Inactive (or silent)
               {{/if}}
@@ -153,7 +153,9 @@
                 {{#ifContains ../skippable_sources id}}
                   {{#if ../changeBroadcast}}
                     {{#if is_active}}
-                      <button class="skip-btn bg-orange" data-name="{{name}}" data-id="{{id}}">Stop<br>(Skip Current Track)</button>
+                      {{#if is_current_stream}}
+                        <button class="skip-btn bg-orange" data-name="{{name}}" data-id="{{id}}">Stop<br>(Skip Current Track)</button>
+                      {{/if}}
                     {{/if}}
                   {{/if}}
                 {{/ifContains}}
