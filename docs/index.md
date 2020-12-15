@@ -90,8 +90,6 @@ that takes care of choosing what to broadcast and when. Think of the Harbor as a
 robot taking several sources and deciding which one is best to broadcast based
 on the rules you see on the status page.
 
-<i class="fa fa-camera-retro fa-lg"></i> fa-lg
-
 ```mermaid
 flowchart LR
     subgraph sources ["Priority-Based Sources"]
@@ -102,7 +100,7 @@ flowchart LR
         failsafe(5. Failsafe Audio File)
     end
 
-    harbor{"Harbor Service<br>(Intelligent stream picker)"}
+    harbor(("Harbor Service<br>(Intelligent stream picker)"))
 
     prerecord -->|highest priority| harbor
     dj --> harbor

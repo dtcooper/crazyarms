@@ -9,7 +9,7 @@ from common.models import after_db_commit, AudioAssetBase, TimestampedModel
 
 class BroadcastAsset(AudioAssetBase):
     UNNAMED_TRACK = 'Unnamed Broadcast'
-    UPLOAD_DIR = 'scheduled'
+    UPLOAD_DIR = 'broadcasts'
 
     class Meta:
         verbose_name = 'scheduled broadcast asset'

@@ -66,7 +66,7 @@ class CommonConfig(AppConfig):
         from constance.apps import ConstanceConfig
         from constance.admin import Config
 
-        ConstanceConfig.verbose_name = 'Server Settings'
+        ConstanceConfig.verbose_name = 'Station Settings'
         Config._meta.verbose_name = 'Configuration'
         Config._meta.verbose_name_plural = 'Configuration'
 

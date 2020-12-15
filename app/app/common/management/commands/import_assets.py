@@ -27,8 +27,8 @@ class Command(BaseCommand):
         group.add_argument('--rotator-assets', action='store_true', help='Import rotator assets')
         group.add_argument('--prerecorded-broadcast-assets', action='store_true',
                            help='Import pre-recorded broadcast assets')
-        parser.add_argument('-k', '--keep', action='store_true', help=(
-            'Keep original files, whether the can be converted to audio files or not (path still normalized).'))
+        parser.add_argument('-d', '--delete', action='store_true', help=(
+            'Delete input files, whether the can be converted to audio files or not (path still normalized).'))
 
     def handle(self, *args, **options):
         if options['verbosity'] < 2:
@@ -71,7 +71,13 @@ class Command(BaseCommand):
         asset_paths = []
 
         for path in options['paths']:
+            if path in ('.', 'imports'):
+                path = ''
+
             imports_root_path = f'{settings.AUDIO_IMPORTS_ROOT}{path}'
+            if path.startswith('imports/') and not os.path.exists(imports_root_path):
+                imports_root_path = f'{settings.AUDIO_IMPORTS_ROOT}{path.removeprefix("imports/")}'
+
             if os.path.isfile(imports_root_path):
                 asset_paths.append(path)
 
@@ -92,7 +98,8 @@ class Command(BaseCommand):
             return
 
         for path in asset_paths:
-            print(f'Importing {path.removeprefix(settings.AUDIO_IMPORTS_ROOT)}', end='', flush=True)
+            delete_str = 'and deleting ' if options['delete'] else ''
+            print(f'Importing {delete_str}{path.removeprefix(settings.AUDIO_IMPORTS_ROOT)}', end='', flush=True)
 
             # Needed for on_commit() queue signals to fire _after_ object exists
             with transaction.atomic():
@@ -108,7 +115,5 @@ class Command(BaseCommand):
                         asset.playlists.add(playlist)
                     print('... done!')
                 finally:
-                    if not options['keep']:
+                    if options['delete']:
                         os.remove(path)
-
-        print()

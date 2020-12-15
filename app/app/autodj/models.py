@@ -219,6 +219,7 @@ class Playlist(PlaylistStopsetBase):
 
 class RotatorAsset(AudioAssetBase):
     UNNAMED_TRACK = 'Untitled Asset'
+    UPLOAD_DIR = 'rotators'
 
     class Meta:
         ordering = ('title', 'id')

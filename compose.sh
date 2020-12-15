@@ -240,5 +240,8 @@ else
     fi
 fi
 
+# Make imports/ folder with current user permissions for easy of copying
+mkdir -p imports
+
 set -x
 docker-compose $COMPOSE_ARGS $@

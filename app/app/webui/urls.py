@@ -9,8 +9,8 @@ urlpatterns = [
     path('change-password/', views.PasswordChangeView.as_view(), name='password_change'),
     path('first-run/', views.FirstRunView.as_view(), name='first_run'),
     path('login/', auth_views.LoginView.as_view(
-        extra_context={'hide_nav': True, 'title': 'Login', 'submit_text': 'Login'}, redirect_authenticated_user=True,
-        template_name='webui/login.html'), name='login'),
+        extra_context={'hide_login_link': True, 'title': 'Login', 'submit_text': 'Login'},
+        redirect_authenticated_user=True, template_name='webui/login.html'), name='login'),
     path('playout-log/', views.PlayoutLogView.as_view(), name='playout_log'),
     path('profile/', views.UserProfileView.as_view(), name='user_profile'),
     path('scheduled-shows/', views.GCalView.as_view(), name='gcal'),
