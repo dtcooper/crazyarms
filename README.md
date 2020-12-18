@@ -65,6 +65,10 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [ ] Tasks to purge failed broadcasts/assets + unstuck processing ones
 - [x] Re-try broadcasts for which underlying assets which aren't `READY` every 2 seconds.
     Fix asset's inline broadcasts.
+- [ ] Remove `sse` service and use the nginx package in Ubuntu 20.04 container,
+    which has the [nchan](https://nchan.io/) module in the
+    [extras package](https://packages.ubuntu.com/bionic/nginx-extras).
+- [ ] Add sftp service using sftpgo
 
 ..._and more!_
 
