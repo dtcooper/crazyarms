@@ -34,27 +34,48 @@ function updateTimers() {
 }
 
 $(function() {
-    var template =  Handlebars.compile($('#liquidsoap-status-template').html())
-    var $status = $('#liquidsoap-status')
+    var harborStatusTemplate =  Handlebars.compile($('#harbor-status-template').html())
+    var $status = $('#harbor-status')
 
-    function updateTemplate(data) {
+    function updateHarborStatusTemplate(data) {
         data = JSON.parse(data)
-        if (data) {
-            var context = $.extend(data, perms)
-            $status.html(template(context))
+        if (data && data.harbor) {
+            var context = $.extend(data.harbor, perms)
+            $status.html(harborStatusTemplate(context))
         } else {
             $status.html('<p class="error">The harbor appears to be down. Please check the server logs or again later.</p>')
         }
         updateTimers()
     }
-    updateTemplate($('#liquidsoap-status-json').text())
+    updateHarborStatusTemplate($('#harbor-status-json').text())
 
     var eventSource = new EventSource('/sse')
     eventSource.onmessage = function(e) {
-        updateTemplate(e.data)
+        updateHarborStatusTemplate(e.data)
     }
 
     setInterval(updateTimers, 1000)
+
+    if (perms.showAutoDJRequests) {
+        // TODO why doesn't "Select a track" show up?
+        $('.django-select2').djangoSelect2({placeholder: 'Select a track', dropdownAutoWidth: true});
+        if (perms.canMakeAutoDJRequests) {
+            $('#autodj-request-form').submit(function(e) {
+                e.preventDefault()
+                var $asset = $('#id_asset')
+
+                if ($asset.val()) {
+                    var postData = $(this).serialize()
+                    $asset.val(null).trigger('change') //clear select2
+                    $.post(autoDJRequestsUrl, postData, function(response) {
+                        addMessage('info', response)
+                    }).fail(function() {
+                        addMessage('error', 'An error occurred while making your AutoDJ request.')
+                    })
+                }
+            });
+        }
+    }
 
     $('body').on('click', '.skip-btn', function(e) {
         e.preventDefault()

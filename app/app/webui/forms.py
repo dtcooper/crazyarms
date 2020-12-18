@@ -15,6 +15,7 @@ from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
 
 from constance import config
+from django_select2.forms import ModelSelect2Widget
 
 from common.models import User
 from services import init_services
@@ -131,6 +132,16 @@ class FirstRunForm(UserCreationForm):
         init_services(restart_services=True)
 
         return user
+
+
+class AutoDJRequestsForm(forms.Form):
+    asset = forms.ModelChoiceField(
+        queryset=AudioAsset.objects.filter(status=AudioAsset.Status.READY),
+        widget=ModelSelect2Widget(
+            model=AudioAsset,
+            search_fields=('title__icontains', 'album__icontains', 'artist__icontains'),
+            data_view='autodj_request_choices'
+        ))
 
 
 class UserProfileForm(forms.ModelForm):

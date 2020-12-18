@@ -12,6 +12,8 @@ function addMessage(level, message) {
     $('.message-list').append('<li class="' + level +'">' + $message.html()
         + '  <a href="#" class="close-message">[dismiss]</a></li>')
     updateMessageContainer()
+    // Scroll to top
+    $('html, body').animate({scrollTop: $('.message-container').position().top}, 'slow');
 }
 
 var audio = new Audio

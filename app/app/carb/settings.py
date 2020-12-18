@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     # Third-party
     'constance',
     'django_extensions',
+    'django_select2',
     'huey.contrib.djhuey',
 
     # Local
@@ -144,6 +145,7 @@ CACHES = {
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
+SELECT2_CACHE_BACKEND = 'default'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -177,7 +179,7 @@ SHELL_PLUS_IMPORTS = [
     'from django_redis import get_redis_connection',
     'from carb import constants',
     'from gcal.tasks import sync_google_calendar_api',
-    'from webui.tasks import preload_sample_audio_assets, preload_sample_stopsets, stop_zoom_broadcast',
+    'from webui.tasks import stop_zoom_broadcast',
     'from broadcast.tasks import play_broadcast',
     'from common.tasks import asset_download_external_url, asset_convert_to_acceptable_format',
     'from services.tasks import purge_playout_log_entries',
@@ -197,6 +199,12 @@ CONSTANCE_ADDITIONAL_FIELDS = {
         'widget': 'django.forms.Select',
         'choices': (('64K', '64kbit'), ('128K', '128kbit'), ('192K', '192kbit'), ('256K', '256kbit'),
                     ('320K', '320kbit')),
+    }],
+    'autodj_requests': ['django.forms.fields.ChoiceField', {
+        'widget': 'django.forms.Select',
+        # Careful: referred to by code text in autodj/models.py and webui/views.py
+        'choices': (('disabled', 'Nobody (disabled)'), ('user', 'Users'),
+                    ('perm', 'Users with "Program the AutoDJ" permissions'), ('superuser', 'Superusers')),
     }],
     'file': ['django.forms.FileField', {'widget': 'common.widgets.AlwaysClearableFileInput', 'required': False}],
     'email': ['django.forms.EmailField', {}],
@@ -224,6 +232,8 @@ CONSTANCE_CONFIG = OrderedDict((
     ('UPSTREAM_FAILSAFE_AUDIO_FILE', (False, 'Failsafe audio file that should be broadcast to upstream servers if we '
                                       "can't connect to the harbor, ie the harbor failed to start.", 'file')),
     ('AUTODJ_ENABLED', (True, 'Whether or not to run an AutoDJ on the harbor.')),
+    ('AUTODJ_REQUESTS', ('users', 'AutoDJ requests enabled for the following users.', 'autodj_requests')),
+    ('AUTODJ_REQUESTS_NUM', (5, 'The maximum number of pending AutoDJ requests (if enabled)', 'positive_int')),
     ('AUTODJ_STOPSETS_ENABLED', (False, 'Whether or not the AutoDJ plays stop sets (for ADs, PSAs, Station IDs, etc)')),
     ('AUTODJ_STOPSETS_ONCE_PER_MINUTES', (20, mark_safe(
         'How often a stop set should <em>approximately</em> be played (in minutes)'), 'positive_int')),
@@ -267,7 +277,8 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
                               'HARBOR_SWOOSH_AUDIO_FILE', 'HARBOR_TRANSITION_SECONDS',
                               'HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE', 'HARBOR_FAILSAFE_AUDIO_FILE',
                               'UPSTREAM_FAILSAFE_AUDIO_FILE')),
-    ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_ANTI_REPEAT_ENABLED', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
+    ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_REQUESTS', 'AUTODJ_REQUESTS_NUM',
+                              'AUTODJ_ANTI_REPEAT_ENABLED', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
                               'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST', 'AUTODJ_PLAYLISTS_ENABLED',
                               'AUTODJ_STOPSETS_ENABLED', 'AUTODJ_STOPSETS_ONCE_PER_MINUTES')),
     ('Audio Assets Configuration', ('ASSET_ENCODING', 'ASSET_BITRATE', 'ASSET_DEDUPING')),

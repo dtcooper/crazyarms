@@ -23,8 +23,9 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
     - [x] Ad rotators + stopsets
     - [x] Weighting similar to [Tomato](https://github.com/dtcooper/tomato) (playlists are weighted,
       which should be enough)
-    - [ ] [select2](https://django-easy-select2.readthedocs.io/) AutoDJ requests in
-        webui (add a new list in redis that gets popped from?)
+    - [x] [select2](https://django-easy-select2.readthedocs.io/) requests in webui (add a new list in
+        redis that gets popped from?)
+    - [ ] sse live status component of AutoDJ requests
 - [x] Finish Zoom broadcasting
     - [ ] needs a second pass, and a better show length picker
 - [ ] Potential for S3 as a storage source using [django-storages](https://django-storages.readthedocs.io/)

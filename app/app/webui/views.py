@@ -25,6 +25,7 @@ from django.views.generic import FormView, ListView, TemplateView, UpdateView
 
 from constance import config
 from django_redis import get_redis_connection
+from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
 from carb import constants
@@ -33,7 +34,7 @@ from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
 
-from .forms import FirstRunForm, UserProfileForm, ZoomForm
+from .forms import AutoDJRequestsForm, FirstRunForm, UserProfileForm, ZoomForm
 from .tasks import stop_zoom_broadcast
 
 
@@ -71,6 +72,32 @@ class FirstRunView(SuccessMessageMixin, FormView):
         return context
 
 
+class AutoDJRequestsAllowedMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not (self.request.user.is_authenticated and self.request.user.has_autodj_request_permission()):
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AutoDJRequestChoicesView(AutoDJRequestsAllowedMixin, AutoResponseView):
+    pass
+
+
+class AutoDJRequestAJAXFormView(AutoDJRequestsAllowedMixin, FormView):
+    form_class = AutoDJRequestsForm
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed(('POST',))
+
+    def form_valid(self, form):
+        audio_asset = form.cleaned_data['asset']
+        if audio_asset.queue_autodj_request():
+            response = f'You successfully queued {audio_asset}.'
+        else:
+            response = f'An error occurred while requesting {audio_asset}: queue full or request already exists.'
+        return HttpResponse(response, content_type='text/plain')
+
+
 class StatusView(LoginRequiredMixin, TemplateView):
     template_name = 'webui/status.html'
 
@@ -82,8 +109,14 @@ class StatusView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         status = harbor.status(safe=True)
-        return {**super().get_context_data(**kwargs),
-                'title': 'Stream Status', 'liquidsoap_status': json.loads(status) if status else None}
+        show_autodj_requests = config.AUTODJ_ENABLED and (config.AUTODJ_REQUESTS != 'disabled')
+        return {
+            **super().get_context_data(**kwargs),
+            'autodj_requests_form': AutoDJRequestsForm() if show_autodj_requests else None,
+            'liquidsoap_status': json.loads(status) if status else None,
+            'show_autodj_requests': show_autodj_requests,
+            'title': 'Stream Status',
+        }
 
 
 class BanListView(PermissionRequiredMixin, TemplateView):
@@ -297,7 +330,7 @@ def status_skip(request):
         else:
             status = json.loads(status)
             response = "You don't have permission to do that."
-            skippable_sources = status['skippable_sources']
+            skippable_sources = status['harbor']['skippable_sources']
             if request.user.has_perm('broadcast.change_broadcast'):
                 source_id = request.POST.get('id')
                 if source_id is None:

@@ -127,6 +127,17 @@ class User(AbstractUser):
                 upcoming_show_times.append(show_time)
         return upcoming_show_times
 
+    def has_autodj_request_permission(self):
+        code = config.AUTODJ_REQUESTS
+        if code == 'disabled':
+            return False
+        elif code == 'user':
+            return True
+        elif code == 'perm':
+            return self.has_perm('autodj.change_audioasset')
+        else:  # code == 'superuser'
+            return self.is_superuser
+
     def currently_harbor_authorized(self, now=None, should_log=True):
         auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
         ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')
@@ -368,12 +379,15 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
         elif run_download_url:
             self.queue_download(url=run_download_url, set_title=set_title)
 
-    def __str__(self, s=None):
+    def full_title(self, include_duration=True):
         s = ' - '.join(filter(None, (getattr(self, field, None) for field in self.TITLE_FIELDS))) or self.UNNAMED_TRACK
-        if self.duration != datetime.timedelta(0):
+        if include_duration and self.duration != datetime.timedelta(0):
             if self.duration >= datetime.timedelta(hours=1):
                 s += f' [{self.duration}]'
             else:
                 seconds = int(self.duration.total_seconds())
                 s += f' [{seconds // 60}:{seconds % 60:02d}]'
         return s
+
+    def __str__(self):
+        return self.full_title()

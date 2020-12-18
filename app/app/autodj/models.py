@@ -19,7 +19,7 @@ from common.models import AudioAssetBase, TruncatingCharField
 logger = logging.getLogger(f'carb.{__name__}')
 RANDOM_CHUNK_TRIES = 15
 RANDOM_CHUNK_SIZE = 250
-STOPSET_CACHE_TIMEOUT = 2 * 60 * 60
+STOPSET_CACHE_TIMEOUT = REQUESTS_CACHE_TIMEOUT = 2 * 60 * 60
 ANTI_REPEAT_CACHE_TIMEOUT = 24 * 60 * 60
 
 
@@ -58,7 +58,7 @@ def normalize_title_field(value):
 
 
 class AudioAsset(AudioAssetBase):
-    TITLE_FIELDS = ('title', 'artist', 'album')
+    TITLE_FIELDS = ('artist', 'album', 'title')
     artist = TruncatingCharField('artist', max_length=255, blank=True,
                                  help_text="If left empty, an artist will be generated from the file's metadata.")
     album = TruncatingCharField('album', max_length=255, blank=True,
@@ -88,6 +88,17 @@ class AudioAsset(AudioAssetBase):
                 raise ValidationError(
                     f'A duplicate audio file already exists with the same artist, title (and album): {match}')
 
+    def queue_autodj_request(self):
+        requests = cache.get(constants.CACHE_KEY_AUTODJ_REQUESTS, [])
+        if len(requests) >= config.AUTODJ_REQUESTS_NUM or self.id in requests:
+            logger.info(f'attempted to make autodj request {self}, but queue full or request exists')
+            return False
+        else:
+            requests.append(self.id)
+            cache.set(constants.CACHE_KEY_AUTODJ_REQUESTS, requests, timeout=REQUESTS_CACHE_TIMEOUT)
+            logger.info(f'queue autodj request {self}')
+            return True
+
     @classmethod
     def process_anti_repeat_autodj(cls, audio_asset):
         if config.AUTODJ_ANTI_REPEAT_ENABLED:
@@ -109,6 +120,19 @@ class AudioAsset(AudioAssetBase):
     @classmethod
     def get_next_for_autodj(cls, run_with_playlist=True, run_no_repeat_artists=True, run_no_repeat_track_ids=True):
         audio_asset = playlist = None
+
+        # Deal with autodj requests
+        requests = cache.get(constants.CACHE_KEY_AUTODJ_REQUESTS)
+        if requests:
+            request_id = requests.pop(0)
+            cache.set(constants.CACHE_KEY_AUTODJ_REQUESTS, requests, timeout=REQUESTS_CACHE_TIMEOUT)
+            try:
+                audio_asset = cls.objects.get(id=request_id)
+            except AudioAsset.DoesNotExist:
+                logger.warnining(f"request with audio asset id = {request_id} doesn't exist")
+            else:
+                logger.info(f'selected {audio_asset} from autodj request aueue')
+                return cls.process_anti_repeat_autodj(audio_asset)
 
         if not config.AUTODJ_ANTI_REPEAT_ENABLED:
             # If anti-repeat is enabled, we don't run these things

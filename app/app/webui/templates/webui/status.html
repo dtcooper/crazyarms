@@ -3,17 +3,34 @@
 {% load static %}
 
 {% block extrahead %}
-{{ liquidsoap_status|json_script:'liquidsoap-status-json' }}
+{% if show_autodj_requests %}
+  {{ autodj_requests_form.media.css }}
+  <style>
+    .autodj-requests-table select, .autodj-requests-table input {
+      width: 100%;
+    }
+    .select2-container {
+      color: var(--nc-bg-1);
+      margin-bottom: 5px;
+    }
+  </style>
+{% endif %}
+
+{{ liquidsoap_status|json_script:'harbor-status-json' }}
 <script>
   {% url 'status_boot' as boot_url %}
   {% url 'status_skip' as skip_url %}
+  {% url 'autodj_request' as autodj_request_url %}
   var statusBootUrl = '{{ boot_url|escapejs }}',
       statusSkipUrl = '{{ skip_url|escapejs }}',
+      autoDJRequestsUrl = '{{ autodj_request_url|escapejs }}',
       csrfToken = '{{ csrf_token|escapejs }}',
       perms = {
         "isSuperuser": {{ user.is_superuser|yesno:'true,false' }},
         "canBoot": {{ perms.common.can_boot|yesno:'true,false' }},
-        "changeBroadcast": {{ perms.broadcast.change_broadcast|yesno:'true,false' }}
+        "changeBroadcast": {{ perms.broadcast.change_broadcast|yesno:'true,false' }},
+        "canMakeAutoDJRequests": {{ user.has_autodj_request_permission|yesno:'true,false' }},
+        "showAutoDJRequests": {{ show_autodj_requests|yesno:'true,false' }}
       }
   perms.showActions = perms.isSuperuser || perms.canBoot || perms.changeBroadcast
 </script>
@@ -24,73 +41,84 @@
 {% block content %}
 
 {% verbatim %}
-<script id="liquidsoap-status-template" type="text/x-handlebars-template">
-<table class="first-td-right">
-  <caption>Harbor Information (Live)</caption>
+<script id="autodj-requests-template" type="text/x-handlebars-template">
+{{if requests}}
+  {{#each requests}}
+
+  {{/each}}
+{{else}}
   <tr>
-    <td width="25%"><strong>Current Stream:</strong></td>
-    <td width="75%">
-      {{#each sources}}
-        {{#if this.is_current_stream}}
-          <strong class="green">{{this.name}}</strong>
-        {{/if}}
-      {{/each}}
-      <em>(see below)</em>
-    </td>
+    <td colspan="2"></td>
   </tr>
-  <tr>
-    <td><strong>Current Metadata:</strong></td>
-    <td>
-      {{#with metadata}}
-        {{#if artist}}{{artist}}{{#if album}} - {{else}}{{#if title}} - {{/if}}{{/if}}{{/if}}
-        {{#if album}}{{album}}{{#if title}} - {{/if}}{{/if}}
-        {{#if title}}{{title}}{{/if}}
-        {{#unless artist}}
-          {{#unless album}}
-            {{#unless title}}
-              <em>none</em>
+{{/if}}
+</script>
+
+<script id="harbor-status-template" type="text/x-handlebars-template">
+{{#if sources}}
+  <table class="first-td-right">
+    <caption>Harbor Information (Live)</caption>
+    <tr>
+      <td width="25%"><strong>Current Stream:</strong></td>
+      <td width="75%">
+        {{#each sources}}
+          {{#if this.is_current_stream}}
+            <strong class="green">{{this.name}}</strong>
+          {{/if}}
+        {{/each}}
+        <em>(see below)</em>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Current Metadata:</strong></td>
+      <td>
+        {{#with metadata}}
+          {{#if artist}}{{artist}}{{#if album}} - {{else}}{{#if title}} - {{/if}}{{/if}}{{/if}}
+          {{#if album}}{{album}}{{#if title}} - {{/if}}{{/if}}
+          {{#if title}}{{title}}{{/if}}
+          {{#unless artist}}
+            {{#unless album}}
+              {{#unless title}}
+                <em>none</em>
+              {{/unless}}
             {{/unless}}
           {{/unless}}
-        {{/unless}}
-      {{/with}}
-    </td>
-  </tr>
-  <tr>
-    <td><strong>Time Remaining:</strong></td>
-    <td>
-      {{#each sources}}
-        {{#if this.is_current_stream}}
-          {{#ifEqual this.id ../dj_harbor_source}}
-            {{#if ../live_user}}
-              {{#with ../live_user}}
-                {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}
-                authorized to stream for
-                {{#if kickoff_time}}
-                  <code class="track-end" data-end="{{kickoff_time}}"></code> until kicked off
-                {{else}}
-                  an unlimited amount of time
-                {{/if}}
+        {{/with}}
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Time Remaining:</strong></td>
+      <td>
+        {{#each sources}}
+          {{#if this.is_current_stream}}
+            {{#ifEqual this.id ../dj_harbor_source}}
+              {{#if ../live_user}}
+                {{#with ../live_user}}
+                  {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}
+                  authorized to stream for
+                  {{#if kickoff_time}}
+                    <code class="track-end" data-end="{{kickoff_time}}"></code> until kicked off
+                  {{else}}
+                    an unlimited amount of time
+                  {{/if}}
+                {{/with}}
+              {{else}}
+                &mdash;
+              {{/if}}
+            {{else}}
+              {{#with (lookup ../timed_sources [id])}}
+                <code class="track-end" data-end="{{this}}"></code> remaining of current track
+              {{else}}
+                &mdash;
               {{/with}}
-            {{else}}
-              &mdash;
-            {{/if}}
-          {{else}}
-            {{#with (lookup ../timed_sources [id])}}
-              <code class="track-end" data-end="{{this}}"></code> remaining of current track
-            {{else}}
-              &mdash;
-            {{/with}}
-          {{/ifEqual}}
-        {{/if}}
-      {{/each}}
-    </td>
-  <tr>
-    <td><strong>Server Uptime:</strong></td>
-    <td><code class="since-timer" data-since="{{server_info.start_time}}"></code></td>
-  </tr>
-</table>
-
-{{#if sources}}
+            {{/ifEqual}}
+          {{/if}}
+        {{/each}}
+      </td>
+    <tr>
+      <td><strong>Server Uptime:</strong></td>
+      <td><code class="since-timer" data-since="{{server_info.start_time}}"></code></td>
+    </tr>
+  </table>
   <table>
     <caption>Harbor Sources (Live)</caption>
     <thead>
@@ -196,7 +224,37 @@
 {{/if}}
 </script>
 {% endverbatim %}
-<div id="liquidsoap-status"></div>
+
+<div id="harbor-status"></div>
+{% if show_autodj_requests %}
+  {% if user.has_autodj_request_permission %}
+    <form id="autodj-request-form">
+      {% csrf_token %}
+  {% endif %}
+  <table class="autodj-requests-table first-td-right">
+    <caption>AutoDJ Requests</caption>
+    <tr>
+      <td colspan="2" class="center-text">
+        <code>TODO:</code> list live requests via sse service with JSON different JSON key than <code>harbor</code>
+      </td>
+    </tr>
+    {% if user.has_autodj_request_permission %}
+      <tr>
+        <td width="15%">Your Request:</td>
+        <td width="85%">{{ autodj_requests_form.asset }}</td>
+      </tr>
+      <tr>
+        <td colspan="2" class="center-text">
+          <button class="autodj-request bg-green">Submit Request to be Played Next</button>
+        </td>
+      </tr>
+    {% endif %}
+  </table>
+  {% if user.has_autodj_request_permission %}
+    </form>
+    {{ autodj_requests_form.media.js }}
+  {% endif %}
+{% endif %}
 
 {% if settings.ICECAST_ENABLED %}
   <table class="even-columns first-td-right">
