@@ -57,8 +57,10 @@ $(function() {
     setInterval(updateTimers, 1000)
 
     if (perms.showAutoDJRequests) {
-        // TODO why doesn't "Select a track" show up?
-        $('.django-select2').djangoSelect2({placeholder: 'Select a track', dropdownAutoWidth: true});
+        setTimeout(function() {
+            // Needs to initialize slightly delayed for some reason?
+            $('.django-select2').djangoSelect2({placeholder: 'Search for a track', dropdownAutoWidth: true})
+        }, 500)
         if (perms.canMakeAutoDJRequests) {
             $('#autodj-request-form').submit(function(e) {
                 e.preventDefault()

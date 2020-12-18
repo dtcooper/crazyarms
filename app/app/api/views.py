@@ -83,20 +83,26 @@ class DJAuthAPIView(APIView):
 class NextTrackAPIView(APIView):
     def get(self, request):
         response = {'has_asset': False}
-        if config.AUTODJ_ENABLED:
-            rotator_asset = None
+        asset = annotations = None
 
+        if config.AUTODJ_ENABLED:
             if config.AUTODJ_STOPSETS_ENABLED:
                 # Will return None if we're not currently playing through a stopset
-                rotator_asset = RotatorAsset.get_next_for_autodj()
-                if rotator_asset:
-                    # TODO this annotation is unused
-                    asset_uri = f'annotate:rotator_asset_id="{rotator_asset.id}":file://{rotator_asset.file.path}'
-                    response.update({'has_asset': True, 'asset_uri': asset_uri})
+                asset = RotatorAsset.get_next_for_autodj()
+                if asset:
+                    annotations = {'rotator_asset_id': str(asset.id)}
 
-            if not rotator_asset:
-                audio_asset = AudioAsset.get_next_for_autodj()
-                if audio_asset:
-                    asset_uri = f'annotate:audio_asset_id="{audio_asset.id}":file://{audio_asset.file.path}'
-                    response.update({'has_asset': True, 'asset_uri': asset_uri})
+            if not asset:
+                asset = AudioAsset.get_next_for_autodj()
+                if asset:
+                    annotations = {'audio_asset_id': str(asset.id)}
+
+        if asset:
+            annotations.update({
+                # Escape " and \, as well as normalize whitespace for liquidsoap
+                field: ' '.join(getattr(asset, field).split()).replace('\\', '\\\\').replace('"', '\\"')
+                for field in asset.TITLE_FIELDS if getattr(asset, field)})
+            annotations = ','.join(f'{key}="{value}"' for key, value in annotations.items())
+            response.update({'has_asset': True, 'asset_uri': f'annotate:{annotations}:file://{asset.file.path}'})
+
         return response
