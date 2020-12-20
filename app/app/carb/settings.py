@@ -179,11 +179,12 @@ SHELL_PLUS_IMPORTS = [
     'from constance import config',
     'from django_redis import get_redis_connection',
     'from carb import constants',
-    'from gcal.tasks import sync_google_calendar_api',
-    'from webui.tasks import stop_zoom_broadcast',
+    'from api.tasks import process_sftp_upload',
     'from broadcast.tasks import play_broadcast',
-    'from common.tasks import asset_download_external_url, asset_convert_to_acceptable_format',
+    'from common.tasks import asset_convert_to_acceptable_format, asset_download_external_url, youtube_dl_daily_update',
+    'from gcal.tasks import sync_google_calendar_api',
     'from services.tasks import purge_playout_log_entries',
+    'from webui.tasks import stop_zoom_broadcast',
 ]
 
 CONSTANCE_BACKEND = 'constance.backends.redisd.RedisBackend'

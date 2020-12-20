@@ -31,7 +31,6 @@ services:
       - static_root:/static_root
       - ./imports:/imports_root
       - ./media:/media_root
-      - sftp_root:/sftp_root
       - services_config:/config
     depends_on:
       - db
@@ -51,6 +50,7 @@ services:
       - ./.env:/.env:ro
       - ./imports:/imports_root
       - ./media:/media_root
+      - sftp_root:/sftp_root
     depends_on:
       - db
       - redis

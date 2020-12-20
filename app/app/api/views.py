@@ -1,11 +1,9 @@
 import datetime
 import logging
 import json
-import re
 
 from django.conf import settings
 from django.contrib.auth import authenticate
-from django.core.management import call_command
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -15,6 +13,8 @@ from constance import config
 
 from autodj.models import AudioAsset, RotatorAsset
 from common.models import User
+
+from .tasks import process_sftp_upload
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -115,18 +115,8 @@ class SFTPAuthView(APIView):
 
 
 class SFTPUploadView(APIView):
-    SFTP_PATH_RE = re.compile(fr'^{re.escape(settings.SFTP_UPLOADS_ROOT)}(?P<uid>[^/]+)/(?P<type>[^/]+)/(?P<path>.+)$')
-
     def post(self, request):
-        match = self.SFTP_PATH_RE.search(self.request_json['path'])
-        if not match:
-            return 400
-
-        match = match.groupdict()
-        # TODO: move to a task
-        call_command('import_assets', match['path'], delete=True, username=f'id={match["uid"]}',
-                     audio_imports_root=f'{settings.SFTP_UPLOADS_ROOT}{match["uid"]}/{match["type"]}/',
-                     dont_print=True, **{match['type'].replace('-', '_'): True})
+        process_sftp_upload(self.request_json['path'])
         return 200
 
 

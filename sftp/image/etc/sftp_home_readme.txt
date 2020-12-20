@@ -1,12 +1,15 @@
-Upload audio assets to be imported into Crazy Arms into the following folders,
+# Crazy Arms SFTP/SCP Uploads
 
-Audio Assets
+You can upload audio assets via SFTP or SCP to be imported into Crazy Arms into
+the following directories,
+
+Audio Assets:
  - /audio-assets/
 
-Rotator Assets
+Rotator Assets:
  - /rotator-assets/
 
-Scheduled Broadcast Assets
+Scheduled Broadcast Assets:
  - /scheduled-broadcast-assets/
 
 Notes:
