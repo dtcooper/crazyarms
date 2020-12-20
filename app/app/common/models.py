@@ -60,7 +60,9 @@ class User(AbstractUser):
         NEVER = 'n', 'never allowed'
         GOOGLE_CALENDAR = 'g', 'Google Calendar based'
 
-    is_staff = True  # All users can access admin site.
+    is_staff = True  # All users can access admin site if they've got at least one permission
+    is_superuser = models.BooleanField('administrator status', default=False, help_text=mark_safe(
+        'Designates that this user has <strong><u>all permissions</u></strong> without explicitly assigning them.'))
     modified = models.DateTimeField('last modified', auto_now=True)
     email = models.EmailField('email address', unique=True, help_text='This is needed to match Google Calendar events '
                                                                       'for calendar based harbor authorization.')
@@ -69,7 +71,7 @@ class User(AbstractUser):
     timezone = models.CharField('timezone', choices=[
         (tz, tz.replace('_', ' ')) for tz in pytz.common_timezones], max_length=60, default=settings.TIME_ZONE)
     authorized_keys = models.TextField('SSH authorized keys', blank=True, help_text='Authorized public SSH keys for '
-                                                                                    'SFTP and SCP (one per line)')
+                                                                                    'SFTP and SCP (one per line).')
     google_calender_entry_grace_minutes = models.PositiveIntegerField(
         'harbor entry grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>before</strong> a scheduled show that the user is allowed to enter the harbor.'))

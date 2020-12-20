@@ -129,7 +129,7 @@ class SFTPAuthView(APIView):
                 permissions.update({f'/{perm}/': self.ALLOWED_DIR_PERMS for perm in dir_perms})
                 return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'quota_size': 0}
             else:
-                logger.info(f'sftp auth requested by {user}: denied (no permissions)')
+                logger.info(f'sftp auth requested by {user}: denied ({auth_type} allowed but no permissions)')
         elif non_logged_in_user:
             logger.info(f'sftp auth requested by {username}: denied (invalid credentials)')
         else:

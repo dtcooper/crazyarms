@@ -40,8 +40,7 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [x] Player for local icecast on status page
 - [x] Make track log a more generic playout log, with asset playing on metadata one
     particular type.
-- [ ] Pin versions in all Dockerfiles, and Python packages
-    (using [Poetry](https://python-poetry.org/))
+- [ ] Pin versions in all Dockerfiles, and Python packages (using [Poetry](https://python-poetry.org/))
 - [x] Convert logging to redis queue (so web server doesn't have to be up to log)
     (decided to use `psql` to directly insert into the DB)
 - [x] Kick off DJs outside of calendar times (with a grace period)
@@ -70,7 +69,9 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
     [extras package](https://packages.ubuntu.com/bionic/nginx-extras).
 - [x] Add sftp service using sftpgo
     - [x] Deal with WinSCP's `.filepart` situation
+    - [x] Add ability to use SSH authorized keys.
 - [ ] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
+- [ ] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
 
 ..._and more!_
 

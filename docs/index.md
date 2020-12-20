@@ -68,8 +68,8 @@ An AutoDJ that plays blocks of advertisements and station IDs (stop sets)
     section.
 
 Fine-grained user permission structure.
-:   If a user is _not_ a superuser, there are several permission groups to allow
-    them some administrative privileges.
+:   If a user is _not_ an administrator, there are several permission groups to
+    allow them some administrative privileges.
 
 Accessible Logs
 :   Less technical users can see server logs without `ssh` or command-line knowledge

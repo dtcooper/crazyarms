@@ -152,7 +152,7 @@ class UserProfileForm(forms.ModelForm):
             for field_name in ('username', 'email', 'harbor_auth'):
                 field = self.fields[field_name]
                 field.disabled = True
-                field.help_text = 'Read-only. Please ask an administrator to update.'
+                field.help_text = "Read-only. (Ask an administrator to update this for you.)"
 
         self.fields['timezone'].help_text = f'Currently {date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")}'
 
@@ -162,7 +162,7 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth')
+        fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth', 'authorized_keys')
 
 
 class ZoomForm(forms.Form):
