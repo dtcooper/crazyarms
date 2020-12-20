@@ -84,39 +84,56 @@ class DJAuthAPIView(APIView):
 
 
 class SFTPAuthView(APIView):
-    ROOT_DIR_PERMS = ('list', 'download')
+    RESTRICTED_DIR_PERMS = ('list', 'download')
     # Don't allow creation of symlinks @ https://github.com/drakkan/sftpgo/blob/master/dataprovider/user.go
-    SUBDIR_PERMS = ('list', 'download', 'upload', 'overwrite', 'delete', 'rename',
-                    'create_dirs', 'chmod', 'chown', 'chtimes')
+    ALLOWED_DIR_PERMS = ('list', 'download', 'upload', 'overwrite', 'delete', 'rename',
+                         'create_dirs', 'chmod', 'chown', 'chtimes')
     SFTP_ASSET_CLASS_PATHS = {v: k for k, v in SFTP_PATH_ASSET_CLASSES.items()}
 
     def post(self, request):
-        username, password = self.request_json['username'], self.request_json['password']
+        username, password, key = self.request_json['username'], self.request_json['password'], self.request_json['key']
+        non_logged_in_user = None
         user = authenticate(username=username, password=password)
 
         if user:
-            permissions = []
-            if config.AUTODJ_ENABLED and user.has_perm('autodj.change_audioasset'):
-                permissions.append(self.SFTP_ASSET_CLASS_PATHS[AudioAsset])
-                if config.AUTODJ_STOPSETS_ENABLED:
-                    permissions.append(self.SFTP_ASSET_CLASS_PATHS[RotatorAsset])
-            if user.has_perm('broadcast.change_broadcast'):
-                permissions.append(self.SFTP_ASSET_CLASS_PATHS[BroadcastAsset])
+            auth_type = 'password'
+        else:
+            try:
+                non_logged_in_user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                pass
+            else:
+                key_split = key.strip().split()
 
-            if permissions:
-                logger.info(f'sftp auth requested by {user}: allowed (directory perms: {permissions})')
-                permissions = {f'/{perm}/': self.SUBDIR_PERMS for perm in permissions}
-                permissions['/'] = self.ROOT_DIR_PERMS
+                for authorized_key in non_logged_in_user.authorized_keys.strip().splitlines():
+                    authorized_key_split = authorized_key.strip().split()
+                    split_len = min(len(key_split), len(authorized_key_split))
+                    if split_len >= 2 and key_split[:split_len] == authorized_key_split[:split_len]:
+                        user = non_logged_in_user
+                        auth_type = 'ssh key'
+                        break
+
+        if user:
+            dir_perms = []
+            permissions = {'/': self.RESTRICTED_DIR_PERMS}
+            if config.AUTODJ_ENABLED and user.has_perm('autodj.change_audioasset'):
+                dir_perms.append(self.SFTP_ASSET_CLASS_PATHS[AudioAsset])
+                permissions = {'/': self.ALLOWED_DIR_PERMS}
+                if config.AUTODJ_STOPSETS_ENABLED:
+                    dir_perms.append(self.SFTP_ASSET_CLASS_PATHS[RotatorAsset])
+            if user.has_perm('broadcast.change_broadcast'):
+                dir_perms.append(self.SFTP_ASSET_CLASS_PATHS[BroadcastAsset])
+
+            if dir_perms:
+                logger.info(f'sftp auth requested by {user}: {auth_type} accepted (directory perms: {dir_perms})')
+                permissions.update({f'/{perm}/': self.ALLOWED_DIR_PERMS for perm in dir_perms})
                 return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'quota_size': 0}
             else:
                 logger.info(f'sftp auth requested by {user}: denied (no permissions)')
+        elif non_logged_in_user:
+            logger.info(f'sftp auth requested by {username}: denied (invalid credentials)')
         else:
-            try:
-                user = User.objects.get(username=username)
-            except User.DoesNotExist:
-                logger.info(f'sftp auth requested by {username}: denied (user does not exist)')
-            else:
-                logger.info(f'sftp auth requested by {username}: denied (incorrect password)')
+            logger.info(f'sftp auth requested by {username}: denied (user does not exist)')
 
         return {'status': 0}
 

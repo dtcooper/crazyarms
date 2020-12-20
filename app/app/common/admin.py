@@ -120,7 +120,7 @@ class UserAdmin(auth_admin.UserAdmin):
     save_on_top = True
     add_form_template = None
     fieldsets = (
-        (None, {'fields': ('username', 'email', 'password')}),
+        (None, {'fields': ('username', 'email', 'password', 'authorized_keys')}),
         ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
         ('Permissions', {'fields': ('harbor_auth', ('google_calender_entry_grace_minutes',
                                     'google_calender_exit_grace_minutes'), 'is_active', 'is_superuser',

@@ -14,12 +14,13 @@ from broadcast.models import BroadcastAsset
 
 logger = logging.getLogger(f'carb.{__name__}')
 
-SFTP_PATH_RE = re.compile(fr'^{re.escape(settings.SFTP_UPLOADS_ROOT)}(?P<user_id>[^/]+)/(?P<asset_type>[^/]+)/.+$')
 SFTP_PATH_ASSET_CLASSES = {
     'audio-assets': AudioAsset,
     'scheduled-broadcast-assets': BroadcastAsset,
     'rotator-assets': RotatorAsset,
 }
+SFTP_PATH_RE = re.compile(fr'^{re.escape(settings.SFTP_UPLOADS_ROOT)}(?P<user_id>[^/]+)/'
+                          fr'(?:(?P<asset_type>{"|".join(re.escape(p) for p in SFTP_PATH_ASSET_CLASSES.keys())})/)?.+$')
 
 
 @djhuey.task()
@@ -28,20 +29,25 @@ def process_sftp_upload(sftp_path):
 
     if os.path.isfile(sftp_path) and not os.path.islink(sftp_path):
         try:
-            match = SFTP_PATH_RE.search(sftp_path).groupdict()
-            asset_cls = SFTP_PATH_ASSET_CLASSES[match['asset_type']]
-            asset = asset_cls(uploader_id=match['user_id'], file_basename=os.path.basename(sftp_path))
-            asset.file.save(f'uploads/{asset.file_basename}', File(open(sftp_path, 'rb')), save=False)
+            match = SFTP_PATH_RE.search(sftp_path)
+            if match:
+                match = match.groupdict()
+                asset_cls = SFTP_PATH_ASSET_CLASSES.get(match['asset_type']) or AudioAsset
+                type_name = asset_cls._meta.verbose_name
+                asset = asset_cls(uploader_id=match['user_id'], file_basename=os.path.basename(sftp_path))
+                asset.file.save(f'uploads/{asset.file_basename}', File(open(sftp_path, 'rb')), save=False)
 
-            try:
-                asset.clean()
-            except ValidationError as e:
-                logger.warning(f'skipping sftp upload of {sftp_path}: validation error: {e.message}')
+                try:
+                    asset.clean()
+                except ValidationError as e:
+                    logger.warning(f'sftp upload skipped {type_name} {sftp_path}: validation error: {e.message}')
+                else:
+                    asset.save()
+                    logger.info(f'sftp upload of {type_name} successfully processed: {sftp_path}')
             else:
-                asset.save()
-                logger.info(f'sftp upload successfully processed: {sftp_path}')
+                logger.warning(f"sftp upload can't process, regular expression failed to match: {sftp_path}")
 
         finally:
             os.remove(sftp_path)
     else:
-        logger.error(f"can't process sftp upload, path doesn't exist / isn't a file: {sftp_path}")
+        logger.error(f"sftp update can't process, path doesn't exist / isn't a file: {sftp_path}")

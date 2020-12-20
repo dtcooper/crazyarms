@@ -68,6 +68,8 @@ class User(AbstractUser):
                                    choices=HarborAuth.choices, default=HarborAuth.ALWAYS)
     timezone = models.CharField('timezone', choices=[
         (tz, tz.replace('_', ' ')) for tz in pytz.common_timezones], max_length=60, default=settings.TIME_ZONE)
+    authorized_keys = models.TextField('SSH authorized keys', blank=True, help_text='Authorized public SSH keys for '
+                                                                                    'SFTP and SCP (one per line)')
     google_calender_entry_grace_minutes = models.PositiveIntegerField(
         'harbor entry grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>before</strong> a scheduled show that the user is allowed to enter the harbor.'))
