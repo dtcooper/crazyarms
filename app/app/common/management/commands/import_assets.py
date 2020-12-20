@@ -125,9 +125,7 @@ class Command(BaseCommand):
             except ValidationError as e:
                 self.log(f'... skipping, validation error: {e.message}')
             else:
-                # Needed for on_commit() queue signals to fire _after_ object exists
-                with transaction.atomic():
-                    asset.save()
+                asset.save()
                 if playlist:
                     asset.playlists.add(playlist)
                 self.log('... done!')

@@ -100,8 +100,7 @@ class SFTPAuthView(APIView):
                 logger.info(f'sftp auth requested by {user}: allowed (directory perms: {permissions})')
                 permissions = {f'/{perm}/': ['*'] for perm in permissions}
                 permissions['/'] = ['list', 'download']
-                return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'expiration_date': 0,
-                        'uid': 0, 'gid': 0, 'quota_size': 0}
+                return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'quota_size': 0}
             else:
                 logger.info(f'sftp auth requested by {user}: denied (no permissions)')
         else:
@@ -124,6 +123,7 @@ class SFTPUploadView(APIView):
             return 400
 
         match = match.groupdict()
+        # TODO: move to a task
         call_command('import_assets', match['path'], delete=True, username=f'id={match["uid"]}',
                      audio_imports_root=f'{settings.SFTP_UPLOADS_ROOT}{match["uid"]}/{match["type"]}/',
                      dont_print=True, **{match['type'].replace('-', '_'): True})

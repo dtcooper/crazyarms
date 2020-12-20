@@ -2,6 +2,7 @@
   "common": {
     "idle_timeout": 15,
     "upload_mode": 1,
+    "setstat_mode": 1,
     "actions": {
       "execute_on": ["upload"],
       "hook": "/usr/local/bin/upload.sh"
@@ -10,6 +11,7 @@
   "sftpd": {
     "bind_port": 2022,
     "max_auth_tries": 0,
+    "track_quota": 0,
     "banner": "Crazy Arms Radio Backend SFTP Server",
     "host_keys": [
       "id_rsa"
