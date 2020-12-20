@@ -4,7 +4,7 @@
     "upload_mode": 1,
     "setstat_mode": 1,
     "actions": {
-      "execute_on": ["upload"],
+      "execute_on": ["rename", "upload"],
       "hook": "/usr/local/bin/upload.sh"
     }
   },

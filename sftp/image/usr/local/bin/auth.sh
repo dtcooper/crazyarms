@@ -14,6 +14,7 @@ if [ "$STATUS" = 1 ]; then
     mkdir -p "$HOME_DIR"
     cp /etc/sftp_home_readme.txt "$HOME_DIR/README.txt"
 
+    # These should match api/tasks.py:SFTP_PATH_ASSET_CLASSES
     for PERM_DIR in '/audio-assets/' '/scheduled-broadcast-assets/' '/rotator-assets/'; do
         echo "----- $PERM_DIR :: $(date) -----" >> /tmp/auth.log
         if [ "$(echo "$JSON_OUT" | jq -r --arg p "$PERM_DIR" '(.permissions | keys)[] | select(. == $p)')" ]; then

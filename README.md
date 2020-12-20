@@ -69,6 +69,8 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
     which has the [nchan](https://nchan.io/) module in the
     [extras package](https://packages.ubuntu.com/bionic/nginx-extras).
 - [x] Add sftp service using sftpgo
+    - [x] Deal with WinSCP's `.filepart` situation
+- [ ] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
 
 ..._and more!_
 

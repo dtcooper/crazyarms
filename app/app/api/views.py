@@ -12,9 +12,10 @@ from django.views.decorators.csrf import csrf_exempt
 from constance import config
 
 from autodj.models import AudioAsset, RotatorAsset
+from broadcast.models import BroadcastAsset
 from common.models import User
 
-from .tasks import process_sftp_upload
+from .tasks import process_sftp_upload, SFTP_PATH_ASSET_CLASSES
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -83,6 +84,12 @@ class DJAuthAPIView(APIView):
 
 
 class SFTPAuthView(APIView):
+    ROOT_DIR_PERMS = ('list', 'download')
+    # Don't allow creation of symlinks @ https://github.com/drakkan/sftpgo/blob/master/dataprovider/user.go
+    SUBDIR_PERMS = ('list', 'download', 'upload', 'overwrite', 'delete', 'rename',
+                    'create_dirs', 'chmod', 'chown', 'chtimes')
+    SFTP_ASSET_CLASS_PATHS = {v: k for k, v in SFTP_PATH_ASSET_CLASSES.items()}
+
     def post(self, request):
         username, password = self.request_json['username'], self.request_json['password']
         user = authenticate(username=username, password=password)
@@ -90,16 +97,16 @@ class SFTPAuthView(APIView):
         if user:
             permissions = []
             if config.AUTODJ_ENABLED and user.has_perm('autodj.change_audioasset'):
-                permissions.append('audio-assets')
+                permissions.append(self.SFTP_ASSET_CLASS_PATHS[AudioAsset])
                 if config.AUTODJ_STOPSETS_ENABLED:
-                    permissions.append('rotator-assets')
+                    permissions.append(self.SFTP_ASSET_CLASS_PATHS[RotatorAsset])
             if user.has_perm('broadcast.change_broadcast'):
-                permissions.append('scheduled-broadcast-assets')
+                permissions.append(self.SFTP_ASSET_CLASS_PATHS[BroadcastAsset])
 
             if permissions:
                 logger.info(f'sftp auth requested by {user}: allowed (directory perms: {permissions})')
-                permissions = {f'/{perm}/': ['*'] for perm in permissions}
-                permissions['/'] = ['list', 'download']
+                permissions = {f'/{perm}/': self.SUBDIR_PERMS for perm in permissions}
+                permissions['/'] = self.ROOT_DIR_PERMS
                 return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'quota_size': 0}
             else:
                 logger.info(f'sftp auth requested by {user}: denied (no permissions)')
