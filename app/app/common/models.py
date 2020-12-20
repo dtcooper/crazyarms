@@ -147,11 +147,11 @@ class User(AbstractUser):
                 logger.info(s)
 
         if ban_seconds > 0:
-            log(f'auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)')
+            log(f'dj auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)')
             return False
 
         elif self.harbor_auth == self.HarborAuth.ALWAYS:
-            log(f'auth requested by {self}: allowed ({auth_log})')
+            log(f'dj auth requested by {self}: allowed ({auth_log})')
             return True
 
         elif self.harbor_auth == self.HarborAuth.GOOGLE_CALENDAR:
@@ -164,23 +164,23 @@ class User(AbstractUser):
                     for show_time in self.show_times:
                         upper_bound = show_time.upper + exit_grace
                         if (show_time.lower - entry_grace) <= now <= upper_bound:
-                            log(f'auth requested by {self}: allowed ({auth_log} and {now} in time bounds - '
+                            log(f'dj auth requested by {self}: allowed ({auth_log} and {now} in time bounds - '
                                 f'{timezone.localtime(show_time.lower)} [{entry_grace} entry grace] - '
                                 f'{timezone.localtime(show_time.upper)} [{exit_grace} exit grace])')
                             return upper_bound
                     else:
-                        log(f'auth requested by {self}: denied ({auth_log} with {now} not in time bounds for '
+                        log(f'dj auth requested by {self}: denied ({auth_log} with {now} not in time bounds for '
                             f'{len(self.show_times)} show times)')
                         return False
                 else:
-                    log(f'auth requested by {self}: denied ({auth_log} with no show times)')
+                    log(f'dj auth requested by {self}: denied ({auth_log} with no show times)')
                     return False
             else:
-                log(f'auth requested by {self}: allowed ({auth_log}, however GOOGLE_CALENDAR_ENABLED = False, '
+                log(f'dj auth requested by {self}: allowed ({auth_log}, however GOOGLE_CALENDAR_ENABLED = False, '
                     f'so treating this like harbor_auth = {self.HarborAuth.ALWAYS.label})')
                 return True
         else:
-            log(f'auth requested by {self}: denied ({auth_log})')
+            log(f'dj auth requested by {self}: denied ({auth_log})')
             return False
 
 
@@ -200,7 +200,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
 
     UNNAMED_TRACK = 'Untitled Track'
     UPLOAD_DIR = 'assets'
-    TITLE_FIELDS = ('title',)
+    TITLE_FIELDS = TITLE_FIELDS_PRINT_SORTED = ('title',)
     FFMPEG_ACCEPTABLE_FORMATS = ('mp3', 'ogg', 'flac')
 
     title = TruncatingCharField('title', max_length=255, blank=True, db_index=True,
@@ -380,7 +380,8 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             self.queue_download(url=run_download_url, set_title=set_title)
 
     def full_title(self, include_duration=True):
-        s = ' - '.join(filter(None, (getattr(self, field, None) for field in self.TITLE_FIELDS))) or self.UNNAMED_TRACK
+        s = (' - '.join(filter(None, (getattr(self, field, None) for field in self.TITLE_FIELDS_PRINT_SORTED)))
+             or self.UNNAMED_TRACK)
         if include_duration and self.duration != datetime.timedelta(0):
             if self.duration >= datetime.timedelta(hours=1):
                 s += f' [{self.duration}]'

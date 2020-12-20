@@ -58,7 +58,8 @@ def normalize_title_field(value):
 
 
 class AudioAsset(AudioAssetBase):
-    TITLE_FIELDS = ('artist', 'album', 'title')
+    TITLE_FIELDS = ('title', 'artist', 'album')
+    TITLE_FIELDS_PRINT_SORTED = ('artist', 'album', 'title')
     artist = TruncatingCharField('artist', max_length=255, blank=True,
                                  help_text="If left empty, an artist will be generated from the file's metadata.")
     album = TruncatingCharField('album', max_length=255, blank=True,

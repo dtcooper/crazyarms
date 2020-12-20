@@ -163,6 +163,7 @@ STATIC_ROOT = '/static_root/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media_root/'
 AUDIO_IMPORTS_ROOT = '/imports_root/'
+SFTP_UPLOADS_ROOT = '/sftp_root/'
 
 HUEY = {
     'connection': {'host': 'redis'},

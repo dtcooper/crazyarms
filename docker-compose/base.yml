@@ -31,6 +31,7 @@ services:
       - static_root:/static_root
       - ./imports:/imports_root
       - ./media:/media_root
+      - sftp_root:/sftp_root
       - services_config:/config
     depends_on:
       - db
@@ -91,7 +92,6 @@ services:
     restart: always
     build:
       context: ./liquidsoap
-      dockerfile: Dockerfile
     ports:
       - '8001:8001'
     depends_on:
@@ -109,7 +109,6 @@ services:
     restart: always
     build:
       context: ./liquidsoap
-      dockerfile: Dockerfile
     depends_on:
       - db
     volumes:
@@ -130,8 +129,22 @@ services:
       DOZZLE_TAILSIZE: 5000
       TZ: ${TIMEZONE:-US/Pacific}
 
+  sftp:
+    container_name: sftp
+    image: dtcooper/carb-sftp:${CARB_VERSION:-latest}
+    restart: always
+    build:
+      context: ./sftp
+    volumes:
+      - ./.env:/.env:ro
+      - services_config:/config
+      - sftp_root:/sftp_root
+    ports:
+      - "2022:2022"
+
 volumes:
   postgres_data:
   redis_data:
   services_config:
+  sftp_root:
   static_root:

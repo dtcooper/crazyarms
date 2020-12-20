@@ -1,9 +1,11 @@
 import datetime
 import logging
 import json
+import re
 
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.core.management import call_command
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -64,9 +66,9 @@ class DJAuthAPIView(APIView):
                 try:
                     user = User.objects.get(username=username)
                 except User.DoesNotExist:
-                    logger.info(f'auth requested by {username}: denied (user does not exist)')
+                    logger.info(f'dj auth requested by {username}: denied (user does not exist)')
                 else:
-                    logger.info(f'auth requested by {username}: denied (incorrect password)')
+                    logger.info(f'dj auth requested by {username}: denied (incorrect password)')
             else:
                 authorized = user.currently_harbor_authorized()
                 if authorized:
@@ -78,6 +80,54 @@ class DJAuthAPIView(APIView):
                 break
 
         return response
+
+
+class SFTPAuthView(APIView):
+    def post(self, request):
+        username, password = self.request_json['username'], self.request_json['password']
+        user = authenticate(username=username, password=password)
+
+        if user:
+            permissions = []
+            if config.AUTODJ_ENABLED and user.has_perm('autodj.change_audioasset'):
+                permissions.append('audio-assets')
+                if config.AUTODJ_STOPSETS_ENABLED:
+                    permissions.append('rotator-assets')
+            if user.has_perm('broadcast.change_broadcast'):
+                permissions.append('scheduled-broadcast-assets')
+
+            if permissions:
+                logger.info(f'sftp auth requested by {user}: allowed (directory perms: {permissions})')
+                permissions = {f'/{perm}/': ['*'] for perm in permissions}
+                permissions['/'] = ['list', 'download']
+                return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'expiration_date': 0,
+                        'uid': 0, 'gid': 0, 'quota_size': 0}
+            else:
+                logger.info(f'sftp auth requested by {user}: denied (no permissions)')
+        else:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                logger.info(f'sftp auth requested by {username}: denied (user does not exist)')
+            else:
+                logger.info(f'sftp auth requested by {username}: denied (incorrect password)')
+
+        return {'status': 0}
+
+
+class SFTPUploadView(APIView):
+    SFTP_PATH_RE = re.compile(fr'^{re.escape(settings.SFTP_UPLOADS_ROOT)}(?P<uid>[^/]+)/(?P<type>[^/]+)/(?P<path>.+)$')
+
+    def post(self, request):
+        match = self.SFTP_PATH_RE.search(self.request_json['path'])
+        if not match:
+            return 400
+
+        match = match.groupdict()
+        call_command('import_assets', match['path'], delete=True, username=f'id={match["uid"]}',
+                     audio_imports_root=f'{settings.SFTP_UPLOADS_ROOT}{match["uid"]}/{match["type"]}/',
+                     dont_print=True, **{match['type'].replace('-', '_'): True})
+        return 200
 
 
 class NextTrackAPIView(APIView):

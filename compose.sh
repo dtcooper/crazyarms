@@ -244,4 +244,4 @@ fi
 mkdir -p imports
 
 set -x
-docker-compose $COMPOSE_ARGS $@
+docker-compose $COMPOSE_ARGS "$@"

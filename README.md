@@ -62,13 +62,13 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
     hooks `update_status[_ref]()` hooks throughout the code.
 - [ ] GCal shows stored as `JSONField` with show name, useful for Zoom or Liquidsoap metadata
     - am I sure I want this??? :tongue:
-- [ ] Tasks to purge failed broadcasts/assets + unstuck processing ones
+- [ ] Tasks to purge failed broadcasts/assets + unstuck processing ones, clean sftpgo files
 - [x] Re-try broadcasts for which underlying assets which aren't `READY` every 2 seconds.
     Fix asset's inline broadcasts.
 - [ ] Remove `sse` service and use the nginx package in Ubuntu 20.04 container,
     which has the [nchan](https://nchan.io/) module in the
     [extras package](https://packages.ubuntu.com/bionic/nginx-extras).
-- [ ] Add sftp service using sftpgo
+- [x] Add sftp service using sftpgo
 
 ..._and more!_
 
