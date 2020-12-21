@@ -21,7 +21,7 @@ from django.utils.formats import date_format
 from django.utils.functional import cached_property, lazy
 from django.utils.html import format_html
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import FormView, ListView, TemplateView, UpdateView
+from django.views.generic import FormView, ListView, TemplateView, UpdateView, View
 
 from constance import config
 from django_redis import get_redis_connection
@@ -108,13 +108,10 @@ class StatusView(LoginRequiredMixin, TemplateView):
             return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        status = harbor.status(safe=True)
-        show_autodj_requests = config.AUTODJ_ENABLED and (config.AUTODJ_REQUESTS != 'disabled')
         return {
             **super().get_context_data(**kwargs),
-            'autodj_requests_form': AutoDJRequestsForm() if show_autodj_requests else None,
-            'liquidsoap_status': json.loads(status) if status else None,
-            'show_autodj_requests': show_autodj_requests,
+            'autodj_requests_form': AutoDJRequestsForm() if self.request.user.has_autodj_request_permission() else None,
+            'liquidsoap_status': harbor.status(safe=True, as_dict=True),
             'title': 'Stream Status',
         }
 
@@ -278,10 +275,8 @@ class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
         super().__init__(extra_context={'submit_text': 'Change Password'})
 
 
-def status_boot(request):
-    # TODO: refactor me to class-based
-    # TODO: log when bans are MADE and LIFTED
-    if request.method == 'POST':
+class BootView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
         # Get pretty copy from front-end because why not?
         user_id, time, ban_text = request.POST.get('user_id'), request.POST.get('time'), request.POST.get('text')
         response = "You don't have permission to do that."
@@ -302,6 +297,7 @@ def status_boot(request):
                     user.harbor_auth = User.HarborAuth.NEVER
                     user.save()
                     harbor.dj_harbor__stop()
+                    logger.info(f'{self.request.user} banned {user} permanently (set harbor_auth = never)')
                     response = (f'{user.get_full_name()} banned permanently. To undo, go the admin site and '
                                 'change their harbor authorization.')
                 else:
@@ -314,23 +310,21 @@ def status_boot(request):
                         if time > 0:
                             cache.set(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{user.id}', True, timeout=time)
                             harbor.dj_harbor__stop()
+                            logger.info(f'{self.request.user} banned {user} for {ban_text}')
                             response = (f'{user.get_full_name()} banned for {ban_text}. To undo, visit the DJ Ban List '
                                         'page')
 
         return HttpResponse(response, content_type='text/plain')
-    else:
-        return HttpResponseNotAllowed(('POST',))
 
 
-def status_skip(request):
-    if request.method == 'POST':
-        status = harbor.status(safe=True)
+class SkipView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        status = harbor.status(safe=True, as_dict=True)
         if status is None:
             response = 'Invalid response from harbor'
         else:
-            status = json.loads(status)
             response = "You don't have permission to do that."
-            skippable_sources = status['harbor']['skippable_sources']
+            skippable_sources = status['skippable_sources']
             if request.user.has_perm('broadcast.change_broadcast'):
                 source_id = request.POST.get('id')
                 if source_id is None:
@@ -341,9 +335,8 @@ def status_skip(request):
                     source_name = request.POST.get('name', 'Unknown')
                     getattr(harbor, f'{source_id}.skip')()
                     response = f'You successfully skipped the current track on {source_name}.'
+                    logger.info(f'{self.request.user} skipped track on {source_id}')
         return HttpResponse(response, content_type='text/plain')
-    else:
-        return HttpResponseNotAllowed(('POST',))
 
 
 class PlayoutLogView(LoginRequiredMixin, ListView):

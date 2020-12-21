@@ -1,12 +1,12 @@
 import json
+import logging
 from telnetlib import Telnet
 from threading import Lock
 
-from django_redis import get_redis_connection
-
-from carb import constants
 
 END_PREFIX = b'\r\nEND\r\n'
+
+logger = logging.getLogger(f'carb.{__name__}')
 
 
 class LiquidsoapTelnetException(Exception):
@@ -34,7 +34,7 @@ class _Liquidsoap:
                 return 'unknown'
         return self._version
 
-    def execute(self, command, arg=None, splitlines=None, safe=False):
+    def execute(self, command, arg=None, splitlines=False, safe=False, as_dict=False):
         if arg is not None:
             command += f' {arg}'
         command = f'{command}\n'.encode('utf-8')
@@ -57,11 +57,23 @@ class _Liquidsoap:
                             raise LiquidsoapTelnetException(str(e))
 
         response = response.removesuffix(END_PREFIX).decode('utf-8').splitlines()
-        return response if splitlines else '\n'.join(response)
+        if as_dict or not splitlines:
+            response = '\n'.join(response)
+            if as_dict:
+                try:
+                    return json.loads(response)
+                except json.JSONDecodeError:
+                    logger.warning(f'Error decoding liquidsoap json: {response}')
+                    if safe:
+                        return None
+                    else:
+                        raise
+
+        return response
 
     def __getattr__(self, command):
         command = command.replace('__', '.')
-        return lambda arg=None, splitlines=None, safe=False: self.execute(command, arg, splitlines, safe)
+        return lambda arg=None, **kwargs: self.execute(command=command, arg=arg, **kwargs)
 
 
 class _UpstreamGetter:

@@ -24,4 +24,4 @@ class Command(BaseCommand):
             init_services(services=options['services'], restart_services=options['restart'],
                           render_only=options['render_only'])
         else:
-            self.stdout.write('No users exists, assuming this is the first run and not starting services')
+            self.stdout.write('No users exist, assuming this is the first run and not starting services.')

@@ -195,7 +195,7 @@ def asset_convert_to_acceptable_format(asset, task=None):
                 asset.refresh_from_db()
                 asset.file.save(filename, File(open(outfile, 'rb')), save=False)
                 asset.clear_metadata_cache()
-                asset.clean()
+                asset.clean(allow_conversion=False)  # Avoids infinite loop
                 asset.save()
 
             finally:

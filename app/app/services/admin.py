@@ -96,9 +96,8 @@ class UpstreamServerAdmin(admin.ModelAdmin):
     def is_online(self, obj):
         connected = False
         message = 'Error: upstream failed to start (see upstream logs)'
-        status = upstream(obj).status(safe=True)
+        status = upstream(obj).status(safe=True, as_dict=True)
         if status:
-            status = json.loads(status)
             connected = status['online']
             if connected:
                 uptime = timezone.now() - pytz.utc.localize(datetime.datetime.utcfromtimestamp(status['start_time']))

@@ -25,18 +25,18 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
       which should be enough)
     - [x] [select2](https://django-easy-select2.readthedocs.io/) requests in webui (add a new list in
         redis that gets popped from?)
-    - [ ] sse live status component of AutoDJ requests
 - [x] Finish Zoom broadcasting
     - [ ] needs a second pass, and a better show length picker
+    - [ ] time remaining of current Zoom Show
 - [ ] Potential for S3 as a storage source using [django-storages](https://django-storages.readthedocs.io/)
 - [ ] Clean up Dockerfiles stripping dev stuff
 - [ ] Go over `TODO`s and `XXX`s in codebase
 - [x] Unit tests for at least the Django app - _skeleton done_
     - [ ] major second pass, fix broken tests, aim for high coverage _(or 100%)
 - [x] Mature `strip_blank` implementation
-- [ ] Convert some Django views to class-based
+- [x] Convert some Django views to class-based
     - [x] `api` package
-    - [ ] `webui` package
+    - [x] `webui` package
 - [x] Player for local icecast on status page
 - [x] Make track log a more generic playout log, with asset playing on metadata one
     particular type.
@@ -44,7 +44,6 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [x] Convert logging to redis queue (so web server doesn't have to be up to log)
     (decided to use `psql` to directly insert into the DB)
 - [x] Kick off DJs outside of calendar times (with a grace period)
-- [ ] TIME REMAINING of Zoom Show
 - [ ] Add make active/disable quick actions for playlists and stopsets
 - [ ] Schedule stopsets at specific times - necessary? nice-to-have
 - [ ] Compression and normalization on a per-DJ basis. (Add a liquidsoap `switch()` to
@@ -54,9 +53,8 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [x] Hide skip track button for lower precedence sources
 - [ ] Radio buttons for ban times
 - [x] Copy change: rename "precedence" -> "priority"
-- [ ] BUG: Edit profile seems to have re-enabled harbor access type
+- [x] BUG: Edit profile seems to have re-enabled harbor access type
 - [x] Thoroughly test new ffprobe + ffmpeg flows for audio assets + task
-- [ ] ~~Convert uploads into their own model.~~ - _not doing this._
 - [x] Harbor: use an add_timeout poll to check for `status_json()` changes rather than
     hooks `update_status[_ref]()` hooks throughout the code.
 - [ ] GCal shows stored as `JSONField` with show name, useful for Zoom or Liquidsoap metadata
@@ -70,7 +68,7 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [x] Add sftp service using sftpgo
     - [x] Deal with WinSCP's `.filepart` situation
     - [x] Add ability to use SSH authorized keys.
-- [ ] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
+- [x] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
 - [ ] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
 
 ..._and more!_

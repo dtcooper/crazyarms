@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block extrahead %}
-{% if show_autodj_requests %}
+{% if autodj_requests_form %}
   {{ autodj_requests_form.media.css }}
   <style>
     .autodj-requests-table select, .autodj-requests-table input {
@@ -18,19 +18,18 @@
 
 {{ liquidsoap_status|json_script:'harbor-status-json' }}
 <script>
-  {% url 'status_boot' as boot_url %}
-  {% url 'status_skip' as skip_url %}
+  {% url 'boot' as boot_url %}
+  {% url 'skip' as skip_url %}
   {% url 'autodj_request' as autodj_request_url %}
-  var statusBootUrl = '{{ boot_url|escapejs }}',
-      statusSkipUrl = '{{ skip_url|escapejs }}',
+  var bootUrl = '{{ boot_url|escapejs }}',
+      skipUrl = '{{ skip_url|escapejs }}',
       autoDJRequestsUrl = '{{ autodj_request_url|escapejs }}',
       csrfToken = '{{ csrf_token|escapejs }}',
       perms = {
         "isSuperuser": {{ user.is_superuser|yesno:'true,false' }},
         "canBoot": {{ perms.common.can_boot|yesno:'true,false' }},
         "changeBroadcast": {{ perms.broadcast.change_broadcast|yesno:'true,false' }},
-        "canMakeAutoDJRequests": {{ user.has_autodj_request_permission|yesno:'true,false' }},
-        "showAutoDJRequests": {{ show_autodj_requests|yesno:'true,false' }}
+        "showAutoDJRequests": {{ autodj_requests_form|yesno:'true,false' }}
       }
   perms.showActions = perms.isSuperuser || perms.canBoot || perms.changeBroadcast
 </script>
@@ -41,18 +40,6 @@
 {% block content %}
 
 {% verbatim %}
-<script id="autodj-requests-template" type="text/x-handlebars-template">
-{{if requests}}
-  {{#each requests}}
-
-  {{/each}}
-{{else}}
-  <tr>
-    <td colspan="2"></td>
-  </tr>
-{{/if}}
-</script>
-
 <script id="harbor-status-template" type="text/x-handlebars-template">
 {{#if sources}}
   <table class="first-td-right">
@@ -226,34 +213,23 @@
 {% endverbatim %}
 
 <div id="harbor-status"></div>
-{% if show_autodj_requests %}
-  {% if user.has_autodj_request_permission %}
-    <form id="autodj-request-form">
-      {% csrf_token %}
-  {% endif %}
-  <table class="autodj-requests-table first-td-right">
-    <caption>AutoDJ Requests</caption>
-    <tr>
-      <td colspan="2" class="center-text">
-        <code>TODO:</code> list live requests via sse service with JSON different JSON key than <code>harbor</code>
-      </td>
-    </tr>
-    {% if user.has_autodj_request_permission %}
-      <tr>
-        <td width="15%">Your Request:</td>
-        <td width="85%">{{ autodj_requests_form.asset }}</td>
-      </tr>
-      <tr>
-        <td colspan="2" class="center-text">
-          <button class="autodj-request bg-green">Submit Request to be Played Next</button>
-        </td>
-      </tr>
-    {% endif %}
-  </table>
-  {% if user.has_autodj_request_permission %}
-    </form>
-    {{ autodj_requests_form.media.js }}
-  {% endif %}
+{% if autodj_requests_form %}
+  <form id="autodj-request-form">
+    {% csrf_token %}
+    <table class="autodj-requests-table first-td-right">
+      <caption>AutoDJ Requests</caption>
+        <tr>
+          <td width="15%">Your Request:</td>
+          <td width="85%">{{ autodj_requests_form.asset }}</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="center-text">
+            <button class="autodj-request bg-green">Submit Request to be Played Next</button>
+          </td>
+        </tr>
+    </table>
+  </form>
+  {{ autodj_requests_form.media.js }}
 {% endif %}
 
 {% if settings.ICECAST_ENABLED %}

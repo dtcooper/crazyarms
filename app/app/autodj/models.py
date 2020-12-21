@@ -132,7 +132,7 @@ class AudioAsset(AudioAssetBase):
             except AudioAsset.DoesNotExist:
                 logger.warnining(f"request with audio asset id = {request_id} doesn't exist")
             else:
-                logger.info(f'selected {audio_asset} from autodj request aueue')
+                logger.info(f'selected {audio_asset} from autodj request queue')
                 return cls.process_anti_repeat_autodj(audio_asset)
 
         if not config.AUTODJ_ANTI_REPEAT_ENABLED:

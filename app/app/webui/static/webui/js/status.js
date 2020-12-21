@@ -39,8 +39,8 @@ $(function() {
 
     function updateHarborStatusTemplate(data) {
         data = JSON.parse(data)
-        if (data && data.harbor) {
-            var context = $.extend(data.harbor, perms)
+        if (data) {
+            var context = $.extend(data, perms)
             $status.html(harborStatusTemplate(context))
         } else {
             $status.html('<p class="error">The harbor appears to be down. Please check the server logs or again later.</p>')
@@ -59,24 +59,22 @@ $(function() {
     if (perms.showAutoDJRequests) {
         setTimeout(function() {
             // Needs to initialize slightly delayed for some reason?
-            $('.django-select2').djangoSelect2({placeholder: 'Search for a track', dropdownAutoWidth: true})
+            $('.django-select2').djangoSelect2({placeholder: 'Search for a track to request...', dropdownAutoWidth: true})
         }, 500)
-        if (perms.canMakeAutoDJRequests) {
-            $('#autodj-request-form').submit(function(e) {
-                e.preventDefault()
-                var $asset = $('#id_asset')
+        $('#autodj-request-form').submit(function(e) {
+            e.preventDefault()
+            var $asset = $('#id_asset')
 
-                if ($asset.val()) {
-                    var postData = $(this).serialize()
-                    $asset.val(null).trigger('change') //clear select2
-                    $.post(autoDJRequestsUrl, postData, function(response) {
-                        addMessage('info', response)
-                    }).fail(function() {
-                        addMessage('error', 'An error occurred while making your AutoDJ request.')
-                    })
-                }
-            });
-        }
+            if ($asset.val()) {
+                var postData = $(this).serialize()
+                $asset.val(null).trigger('change') //clear select2
+                $.post(autoDJRequestsUrl, postData, function(response) {
+                    addMessage('success', response)
+                }).fail(function() {
+                    addMessage('error', 'An error occurred while making your AutoDJ request.')
+                })
+            }
+        })
     }
 
     $('body').on('click', '.skip-btn', function(e) {
@@ -85,7 +83,7 @@ $(function() {
         var sourceName = $(this).data('name')
         if (confirm('Are you skip you want to skip the current ' + sourceName + ' track?')) {
             var postData = {"csrfmiddlewaretoken": csrfToken, "name": sourceName, "id": sourceId}
-            $.post(statusSkipUrl, postData, function(response) {
+            $.post(skipUrl, postData, function(response) {
                 addMessage('info', response)
             }).fail(function() {
                 addMessage('error', 'An error occurred while skipping ' + sourceName)
@@ -113,7 +111,7 @@ $(function() {
 
         if (shouldBoot) {
             var postData = {"time": time, "user_id": userId, "text": text, "csrfmiddlewaretoken": csrfToken}
-            $.post(statusBootUrl, postData, function(response) {
+            $.post(bootUrl, postData, function(response) {
                 addMessage('info', response)
             }).fail(function() {
                 addMessage('error', 'An error occurred while banning ' + user)

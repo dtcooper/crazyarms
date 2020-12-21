@@ -351,9 +351,9 @@ end
 
 def status_json_from_tuple(tuple)
     let (sources, dj_harbor_source, live_user, skippable_sources, metadata, server_info, timed_sources) = tuple
-    '{"harbor": {"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
+    '{"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
         ^ '"skippable_sources":#{skippable_sources},"timed_sources":#{timed_sources},"metadata":#{metadata},'
-        ^ '"server_info": #{server_info}}}'
+        ^ '"server_info": #{server_info}}'
 end
 
 def status_json()

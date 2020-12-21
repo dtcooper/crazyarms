@@ -132,15 +132,18 @@ class User(AbstractUser):
         return upcoming_show_times
 
     def has_autodj_request_permission(self):
-        code = config.AUTODJ_REQUESTS
-        if code == 'disabled':
+        if config.AUTODJ_ENABLED:
+            code = config.AUTODJ_REQUESTS
+            if code == 'disabled':
+                return False
+            elif code == 'user':
+                return True
+            elif code == 'perm':
+                return self.has_perm('autodj.change_audioasset')
+            else:  # code == 'superuser'
+                return self.is_superuser
+        else:
             return False
-        elif code == 'user':
-            return True
-        elif code == 'perm':
-            return self.has_perm('autodj.change_audioasset')
-        else:  # code == 'superuser'
-            return self.is_superuser
 
     def currently_harbor_authorized(self, now=None, should_log=True):
         auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
@@ -297,7 +300,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             logger.warning(f'ffmpeg (md5) return {cmd.returncode}: {cmd.stderr}')
             return None
 
-    def clean(self):
+    def clean(self, allow_conversion=True):
         if self.file:
             if not self.metadata:
                 raise ValidationError("Failed to extract audio info from the file you've uploaded. Try another?")
@@ -318,10 +321,25 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
 
                 self.duration = self.metadata.duration
 
-                if self.metadata.format not in self.FFMPEG_ACCEPTABLE_FORMATS:
+                if self.metadata.format in self.FFMPEG_ACCEPTABLE_FORMATS:
+                    self.status = self.Status.READY
+
+                    # Normalize extension if it's an acceptable format
+                    file_name, file_ext = os.path.splitext(self.file.name)
+                    correct_ext = self.metadata.format
+                    if correct_ext != file_ext.lower():
+                        file_exists = os.path.exists(self.file.path)
+                        if file_exists or isinstance(self.file.file, TemporaryUploadedFile):
+                            # If it's pending and a UI based (TemporaryUploadedFile) upload, that's all we have to do
+                            if file_exists:
+                                # Otherwise the file already exists, so rename it
+                                os.rename(self.file.path, f'{os.path.splitext(self.file.path)[0]}.{correct_ext}')
+                            logger.info(f'normalized upload filename {self.file.name} => {file_name}.{correct_ext}')
+                            self.file.name = f'{file_name}.{correct_ext}'
+                elif allow_conversion:
                     self.run_conversion_after_save = True
                 else:
-                    self.status = self.Status.READY
+                    raise ValidationError('asset in an invalid format and conversion not allowed')
 
             for field in self.TITLE_FIELDS:
                 if not getattr(self, field):
