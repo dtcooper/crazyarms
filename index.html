@@ -282,13 +282,6 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#features-at-a-glance" class="md-nav__link">
-    Features At a Glance
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#audio-infrastructure-overview" class="md-nav__link">
     Audio Infrastructure Overview
   </a>
@@ -299,6 +292,26 @@
           <li class="md-nav__item">
   <a href="#sources-harbor-and-upstreams-explained" class="md-nav__link">
     Sources, Harbor, and Upstreams Explained
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#features-at-a-glance" class="md-nav__link">
+    Features At a Glance
+  </a>
+  
+    <nav class="md-nav" aria-label="Features At a Glance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#non-features" class="md-nav__link">
+    Non-Features
   </a>
   
 </li>
@@ -362,7 +375,7 @@
 
   <li class="md-nav__item">
     <a href="users-guide/dj/icecast/" class="md-nav__link">
-      IceCast 2 or SHOUTcast
+      Icecast 2
     </a>
   </li>
 
@@ -486,13 +499,6 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#features-at-a-glance" class="md-nav__link">
-    Features At a Glance
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#audio-infrastructure-overview" class="md-nav__link">
     Audio Infrastructure Overview
   </a>
@@ -503,6 +509,26 @@
           <li class="md-nav__item">
   <a href="#sources-harbor-and-upstreams-explained" class="md-nav__link">
     Sources, Harbor, and Upstreams Explained
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#features-at-a-glance" class="md-nav__link">
+    Features At a Glance
+  </a>
+  
+    <nav class="md-nav" aria-label="Features At a Glance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#non-features" class="md-nav__link">
+    Non-Features
   </a>
   
 </li>
@@ -539,6 +565,61 @@ online radio stations with varying types of scheduling and finding no existing
 product fit some common needs out of the box.</p>
 <p>If you're an technical user or a systems administrator wanting to install Crazy
 Arms, head over to the <a href="installation/">installation docs</a>.</p>
+<h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">&para;</a></h2>
+<h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">&para;</a></h3>
+<p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> This is a
+customizable script, implemented in <a href="https://www.liquidsoap.info/">Liquidsoap</a>
+that takes care of choosing what to broadcast and when. Think of the Harbor as a
+robot taking several sources and deciding which one is best to broadcast from
+based on some simple rules.</p>
+<p>The harbor has several input <strong>sources</strong>. These are things like pre-recorded
+broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
+source with the highest priority <em>that is active</em> will be what the harbor chooses
+to play.</p>
+<div class="admonition note">
+<p class="admonition-title">Inactive Sources</p>
+<p>When a source goes from inactive to active, the harbor will smootly fade to it.</p>
+<p>For the <em>"Live Sources"</em> listed below (Zoom and Icecast), there's a feature
+called <strong>silence detection.</strong> This means <em>if a DJ is <strong>connected but broadcasting
+silence,</strong></em> that source will be <strong>considered inactive</strong> and the <strong>first active
+source with less priority will be broadcast.</strong></p>
+<p>The theory behind this feature is part of the <em>Idiot-Tolerant&trade;</em> DJing
+philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f609.svg" title=":wink:" /></p>
+</div>
+<div class="mermaid">flowchart LR
+    subgraph sources ["Priority-Based Sources"]
+        prerecord("1. Pre-recorded Broadcast&lt;br&gt;(Scheduled, long-format shows)")
+        subgraph live-sources ["Live Sources (Silence Detection)"]
+            dj("2. Live DJ&lt;br&gt;(Icecast 2, RTMP)")
+            zoom("3. Live Zoom Room&lt;br&gt;(optional)")
+        end
+        autodj("4. AutoDJ&lt;br&gt;(optional)")
+        failsafe(5. Failsafe Audio File)
+    end
+
+    harbor(("Harbor Service&lt;br&gt;(Intelligent stream picker)"))
+
+    prerecord --&gt;|highest priority| harbor
+    dj --&gt; harbor
+    zoom --&gt; harbor
+    autodj --&gt; harbor
+    failsafe --&gt;|lowest priority| harbor
+
+    subgraph upstreams ["Upstream Services (Examples)"]
+        icecast1("Local Icecast 2 Server (mp3)")
+        icecast2("External Icecast 2 Server (aac)")
+        icecastOthers("Other Icecast 2 Servers")
+    end
+
+    harbor --&gt; icecast1
+    harbor --&gt; icecast2
+    harbor --&gt; icecastOthers
+
+    listeners(("Listeners"))
+
+    icecast1 --&gt; listeners
+    icecast2 --&gt; listeners
+    icecastOthers --&gt; listeners</div>
 <h2 id="features-at-a-glance">Features At a Glance<a class="headerlink" href="#features-at-a-glance" title="Permanent link">&para;</a></h2>
 <dl>
 <dt>Priority-based Streaming</dt>
@@ -564,7 +645,7 @@ It's inherently a bit brittle, but can be troubleshooted somewhat easily in
 a web browser running <a href="https://novnc.com/info.html">noVNC</a> by an admin.</dd>
 <dt><em>Idiot-Tolerant&trade;</em> DJing</dt>
 <dd>If a live DJ or Zoom room is broadcasting silence, Crazy Arms picks another
-input to stream from.</dd>
+source to stream from.</dd>
 <dt>Completely <a href="https://www.docker.com/">Docker</a>-ized</dt>
 <dd>Easy development and easy deployment using
 <a href="https://docs.docker.com/compose/">docker-compose</a>.</dd>
@@ -600,55 +681,26 @@ at the wrong time?</dd>
 <dt>Streaming Customization</dt>
 <dd>At your own risk, you can modify <a href="https://www.liquidsoap.info/">Liquidsoap</a>
 Harbor scripts. This gives pretty high flexibility for various use cases.</dd>
+<dt>RTMP Support (Experimental)</dt>
+<dd>There's experimental support for RTMP, so anyone who's familiar with tools
+like <a href="https://obsproject.com/">Open Source Broadcaster (OBS)</a> can stream to
+the harbor. Of course, video is discarded.</dd>
 </dl>
-<h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">&para;</a></h2>
-<h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">&para;</a></h3>
-<p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> This is a
-customizable script, implemented in <a href="https://www.liquidsoap.info/">Liquidsoap</a>
-that takes care of choosing what to broadcast and when. Think of the Harbor as a
-robot taking several sources and deciding which one is best to broadcast based
-on the rules you see on the status page.</p>
-<p>The harbor has several input <strong>sources</strong>. These are things like pre-recorded
-broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
-source with the highest priority <em>that is active</em> will be what the harbor chooses
-to play.</p>
-<div class="admonition note">
-<p class="admonition-title">A Note About Inactive Sources</p>
-<p>When a source becomes active from inactive, the harbor will fade to it.
-Note a connected source that is silent will usually</p>
-</div>
-<div class="mermaid">flowchart LR
-    subgraph sources ["Priority-Based Sources"]
-        prerecord("1. Pre-recorded Broadcast&lt;br&gt;(Scheduled, long-format shows)")
-        dj("2. Live DJ&lt;br&gt;(IceCast 2 / SHOUTCast)")
-        zoom("3. Zoom Room&lt;br&gt;(optional)")
-        autodj("4. AutoDJ&lt;br&gt;(optional)")
-        failsafe(5. Failsafe Audio File)
-    end
-
-    harbor(("Harbor Service&lt;br&gt;(Intelligent stream picker)"))
-
-    prerecord --&gt;|highest priority| harbor
-    dj --&gt; harbor
-    zoom --&gt; harbor
-    autodj --&gt; harbor
-    failsafe --&gt;|lowest priority| harbor
-
-    subgraph upstreams ["Upstream Services (Examples)"]
-        icecast1("Local IceCast 2 Server (mp3)")
-        icecast2("External IceCast 2 Server (aac)")
-        icecastOthers("Other IceCast 2 Servers")
-    end
-
-    harbor --&gt; icecast1
-    harbor --&gt; icecast2
-    harbor --&gt; icecastOthers
-
-    listeners(("Listeners"))
-
-    icecast1 --&gt; listeners
-    icecast2 --&gt; listeners
-    icecastOthers --&gt; listeners</div>
+<h3 id="non-features">Non-Features<a class="headerlink" href="#non-features" title="Permanent link">&para;</a></h3>
+<p><em>The following are non-features of Crazy Arms.</em></p>
+<dl>
+<dt>Front-end Not Included</dt>
+<dd>Crazy Arms is designed to be a backend for your radio stream only. A user
+interface that includes calendars, a fancy stream player, and metadata
+isn't included.</dd>
+<dt>Admin Site Look and Feel</dt>
+<dd>The admin site for Crazy Arms has a fairly inflexible look and feel. It's
+not necessarily a beautiful, easy to use interface but instead meant for
+somewhat technical users. This is by design and was chosen for ease of
+programming. The technical reason for why is that we chose to build it on
+top of <a href="https://docs.djangoproject.com/en/3.1/ref/contrib/admin/">Django's admin site</a>
+module.</dd>
+</dl>
                 
               
               
@@ -674,7 +726,7 @@ Note a connected source that is silent will usually</p>
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                IceCast 2 or SHOUTcast
+                Icecast 2
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
