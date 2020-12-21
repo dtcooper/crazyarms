@@ -11,14 +11,15 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(
         extra_context={'hide_login_link': True, 'title': 'Login', 'submit_text': 'Login'},
         redirect_authenticated_user=True, template_name='webui/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('info/', views.InfoView.as_view(), name='info'),
     path('playout-log/', views.PlayoutLogView.as_view(), name='playout_log'),
     path('profile/', views.UserProfileView.as_view(), name='profile'),
     path('scheduled-shows/', views.GCalView.as_view(), name='gcal'),
-    path('status/autodj-request/choices/', views.AutoDJRequestChoicesView.as_view(), name='autodj_request_choices'),
     path('status/autodj-request/', views.AutoDJRequestAJAXFormView.as_view(), name='autodj_request'),
+    path('status/autodj-request/choices/', views.AutoDJRequestChoicesView.as_view(), name='autodj_request_choices'),
     path('status/boot/', views.BootView.as_view(), name='boot'),
     path('status/skip/', views.SkipView.as_view(), name='skip'),
     path('zoom/', views.ZoomView.as_view(), name='zoom'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     re_path('^(?P<module>logs|websockify|telnet|sse)', views.nginx_protected, name='nginx_protected'),
 ]

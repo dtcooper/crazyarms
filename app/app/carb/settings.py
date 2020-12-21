@@ -11,18 +11,21 @@ if os.path.exists('/.env'):
     env.read_env('/.env')
 
 BASE_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-SECRET_KEY = env('SECRET_KEY', default='topsecret')
+SECRET_KEY = env('SECRET_KEY')
 
 DEBUG = env.bool('DEBUG', default=False)
-ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
-ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
-EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
-HARBOR_TELNET_WEB_ENABLED = env.bool('HARBOR_TELNET_WEB_ENABLED', default=False)
-RTMP_ENABLED = env.bool('RTMP_ENABLED', default=False)
 DOMAIN_NAME = env('DOMAIN_NAME', default='localhost')
+EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
+HARBOR_PORT = env.int('HARBOR_PORT', default=8001)
+HARBOR_TELNET_WEB_ENABLED = env.bool('HARBOR_TELNET_WEB_ENABLED', default=False)
+ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
+ICECAST_PORT = env.int('ICECAST_PORT', default=8000)
+RTMP_ENABLED = env.bool('RTMP_ENABLED', default=False)
+RTMP_PORT = env.int('RTMP_PORT', default=1935)
 TIME_ZONE = env('TIMEZONE', default='US/Pacific')
+ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 
-ALLOWED_HOSTS = ['app', 'localhost', DOMAIN_NAME]
+ALLOWED_HOSTS = ['app', 'localhost', '127.0.0.1', DOMAIN_NAME]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
@@ -206,7 +209,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     'autodj_requests': ['django.forms.fields.ChoiceField', {
         'widget': 'django.forms.Select',
         # Careful: referred to by code text in autodj/models.py and webui/views.py
-        'choices': (('disabled', 'Nobody (disabled)'), ('user', 'Users'),
+        'choices': (('disabled', 'Disabled (nobody)'), ('user', 'Users'),
                     ('perm', 'Users with "Program the AutoDJ" permissions'), ('superuser', 'Superusers')),
     }],
     'file': ['django.forms.FileField', {'widget': 'common.widgets.AlwaysClearableFileInput', 'required': False}],
@@ -235,7 +238,7 @@ CONSTANCE_CONFIG = OrderedDict((
     ('UPSTREAM_FAILSAFE_AUDIO_FILE', (False, 'Failsafe audio file that should be broadcast to upstream servers if we '
                                       "can't connect to the harbor, ie the harbor failed to start.", 'file')),
     ('AUTODJ_ENABLED', (True, 'Whether or not to run an AutoDJ on the harbor.')),
-    ('AUTODJ_REQUESTS', ('users', 'AutoDJ requests enabled for the following users.', 'autodj_requests')),
+    ('AUTODJ_REQUESTS', ('disabled', 'AutoDJ requests enabled for the following users.', 'autodj_requests')),
     ('AUTODJ_REQUESTS_NUM', (5, 'The maximum number of pending AutoDJ requests (if enabled)', 'positive_int')),
     ('AUTODJ_STOPSETS_ENABLED', (False, 'Whether or not the AutoDJ plays stop sets (for ADs, PSAs, Station IDs, etc)')),
     ('AUTODJ_STOPSETS_ONCE_PER_MINUTES', (20, mark_safe(
@@ -276,14 +279,14 @@ if ICECAST_ENABLED:
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME', 'PLAYOUT_LOG_PURGE_DAYS')),
-    ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH',
-                              'HARBOR_SWOOSH_AUDIO_FILE', 'HARBOR_TRANSITION_SECONDS',
-                              'HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE', 'HARBOR_FAILSAFE_AUDIO_FILE',
-                              'UPSTREAM_FAILSAFE_AUDIO_FILE')),
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_REQUESTS', 'AUTODJ_REQUESTS_NUM',
                               'AUTODJ_ANTI_REPEAT_ENABLED', 'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT',
                               'AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST', 'AUTODJ_PLAYLISTS_ENABLED',
                               'AUTODJ_STOPSETS_ENABLED', 'AUTODJ_STOPSETS_ONCE_PER_MINUTES')),
+    ('Harbor Configuration', ('HARBOR_COMPRESSION_NORMALIZATION', 'HARBOR_TRANSITION_WITH_SWOOSH',
+                              'HARBOR_SWOOSH_AUDIO_FILE', 'HARBOR_TRANSITION_SECONDS',
+                              'HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE', 'HARBOR_FAILSAFE_AUDIO_FILE',
+                              'UPSTREAM_FAILSAFE_AUDIO_FILE')),
     ('Audio Assets Configuration', ('ASSET_ENCODING', 'ASSET_BITRATE', 'ASSET_DEDUPING')),
     ('Google Calendar Based Authentication', ('GOOGLE_CALENDAR_ENABLED', 'GOOGLE_CALENDAR_ID',
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),

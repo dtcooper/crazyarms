@@ -21,7 +21,7 @@ nav:
     - Home: index.md
     - User's Guide:
         - Live DJing:
-            - IceCast 2: users-guide/dj/icecast.md
+            - Icecast 2: users-guide/dj/icecast.md
             - Zoom: users-guide/dj/zoom.md
     - Admin's Guide:
         - AutoDJ: admin-guide/autodj.md

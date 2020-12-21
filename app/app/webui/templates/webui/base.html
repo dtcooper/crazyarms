@@ -30,15 +30,16 @@
           {% endif %}
           {% if user.is_authenticated %}
             <a href="{% url 'status' %}">Stream Status</a> /
+            <a href="{% url 'info' %}">Server Info</a> /
             {% if settings.ZOOM_ENABLED and user.harbor_auth != user.HarborAuth.NEVER %}
-              <a href="{% url 'zoom' %}">Zoom Broadcasting</a> /
+              <a href="{% url 'zoom' %}">Zoom</a> /
             {% endif %}
             <a href="{% url 'playout_log' %}">Playout Log</a> /
             {% if config.GOOGLE_CALENDAR_ENABLED %}
-              <a href="{% url 'gcal' %}">My Scheduled Shows</a> /
+              <a href="{% url 'gcal' %}">Scheduled Shows</a> /
             {% endif %}
             {% if perms.common.can_boot %}
-              <a href="{% url 'banlist' %}">DJ Ban List</a> /
+              <a href="{% url 'banlist' %}">DJ Bans</a> /
             {% endif %}
             <a href="{% url 'profile' %}">Profile</a> /
             <a href="{% url 'logout' %}">Logout</a>
@@ -48,7 +49,7 @@
             <a href="{% url 'login' %}">Login</a> /
           {% endif %}
           {% if user_has_admin_permissions %}
-            <strong><a href="{% url 'admin:index' %}">Station Admin Site</a></strong> /
+            <strong><a href="{% url 'admin:index' %}">Station Admin</a></strong> /
           {% endif %}
           <a href="https://dtcooper.github.io/carb/" target="_blank">Help Docs</a>
         </nav>

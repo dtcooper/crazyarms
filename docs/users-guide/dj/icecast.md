@@ -1,1 +1,1 @@
-# IceCast 2
+# Icecast 2

@@ -61,7 +61,9 @@ class FirstRunForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.order_fields(['station_name', 'username', 'email', 'password1', 'password2', 'icecast_passwords'])
+        self.fields['username'].widget.attrs.pop('autofocus', None)
+        self.order_fields(['station_name', 'username', 'email', 'password1', 'password2', 'icecast_admin_password',
+                           'generate_sample_assets'])
 
     class Meta(UserCreationForm.Meta):
         model = User

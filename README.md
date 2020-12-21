@@ -70,6 +70,7 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
     - [x] Add ability to use SSH authorized keys.
 - [x] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
 - [ ] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
+- [ ] Do we really need a postfix container? Can't we just configure Django to send email directly?
 
 ..._and more!_
 

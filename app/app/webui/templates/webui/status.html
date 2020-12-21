@@ -232,26 +232,4 @@
   {{ autodj_requests_form.media.js }}
 {% endif %}
 
-{% if settings.ICECAST_ENABLED %}
-  <table class="even-columns first-td-right">
-    <caption>Local Icecast Server</caption>
-    <tr>
-      {# TODO: use ICECAST_PORT, don't hardcode 8000 #}
-      <td>Server Status:</td>
-      <td><a href="http://{{ request.get_host }}:8000/" target="_blank">http://{{ request.get_host }}:8000/</a></td>
-    </tr>
-    <tr>
-      <td>Live Stream (direct &amp; insecure):</td>
-      <td><a href="http://{{ request.get_host }}:8000/live" target="_blank">http://{{ request.get_host }}:8000/live</a></td>
-    </tr>
-    <tr>
-      <td>Live Stream (proxied &amp; {% if request.is_secure %}<u>secure</u>{% else %}insecure{% endif%}):</td>
-      <td>
-        <a href="http{% if request.is_secure %}s{% endif %}://{{ request.get_host }}/live" target="_blank">
-          http{% if request.is_secure %}s{% endif %}://{{ request.get_host }}/live
-        </a>
-      </td>
-  </table>
-{% endif %}
-
 {% endblock %}

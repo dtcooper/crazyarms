@@ -33,7 +33,7 @@ to play.
 !!! note "Inactive Sources"
     When a source goes from inactive to active, the harbor will smootly fade to it.
 
-    For the _"Live Sources"_ listed below (Zoom and IceCast), there's a feature
+    For the _"Live Sources"_ listed below (Zoom and Icecast), there's a feature
     called **silence detection.** This means _if a DJ is **connected but broadcasting
     silence,**_ that source will be **considered inactive** and the **first active
     source with less priority will be broadcast.**
@@ -46,7 +46,7 @@ flowchart LR
     subgraph sources ["Priority-Based Sources"]
         prerecord("1. Pre-recorded Broadcast<br>(Scheduled, long-format shows)")
         subgraph live-sources ["Live Sources (Silence Detection)"]
-            dj("2. Live DJ<br>(IceCast 2)")
+            dj("2. Live DJ<br>(Icecast 2, RTMP)")
             zoom("3. Live Zoom Room<br>(optional)")
         end
         autodj("4. AutoDJ<br>(optional)")
@@ -62,9 +62,9 @@ flowchart LR
     failsafe -->|lowest priority| harbor
 
     subgraph upstreams ["Upstream Services (Examples)"]
-        icecast1("Local IceCast 2 Server (mp3)")
-        icecast2("External IceCast 2 Server (aac)")
-        icecastOthers("Other IceCast 2 Servers")
+        icecast1("Local Icecast 2 Server (mp3)")
+        icecast2("External Icecast 2 Server (aac)")
+        icecastOthers("Other Icecast 2 Servers")
     end
 
     harbor --> icecast1
@@ -147,6 +147,11 @@ Accessible Logs
 Streaming Customization
 :   At your own risk, you can modify [Liquidsoap](https://www.liquidsoap.info/)
     Harbor scripts. This gives pretty high flexibility for various use cases.
+
+RTMP Support (Experimental)
+:   There's experimental support for RTMP, so anyone who's familiar with tools
+    like [Open Source Broadcaster (OBS)](https://obsproject.com/) can stream to
+    the harbor. Of course, video is discarded.
 
 ### Non-Features
 

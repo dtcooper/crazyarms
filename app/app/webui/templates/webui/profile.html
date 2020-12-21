@@ -8,9 +8,9 @@
 {% block extra_table %}
 {% if settings.RTMP_ENABLED %}
   <tr>
-    <td><label>RTMP Stream Key:</label></td>
+    <th>RTMP Stream Key:</th>
     <td>
-      <p><code>{{ user.stream_key }}</code></p>
+      <p><small><code>{{ user.stream_key }}</code></small></p>
       <p class="center-text">
         <button name="update_stream_key" value="1" type="submit">Generate new stream key</button>
       </p>

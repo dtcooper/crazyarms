@@ -363,10 +363,6 @@ th {
     padding: .5rem;
 }
 
-th {
-    background: var(--nc-bg-2);
-}
-
 tr:nth-child(even) {
     /* Set every other cell slightly darker. Improves readability. */
     background: var(--nc-bg-2);

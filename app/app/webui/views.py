@@ -46,6 +46,10 @@ class FirstRunView(SuccessMessageMixin, FormView):
     success_url = reverse_lazy('status')
     success_message = ('Crazy Arms Radio has successfully been setup! You can change any of '
                        'the settings that you chose in the admin section.')
+    extra_context = {'station_name_override': 'Crazy Arms Radio Backend', 'hide_nav': True,
+                     'submit_text': 'Run Initial Setup', 'title': 'Initial Setup',
+                     'form_description': "Welcome to Crazy Arms! Since no account has been created, you'll need to "
+                                         'create a new administrator and provide some settings below before starting.'}
 
     def dispatch(self, request, *args, **kwargs):
         # Only work if no user exists
@@ -57,18 +61,6 @@ class FirstRunView(SuccessMessageMixin, FormView):
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'station_name_override': 'Crazy Arms Radio Backend',
-            'hide_nav': True,
-            'form_description': "Welcome to Crazy Arms! Since no account has been created, you'll need to create "
-                                'a new administrator and specify some settings below before proceeding.',
-            'submit_text': 'Run Initial Setup',
-            'title': 'Initial Setup',
-        })
-        return context
 
 
 class AutoDJRequestsAllowedMixin:
@@ -99,6 +91,7 @@ class AutoDJRequestAJAXFormView(AutoDJRequestsAllowedMixin, FormView):
 
 class StatusView(LoginRequiredMixin, TemplateView):
     template_name = 'webui/status.html'
+    extra_context = {'title': 'Stream Status'}
 
     def dispatch(self, request, *args, **kwargs):
         if not User.objects.exists():
@@ -111,16 +104,20 @@ class StatusView(LoginRequiredMixin, TemplateView):
             **super().get_context_data(**kwargs),
             'autodj_requests_form': AutoDJRequestsForm() if self.request.user.has_autodj_request_permission() else None,
             'liquidsoap_status': harbor.status(safe=True, as_dict=True),
-            'title': 'Stream Status',
         }
+
+
+class InfoView(LoginRequiredMixin, TemplateView):
+    template_name = 'webui/info.html'
+    extra_context = {'title': 'Server Information'}
 
 
 class BanListView(PermissionRequiredMixin, TemplateView):
     template_name = 'webui/ban_list.html'
     permission_required = 'common.can_boot'
+    extra_context = {'title': 'DJ Ban List'}
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
         bans = []
         for key in cache.keys(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}*'):
             user_id = key.removeprefix(constants.CACHE_KEY_HARBOR_BAN_PREFIX)
@@ -135,8 +132,7 @@ class BanListView(PermissionRequiredMixin, TemplateView):
                     # Reverse sort by seconds left
                     -seconds_left, user.get_full_name(), user_id, date_format(banned_until, 'DATETIME_FORMAT')))
 
-        context['bans'] = sorted(bans)
-        return {**super().get_context_data(**kwargs), 'title': 'DJ Ban List', 'bans': sorted(bans)}
+        return {**super().get_context_data(**kwargs), 'bans': sorted(bans)}
 
     def post(self, request):
         user = get_object_or_404(User, id=request.POST.get('user_id'))
@@ -262,14 +258,12 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
 class GCalView(LoginRequiredMixin, TemplateView):
     template_name = 'webui/gcal.html'
+    extra_context = {'title': 'My Scheduled Shows'}
 
     def dispatch(self, *args, **kwargs):
         if not config.GOOGLE_CALENDAR_ENABLED:
             return redirect('status')
         return super().dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        return {**super().get_context_data(**kwargs), 'title': 'My Scheduled Shows'}
 
 
 class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
@@ -358,10 +352,7 @@ class PlayoutLogView(LoginRequiredMixin, ListView):
     MAX_ENTRIES = 250
     template_name = 'webui/playout_log.html'
     queryset = PlayoutLogEntry.objects.order_by('-created')[:MAX_ENTRIES]
-
-    def get_context_data(self, **kwargs):
-        return {**super().get_context_data(**kwargs),
-                'title': 'Playout Log', 'MAX_ENTRIES': self.MAX_ENTRIES}
+    extra_context = {'title': 'Playout Log', 'MAX_ENTRIES': MAX_ENTRIES}
 
 
 @csrf_exempt

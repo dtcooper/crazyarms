@@ -39,6 +39,7 @@ input[type=text], input[type=password], input[type=email], textarea { width: 100
     text-align: right;
 }
 .form-table th { width: 25%; }
+table caption { text-decoration: underline; }
 
 .boot-btn {
   margin: 2px 0;
@@ -47,7 +48,6 @@ input[type=text], input[type=password], input[type=email], textarea { width: 100
 
 td, th { border: 1px solid #666666; }
 th { text-align: center; }
-table.even-columns { table-layout: fixed; }
 
 .current-page {
   cursor: default;

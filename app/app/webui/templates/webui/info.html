@@ -1,0 +1,55 @@
+{% extends 'webui/base.html' %}
+
+{% block content %}
+{% with host=request.get_host %}
+  <table class="first-td-right">
+    <caption>Harbor Live DJ Access (Icecast 2)</caption>
+    <tr><th>Server Address (Hostname):</th><td><code>{{ host }}</code></td></tr>
+    <tr><th>Type:</th><td>Icecast 2</td></tr>
+    <tr><td colspan="2" class="right-text"><em>(<b><u>NOT</u></b> SHOUTCast, sometimes the "2" is omitted)</em></td>
+    </tr>
+    <tr><th>Port:</th><td><code>{{ settings.HARBOR_PORT }}</code></td></tr>
+    <tr><th>Mountpoint:</th><td><code>stream</code></td></tr>
+    <tr><th>Username:</th><td><code>{{ user.username }}</code></td></tr>
+    <tr><th>Password:</th><td><em><u class="orange"><code>your-password-here</code></u></em></td></tr>
+    <tr>
+      <td colspan="2" class="right-text">
+          <em>Older clients may only allow you to enter a password. In that case, use:
+            <code class="orange">{{ user.username}}:<u>your-password-here</u></code></em>
+      </td>
+    </tr>
+  </table>
+
+  {% if settings.RTMP_ENABLED %}
+    <table class="first-td-right">
+      <caption>Harbor Live DJ Access (RTMP)</caption>
+      <tr><th>Server Address:</th><td><code>rtmp://{{ host }}{% if settings.RTMP_PORT != 1935 %}:{{ settings.RTMP_PORT }}{% endif %}/stream</code></td></tr>
+      <tr><th>Port:</th><td><code>{{ settings.RTMP_PORT }}</code>{% if settings.RTMP_PORT == 1935 %} <em>(the default)</em>{% endif %}</td></tr>
+      <tr><th>Stream Key:</th><td><small><code>{{ user.stream_key }}</code></small></td></tr>
+    </table>
+  {% endif %}
+
+  {% if settings.ICECAST_ENABLED %}
+    <table class="first-td-right">
+      <caption>Local Icecast Server</caption>
+      <tr>
+        <th>Server Status:</th>
+        <td><code><a href="http://{{ host }}:{{ settings.ICECAST_PORT }}/" target="_blank">http://{{ host }}:{{ settings.ICECAST_PORT }}/</a></code></td>
+      </tr>
+      <tr>
+        <th>Live Stream (direct &amp; insecure):</th>
+        <td><code><a href="http://{{ host }}:{{ settings.ICECAST_PORT }}/live" target="_blank">http://{{ host }}:{{ settings.ICECAST_PORT }}/live</a></code></td>
+      </tr>
+      <tr>
+        <th>Live Stream (proxied &amp; {% if request.is_secure %}<u>secure</u>{% else %}insecure{% endif%}):</th>
+        <td>
+          <code>
+            <a href="http{% if request.is_secure %}s{% endif %}://{{ host }}/live" target="_blank">
+              http{% if request.is_secure %}s{% endif %}://{{ host }}/live
+            </a>
+          </code>
+        </td>
+    </table>
+  {% endif %}
+{% endwith %}
+{% endblock %}
