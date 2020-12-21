@@ -32,9 +32,9 @@ upstream sse {
     }
 {% endif %}
 
-{% if HARBOR_TELNET_ENABLED|int %}
-    upstream harbor-telnet {
-        server harbor-telnet:7681;
+{% if HARBOR_TELNET_WEB_ENABLED|int %}
+    upstream harbor-telnet-web {
+        server harbor-telnet-web:7681;
     }
 {% endif %}
 
@@ -87,10 +87,10 @@ server {
         proxy_cache off;
     }
 
-    {% if HARBOR_TELNET_ENABLED|int %}
+    {% if HARBOR_TELNET_WEB_ENABLED|int %}
         location /protected/telnet/ {
             internal;
-            proxy_pass http://harbor-telnet/;
+            proxy_pass http://harbor-telnet-web/;
             proxy_buffering off;
             proxy_cache off;
             proxy_http_version 1.1;

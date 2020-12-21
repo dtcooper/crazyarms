@@ -147,10 +147,11 @@ class UserAdmin(auth_admin.UserAdmin):
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         queryset = Group.objects.order_by('name')
-        if not settings.ZOOM_ENABLED and db_field.name == 'groups':
-            queryset = queryset.exclude(permissions__codename='view_websockify')
-        if not settings.HARBOR_TELNET_ENABLED and db_field.name == 'groups':
-            queryset = queryset.exclude(permissions__codename='view_telnet')
+        if db_field.name == 'groups':
+            if not settings.ZOOM_ENABLED:
+                queryset = queryset.exclude(permissions__codename='view_websockify')
+            if not settings.HARBOR_TELNET_WEB_ENABLED:
+                queryset = queryset.exclude(permissions__codename='view_telnet')
         kwargs['queryset'] = queryset
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 

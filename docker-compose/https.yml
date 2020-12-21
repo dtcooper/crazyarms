@@ -3,7 +3,7 @@ services:
     volumes:
       - letsencrypt:/etc/letsencrypt
     ports:
-      - '443:443'
+      - '${HTTPS_PORT:-443}:443'
 
 volumes:
   # TODO move this to services_config, and symlink /etc/letsencrypt

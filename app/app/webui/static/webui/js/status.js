@@ -58,7 +58,7 @@ $(function() {
 
     if (perms.showAutoDJRequests) {
         setTimeout(function() {
-            // Needs to initialize slightly delayed for some reason?
+            // Needs to initialize slightly delayed for some reason otherwise placeholder doesn't show
             $('.django-select2').djangoSelect2({placeholder: 'Search for a track to request...', dropdownAutoWidth: true})
         }, 500)
         $('#autodj-request-form').submit(function(e) {
@@ -69,7 +69,7 @@ $(function() {
                 var postData = $(this).serialize()
                 $asset.val(null).trigger('change') //clear select2
                 $.post(autoDJRequestsUrl, postData, function(response) {
-                    addMessage('success', response)
+                    addMessage('info', response)
                 }).fail(function() {
                     addMessage('error', 'An error occurred while making your AutoDJ request.')
                 })
@@ -84,7 +84,7 @@ $(function() {
         if (confirm('Are you skip you want to skip the current ' + sourceName + ' track?')) {
             var postData = {"csrfmiddlewaretoken": csrfToken, "name": sourceName, "id": sourceId}
             $.post(skipUrl, postData, function(response) {
-                addMessage('info', response)
+                addMessage('warning', response)
             }).fail(function() {
                 addMessage('error', 'An error occurred while skipping ' + sourceName)
             })
@@ -94,6 +94,7 @@ $(function() {
     $('body').on('click', '.boot-btn', function(e) {
         e.preventDefault()
         var shouldBoot = false
+        var messageType = 'warning'
         var time = $(this).data('time'),
             user = $(this).data('name'),
             userId = $(this).data('id'),
@@ -103,6 +104,7 @@ $(function() {
             var promptOut = prompt('Are you SURE you want to PERMANENTLY BAN ' + user + ' by setting their '
                 + 'harbor authorization to never.\n\nPlease type "YES" to below to confirm.')
             if (promptOut) {
+                messageType = 'error'  // red message for ban
                 shouldBoot = promptOut.toLowerCase().indexOf('yes') != -1
             }
         } else {
@@ -112,7 +114,7 @@ $(function() {
         if (shouldBoot) {
             var postData = {"time": time, "user_id": userId, "text": text, "csrfmiddlewaretoken": csrfToken}
             $.post(bootUrl, postData, function(response) {
-                addMessage('info', response)
+                addMessage(messageType, response)
             }).fail(function() {
                 addMessage('error', 'An error occurred while banning ' + user)
             })

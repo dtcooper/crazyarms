@@ -1,9 +1,9 @@
 services:
   nginx:
     depends_on:
-      - harbor-telnet
-  harbor-telnet:
-    container_name: harbor-telnet
+      - harbor-telnet-web
+  harbor-telnet-web:
+    container_name: harbor-telnet-web
     image: dtcooper/carb-harbor-telnet:${CARB_VERSION:-latest}
     build:
       context: ./liquidsoap

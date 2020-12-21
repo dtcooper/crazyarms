@@ -6,11 +6,6 @@ This guide is intended for systems administrators only.
 
 ### Quickstart
 
-!!! danger "Crazy Arms is under development"
-    Crazy Arms is currently under active development, however you can preview
-    things right now by doing the following steps below. These will likely change
-    after initial development is complete.
-
 Prerequisite: Linux or macOS with [Docker](https://www.docker.com/) and
 [docker-compose](https://docs.docker.com/compose/) installed.
 

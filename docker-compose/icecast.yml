@@ -11,7 +11,7 @@ services:
       context: ./icecast
       dockerfile: Dockerfile
     ports:
-      - '8000:8000'
+      - '${ICECAST_PORT:-8000}:8000'
     volumes:
       - services_config:/config:ro
     environment:

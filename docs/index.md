@@ -1,5 +1,10 @@
 # Crazy Arms Radio Backend
 
+!!! danger "Crazy Arms is under active development"
+    Crazy Arms is currently under active development, however you can preview
+    things right now. This documentation is incomplete, is missing sections, and
+    may include incorrect information until the first release.
+
 Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-end
 written from the ground up.
 

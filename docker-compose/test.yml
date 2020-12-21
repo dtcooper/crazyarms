@@ -13,7 +13,7 @@ services:
       DJANGO_SETTINGS_MODULE: carb.settings_test
       TZ: ${TIMEZONE:-US/Pacific}
       EMAIL_ENABLED: 1
-      HARBOR_TELNET_ENABLED: 1
+      HARBOR_TELNET_WEB_ENABLED: 1
       ICECAST_ENABLED: 1
       ZOOM_ENABLED: 1
     command: sh -c "wait-for-it -t 0 db_test:5432 && wait-for-it -t 0 redis_test:6379 && pytest"
