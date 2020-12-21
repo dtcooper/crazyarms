@@ -3,9 +3,8 @@ body {
   padding: 0.5rem;
 }
 
-* {
-  hyphens: auto;
-}
+* { hyphens: auto; }
+code, pre { hyphens: none; }
 
 .button:focus,
 .button:enabled:hover,

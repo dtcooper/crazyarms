@@ -5,6 +5,8 @@ import json
 import logging
 import math
 import os
+import random
+import string
 import subprocess
 import uuid
 
@@ -27,6 +29,8 @@ from dirtyfields import DirtyFieldsMixin
 
 from carb import constants
 
+
+STREAM_KEY_LENGTH = 80
 
 logger = logging.getLogger(f'carb.{__name__}')
 
@@ -54,7 +58,12 @@ class TimestampedModel(models.Model):
         abstract = True
 
 
-class User(AbstractUser):
+def generate_stream_key():
+    # Needs to be non-urlencodable (just alphanum characters) for nginx-rtmp to work without escaping hell
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(STREAM_KEY_LENGTH))
+
+
+class User(DirtyFieldsMixin, AbstractUser):
     class HarborAuth(models.TextChoices):
         ALWAYS = 'a', 'always allowed'
         NEVER = 'n', 'never allowed'
@@ -72,6 +81,8 @@ class User(AbstractUser):
         (tz, tz.replace('_', ' ')) for tz in pytz.common_timezones], max_length=60, default=settings.TIME_ZONE)
     authorized_keys = models.TextField('SSH authorized keys', blank=True, help_text='Authorized public SSH keys for '
                                                                                     'SFTP and SCP (one per line).')
+    stream_key = models.CharField('RTMP stream key', max_length=STREAM_KEY_LENGTH, default=generate_stream_key,
+                                  unique=True, help_text=mark_safe('Users can reset this in their Profile.'))
     google_calender_entry_grace_minutes = models.PositiveIntegerField(
         'harbor entry grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>before</strong> a scheduled show that the user is allowed to enter the harbor.'))
@@ -85,6 +96,11 @@ class User(AbstractUser):
         if 'is_staff' in kwargs:
             del kwargs['is_staff']
         super().__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        if 'password' in self.get_dirty_fields():
+            self.stream_key = generate_stream_key()
+        super().save(*args, **kwargs)
 
     def get_full_name(self):
         s = ' '.join(filter(None, (self.first_name, self.last_name))).strip()

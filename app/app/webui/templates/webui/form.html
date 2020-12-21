@@ -10,9 +10,10 @@
     {% csrf_token %}
     <table class="first-td-right form-table">
       {{ form.as_table }}
+      {% block extra_table %}{% endblock %}
     </table>
     <p>
-      <button type="submit">{{ submit_text|default:'Submit' }}</button>
+      <button class="bg-green" type="submit">{{ submit_text|default:'Submit' }}</button>
       <button type="reset">Reset Form</button>
     </p>
   </form>

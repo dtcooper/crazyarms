@@ -227,7 +227,7 @@ else
     COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/base.yml"
 
     # Enable compose files for services
-    for CONF in https icecast zoom email harbor-telnet-web; do
+    for CONF in https icecast zoom email harbor-telnet-web rtmp; do
         CONF_VAR="$(echo "$CONF" | LC_CTYPE=C tr '[:lower:]-' '[:upper:]_')_ENABLED"
         CONF_VAL="${!CONF_VAR}"
         if [ "$CONF_VAL" -a "$CONF_VAL" != '0' -o "$ALL_SERVICES" ]; then

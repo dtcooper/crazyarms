@@ -34,7 +34,7 @@ RUN wget -qO /tmp/zoom.deb https://zoom.us/client/latest/zoom_amd64.deb \
 
 RUN rmdir /etc/supervisor/conf.d && ln -s /config/zoom/supervisor /etc/supervisor/conf.d
 
-ADD image/ /
+COPY image/ /
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

@@ -1,0 +1,13 @@
+services:
+  rtmp:
+    container_name: rtmp
+    image: dtcooper/carb-rtmp:${CARB_VERSION:-latest}
+    restart: always
+    depends_on:
+      - app
+    volumes:
+      - ./.env:/.env:ro
+    build:
+      context: ./rtmp
+    ports:
+      - "${RTMP_PORT:-1935}:1935"

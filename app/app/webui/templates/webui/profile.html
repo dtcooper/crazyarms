@@ -1,0 +1,20 @@
+{% extends 'webui/form.html' %}
+
+{% block content %}
+<p>Update your user profile below. <a href="{% url 'password_change' %}">Click here</a> to change your password.</p>
+{{ block.super }}
+{% endblock %}
+
+{% block extra_table %}
+{% if settings.RTMP_ENABLED %}
+  <tr>
+    <td><label>RTMP Stream Key:</label></td>
+    <td>
+      <p><code>{{ user.stream_key }}</code></p>
+      <p class="center-text">
+        <button name="update_stream_key" value="1" type="submit">Generate new stream key</button>
+      </p>
+    </td>
+  </tr>
+{% endif %}
+{% endblock %}

@@ -15,11 +15,10 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.utils.functional import cached_property, lazy
-from django.utils.html import format_html
+from django.utils.functional import cached_property
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, ListView, TemplateView, UpdateView, View
 
@@ -29,7 +28,7 @@ from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
 from carb import constants
-from common.models import User
+from common.models import generate_stream_key, User
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
@@ -242,15 +241,23 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
 class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     form_class = UserProfileForm
     success_message = 'Your user profile was successfully updated.'
-    success_url = reverse_lazy('user_profile')
-    template_name = 'webui/form.html'
-    extra_context = {'title': 'Edit Your User Profile', 'submit_text': 'Update User Profile',
-                     'form_description': lazy(lambda: format_html(
-                        'Update your user profile below. <a href="{}">Click here</a> to change your password.',
-                        reverse('password_change')))}
+    success_url = reverse_lazy('profile')
+    template_name = 'webui/profile.html'
+    extra_context = {'title': 'Edit Your User Profile', 'submit_text': 'Update User Profile'}
 
     def get_object(self, **kwargs):
         return self.request.user
+
+    def post(self, request, *args, **kwargs):
+        if settings.RTMP_ENABLED and self.request.POST.get('update_stream_key'):
+            user = self.get_object()
+            user.stream_key = generate_stream_key()
+            user.save()
+            messages.add_message(request, messages.SUCCESS,
+                                 'Your stream key has successfully been updated. Copy the new value below.')
+            return redirect(self.success_url)
+        else:
+            return super().post(request, *args, **kwargs)
 
 
 class GCalView(LoginRequiredMixin, TemplateView):
@@ -266,13 +273,21 @@ class GCalView(LoginRequiredMixin, TemplateView):
 
 
 class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
-    success_url = reverse_lazy('status')
+    success_url = reverse_lazy('profile')
     template_name = 'webui/form.html'
     title = 'Change Your Password'
-    success_message = 'Your password was successfully changed'
+    if settings.RTMP_ENABLED:
+        success_message = ('Your password was successfully changed and a new RTMP stream key was generated. '
+                           'Copy the new stream key below.')
+    else:
+        success_message = 'Your password was successfully changed.'
 
     def __init__(self):
-        super().__init__(extra_context={'submit_text': 'Change Password'})
+        context = {'submit_text': 'Change Password'}
+        if settings.RTMP_ENABLED:
+            context['form_description'] = ('If you update your password, a new RTMP stream key will be generated. '
+                                           "You'll need to copy it from your profile page after updating.")
+        super().__init__(extra_context=context)
 
 
 class BootView(LoginRequiredMixin, View):

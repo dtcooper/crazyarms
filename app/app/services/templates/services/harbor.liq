@@ -81,6 +81,7 @@ def dj_auth(username, password)
         if authorized then
             # Parse out response and save to last_authorized_user
             full_name = list.assoc(default='', 'full_name', of_json(default=[('_', '')], response))
+            username = list.assoc(default='', 'username', of_json(default=[('_', '')], response))
             json_ints = of_json(default=[('_', 0)], response)
             kickoff_time = float_of_int(list.assoc(default=-1, 'kickoff_time', json_ints))
             user_id = list.assoc(default=0, 'user_id', json_ints)

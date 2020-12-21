@@ -18,6 +18,7 @@ ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
 ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 EMAIL_ENABLED = env.bool('EMAIL_ENABLED', default=False)
 HARBOR_TELNET_WEB_ENABLED = env.bool('HARBOR_TELNET_WEB_ENABLED', default=False)
+RTMP_ENABLED = env.bool('RTMP_ENABLED', default=False)
 DOMAIN_NAME = env('DOMAIN_NAME', default='localhost')
 TIME_ZONE = env('TIMEZONE', default='US/Pacific')
 

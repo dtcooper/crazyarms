@@ -49,38 +49,66 @@ class APIView(View):
 
 class DJAuthAPIView(APIView):
     def post(self, request):
-        username_password_tries = [
-            (self.request_json['username'], self.request_json['password']),
-        ]
-
-        # Allow username to be anything and password to be username:password or username-password
-        for pw_split_char in (':', '-'):
-            pw_split = self.request_json['password'].split(pw_split_char, 1)
-            if len(pw_split) == 2:
-                username_password_tries.append(pw_split)
-
         response = {'authorized': False}
+        user = None
 
-        for username, password in username_password_tries:
-            user = authenticate(username=username, password=password)
-            if user is None:
-                try:
-                    user = User.objects.get(username=username)
-                except User.DoesNotExist:
-                    logger.info(f'dj auth requested by {username}: denied (user does not exist)')
+        if self.request_json['username'] == '!':
+            try:
+                user = User.objects.get(stream_key=self.request_json['password'].strip())
+            except User.DoesNotExist:
+                logger.info('dj auth requested by stream key: denied')
+        else:
+            username_password_tries = [
+                (self.request_json['username'], self.request_json['password']),
+            ]
+
+            # Allow username to be anything and password to be username:password or username-password
+            for pw_split_char in (':', '-'):
+                pw_split = self.request_json['password'].split(pw_split_char, 1)
+                if len(pw_split) == 2:
+                    username_password_tries.append(pw_split)
+
+            for username, password in username_password_tries:
+                user = authenticate(username=username, password=password)
+                if user:
+                    break
                 else:
-                    logger.info(f'dj auth requested by {username}: denied (incorrect password)')
-            else:
-                authorized = user.currently_harbor_authorized()
-                if authorized:
-                    kickoff_time = None
-                    if isinstance(authorized, datetime.datetime):
-                        kickoff_time = int(authorized.timestamp())
-                    response.update({'authorized': True, 'full_name': user.get_full_name(),
-                                    'user_id': user.id, 'kickoff_time': kickoff_time})
-                break
+                    try:
+                        user = User.objects.get(username=username)
+                    except User.DoesNotExist:
+                        logger.info(f'dj auth requested by {username}: denied (user does not exist)')
+                    else:
+                        logger.info(f'dj auth requested by {username}: denied (incorrect password)')
+
+        if user:
+            authorized = user.currently_harbor_authorized()
+            if authorized:
+                kickoff_time = None
+                if isinstance(authorized, datetime.datetime):
+                    kickoff_time = int(authorized.timestamp())
+                response.update({'authorized': True, 'username': user.username, 'full_name': user.get_full_name(),
+                                 'user_id': user.id, 'kickoff_time': kickoff_time})
 
         return response
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ValidateStreamKeyView(View):
+    def post(self, request, *args, **kwargs):
+        # nginx-rtmp expects a 2xx code to allow and a 4xx to deny
+        stream_key = self.request.POST.get('name')
+        if stream_key:
+            try:
+                user = User.objects.get(stream_key=stream_key)
+            except User.DoesNotExist:
+                pass
+            else:
+                if user.currently_harbor_authorized():
+                    logger.info(f'rtmp auth by {user} auth: allowed')
+                    return HttpResponse(status=200)
+
+        logger.info('rtmp auth: denied')
+        return HttpResponse(status=404)
 
 
 class SFTPAuthView(APIView):

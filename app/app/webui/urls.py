@@ -12,7 +12,7 @@ urlpatterns = [
         extra_context={'hide_login_link': True, 'title': 'Login', 'submit_text': 'Login'},
         redirect_authenticated_user=True, template_name='webui/login.html'), name='login'),
     path('playout-log/', views.PlayoutLogView.as_view(), name='playout_log'),
-    path('profile/', views.UserProfileView.as_view(), name='user_profile'),
+    path('profile/', views.UserProfileView.as_view(), name='profile'),
     path('scheduled-shows/', views.GCalView.as_view(), name='gcal'),
     path('status/autodj-request/choices/', views.AutoDJRequestChoicesView.as_view(), name='autodj_request_choices'),
     path('status/autodj-request/', views.AutoDJRequestAJAXFormView.as_view(), name='autodj_request'),
