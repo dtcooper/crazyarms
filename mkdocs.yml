@@ -6,6 +6,9 @@ extra_javascript:
 markdown_extensions:
     - admonition
     - def_list
+    - pymdownx.emoji:
+        emoji_index: !!python/name:materialx.emoji.twemoji
+        emoji_generator: !!python/name:materialx.emoji.to_svg
     - pymdownx.smartsymbols
     - pymdownx.superfences:
         custom_fences:
@@ -18,7 +21,7 @@ nav:
     - Home: index.md
     - User's Guide:
         - Live DJing:
-            - IceCast 2 or SHOUTcast: users-guide/dj/icecast.md
+            - IceCast 2: users-guide/dj/icecast.md
             - Zoom: users-guide/dj/zoom.md
     - Admin's Guide:
         - AutoDJ: admin-guide/autodj.md

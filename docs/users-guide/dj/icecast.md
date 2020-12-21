@@ -1,1 +1,1 @@
-# IceCast 2 or SHOUTcast
+# IceCast 2

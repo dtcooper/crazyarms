@@ -15,6 +15,69 @@ product fit some common needs out of the box.
 If you're an technical user or a systems administrator wanting to install Crazy
 Arms, head over to the [installation docs](./installation.md).
 
+## Audio Infrastructure Overview
+
+### Sources, Harbor, and Upstreams Explained
+
+The main audio component of Crazy Arms is called the **Harbor.** This is a
+customizable script, implemented in [Liquidsoap](https://www.liquidsoap.info/)
+that takes care of choosing what to broadcast and when. Think of the Harbor as a
+robot taking several sources and deciding which one is best to broadcast from
+based on some simple rules.
+
+The harbor has several input **sources**. These are things like pre-recorded
+broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
+source with the highest priority _that is active_ will be what the harbor chooses
+to play.
+
+!!! note "Inactive Sources"
+    When a source goes from inactive to active, the harbor will smootly fade to it.
+
+    For the _"Live Sources"_ listed below (Zoom and IceCast), there's a feature
+    called **silence detection.** This means _if a DJ is **connected but broadcasting
+    silence,**_ that source will be **considered inactive** and the **first active
+    source with less priority will be broadcast.**
+
+    The theory behind this feature is part of the _Idiot-Tolerant(tm)_ DJing
+    philosophy of Crazy Arms. :wink:
+
+```mermaid
+flowchart LR
+    subgraph sources ["Priority-Based Sources"]
+        prerecord("1. Pre-recorded Broadcast<br>(Scheduled, long-format shows)")
+        subgraph live-sources ["Live Sources (Silence Detection)"]
+            dj("2. Live DJ<br>(IceCast 2)")
+            zoom("3. Live Zoom Room<br>(optional)")
+        end
+        autodj("4. AutoDJ<br>(optional)")
+        failsafe(5. Failsafe Audio File)
+    end
+
+    harbor(("Harbor Service<br>(Intelligent stream picker)"))
+
+    prerecord -->|highest priority| harbor
+    dj --> harbor
+    zoom --> harbor
+    autodj --> harbor
+    failsafe -->|lowest priority| harbor
+
+    subgraph upstreams ["Upstream Services (Examples)"]
+        icecast1("Local IceCast 2 Server (mp3)")
+        icecast2("External IceCast 2 Server (aac)")
+        icecastOthers("Other IceCast 2 Servers")
+    end
+
+    harbor --> icecast1
+    harbor --> icecast2
+    harbor --> icecastOthers
+
+    listeners(("Listeners"))
+
+    icecast1 --> listeners
+    icecast2 --> listeners
+    icecastOthers --> listeners
+```
+
 ## Features At a Glance
 
 Priority-based Streaming
@@ -43,7 +106,7 @@ Broadcasting for non-technical users with [Zoom](https://zoom.us/)
 
 _Idiot-Tolerant(tm)_ DJing
 :   If a live DJ or Zoom room is broadcasting silence, Crazy Arms picks another
-    input to stream from.
+    source to stream from.
 
 Completely [Docker](https://www.docker.com/)-ized
 :   Easy development and easy deployment using
@@ -85,56 +148,19 @@ Streaming Customization
 :   At your own risk, you can modify [Liquidsoap](https://www.liquidsoap.info/)
     Harbor scripts. This gives pretty high flexibility for various use cases.
 
-## Audio Infrastructure Overview
+### Non-Features
 
-### Sources, Harbor, and Upstreams Explained
+_The following are non-features of Crazy Arms._
 
-The main audio component of Crazy Arms is called the **Harbor.** This is a
-customizable script, implemented in [Liquidsoap](https://www.liquidsoap.info/)
-that takes care of choosing what to broadcast and when. Think of the Harbor as a
-robot taking several sources and deciding which one is best to broadcast based
-on the rules you see on the status page.
+Front-end Not Included
+:   Crazy Arms is designed to be a backend for your radio stream only. A user
+    interface that includes calendars, a fancy stream player, and metadata
+    isn't included.
 
-The harbor has several input **sources**. These are things like pre-recorded
-broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
-source with the highest priority _that is active_ will be what the harbor chooses
-to play.
-
-!!! note "A Note About Inactive Sources"
-    When a source becomes active from inactive, the harbor will fade to it.
-    Note a connected source that is silent will usually
-
-```mermaid
-flowchart LR
-    subgraph sources ["Priority-Based Sources"]
-        prerecord("1. Pre-recorded Broadcast<br>(Scheduled, long-format shows)")
-        dj("2. Live DJ<br>(IceCast 2 / SHOUTCast)")
-        zoom("3. Zoom Room<br>(optional)")
-        autodj("4. AutoDJ<br>(optional)")
-        failsafe(5. Failsafe Audio File)
-    end
-
-    harbor(("Harbor Service<br>(Intelligent stream picker)"))
-
-    prerecord -->|highest priority| harbor
-    dj --> harbor
-    zoom --> harbor
-    autodj --> harbor
-    failsafe -->|lowest priority| harbor
-
-    subgraph upstreams ["Upstream Services (Examples)"]
-        icecast1("Local IceCast 2 Server (mp3)")
-        icecast2("External IceCast 2 Server (aac)")
-        icecastOthers("Other IceCast 2 Servers")
-    end
-
-    harbor --> icecast1
-    harbor --> icecast2
-    harbor --> icecastOthers
-
-    listeners(("Listeners"))
-
-    icecast1 --> listeners
-    icecast2 --> listeners
-    icecastOthers --> listeners
-```
+Admin Site Look and Feel
+:   The admin site for Crazy Arms has a fairly inflexible look and feel. It's
+    not necessarily a beautiful, easy to use interface but instead meant for
+    somewhat technical users. This is by design and was chosen for ease of
+    programming. The technical reason for why is that we chose to build it on
+    top of [Django's admin site](https://docs.djangoproject.com/en/3.1/ref/contrib/admin/)
+    module.
