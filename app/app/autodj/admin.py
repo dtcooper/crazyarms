@@ -55,10 +55,21 @@ class AutoDJStopsetRelatedAdmin(AutoDJModelAdmin):
 
 
 class PlaylistAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJModelAdmin):
+    actions = ('set_active_action', 'set_inactive_action')
     search_fields = ('name',)
     fields = ('name', 'is_active', 'weight', 'audio_assets')
     list_display = ('name', 'is_active', 'weight', 'audio_assets_list_display')
     filter_horizontal = ('audio_assets',)
+
+    def set_active_action(self, request, queryset):
+        queryset.update(is_active=True)
+        self.message_user(request, 'Playlists marked as active.', messages.SUCCESS)
+    set_active_action.short_description = 'Activate selected playlists'
+
+    def set_inactive_action(self, request, queryset):
+        queryset.update(is_active=False)
+        self.message_user(request, 'Playlists marked as inactive.', messages.SUCCESS)
+    set_inactive_action.short_description = 'Deactivate selected playlists'
 
     def has_add_permission(self, request):
         return config.AUTODJ_PLAYLISTS_ENABLED and super().has_add_permission(request)
@@ -274,10 +285,21 @@ class StopsetRotatorInline(admin.TabularInline):
 
 
 class StopsetAdmin(AutoDJStopsetRelatedAdmin):
+    actions = ('set_active_action', 'set_inactive_action')
     inlines = (StopsetRotatorInline,)
     search_fields = ('name',)
     fields = ('name', 'is_active', 'weight')
     list_display = ('name', 'stopset_rotators_list_display', 'is_active', 'weight')
+
+    def set_active_action(self, request, queryset):
+        queryset.update(is_active=True)
+        self.message_user(request, 'Stop sets marked as active.', messages.SUCCESS)
+    set_active_action.short_description = 'Activate selected stop sets'
+
+    def set_inactive_action(self, request, queryset):
+        queryset.update(is_active=False)
+        self.message_user(request, 'Stop sets marked as inactive.', messages.SUCCESS)
+    set_inactive_action.short_description = 'Deactivate selected stop sets'
 
     def stopset_rotators_list_display(self, obj):
         rotators = StopsetRotator.objects.filter(stopset=obj).values_list('rotator__name', flat=True)

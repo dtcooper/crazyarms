@@ -37,51 +37,17 @@
   {% else %}
     {# TODO: say whether current user can broadcast based on harbor_auth #}
     <span class="green">Zoom is not currently running</span>.<br>
-    Start a show by filling out the form below.
+    {% if currently_authorized %}
+      Start a show by filling out the form below.
+    {% else %}
+      <span class="error">You are currently not authorized to broadcast.</span>
+    {% endif %}
   {% endif %}
 </p>
 
-<p>For more information on how to use Zoom broadcasting,
-  <a href="https://dtcooper.github.io/carb/users-guide/dj/zoom/" target="_blank">
-    consult the User's Guide here</a>.
+<p>For more information on how to use Zoom broadcasting, consult the
+  <a href="https://dtcooper.github.io/carb/users-guide/dj/zoom/" target="_blank">Help Docs</a>.
 </p>
-
-
-<details>
-  <summary>Zoom Broadcasting Instructions (Click Here to Expand)</summary>
-  <p>
-    Here are the instructions to start <a href="https://zoom.us/" target="_blank">Zoom</a>
-    broadcasting via a room.
-  </p>
-  <p class="orange">
-    NOTE: if you're <em>not</em> using a paid Zoom account, or {{ config.STATION_NAME }}'s
-    administrator has not set up a paid account, there are room time limits for group
-    meetings held in Zoom rooms. (40 minutes at the time of this writing.) Your show will
-    be capped at that length.
-  </p>
-  <p>
-    <ol>
-      <li>Create and start a Zoom room</li>
-      <li>Click on the <em>Meeting Information</em> icon, shown below<br>
-        <img src="{% static 'webui/images/zoom-instructions-1.png' %}"></li>
-      <li>Copy link to the Zoom by clicking <em>Copy Link</em>, show below<br>
-        <img src="{% static 'webui/images/zoom-instructions-2.png' %}"></li>
-      <li>Paste the link into the <em>Room Link</em> input, choose a show
-        length, and click <em>{{ submit_text }}</em> below.</li>
-      <li>Admit the <b>Broadcast Bot</b> to your Zoom room, if you have a waiting
-        room enabled.</li>
-      <li>As soon as the <b>Broadcast Bot</b> has entered your Zoom room, your show
-        starts, however you must produce make noise for the stream to transition
-        to your show. This way, you can set up your show a little bit early.</li>
-    </ol>
-
-    Note: If a <b>Broadcast Bot</b> attendee does not enter your Zoom room about
-    15 or so seconds after you click <em>{{ submit_text }}</em>, please contact
-    the administrator or <a href="https://github.com/dtcooper/carb/issues" target="_blank">
-      report a bug</a>.
-  </p>
-
-</details>
 
 {% if currently_authorized and not zoom_is_running %}
   {# Show form if the user is authorized and Zoom isn't currently running #}

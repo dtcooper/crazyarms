@@ -1,8 +1,6 @@
 import datetime
 import logging
-import random
 import re
-import string
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -17,7 +15,7 @@ from django.utils.safestring import mark_safe
 from constance import config
 from django_select2.forms import ModelSelect2Widget
 
-from common.models import User
+from common.models import generate_random_string, User
 from services import init_services
 
 from autodj.models import AudioAsset, RotatorAsset, Rotator, Playlist, Stopset, StopsetRotator
@@ -67,10 +65,6 @@ class FirstRunForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-
-    @staticmethod
-    def random_password():
-        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
 
     @staticmethod
     def preload_sample_audio_assets(uploader):
@@ -124,8 +118,8 @@ class FirstRunForm(UserCreationForm):
         if settings.ICECAST_ENABLED:
             config.ICECAST_ADMIN_EMAIL = user.email
             config.ICECAST_ADMIN_PASSWORD = self.cleaned_data['icecast_admin_password']
-            config.ICECAST_SOURCE_PASSWORD = self.random_password()
-            config.ICECAST_RELAY_PASSWORD = self.random_password()
+            config.ICECAST_SOURCE_PASSWORD = generate_random_string(16)
+            config.ICECAST_RELAY_PASSWORD = generate_random_string(16)
 
         if self.cleaned_data['generate_sample_assets']:
             self.preload_sample_audio_assets(uploader=user)

@@ -28,7 +28,7 @@ from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
 from carb import constants
-from common.models import generate_stream_key, User
+from common.models import User
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
@@ -247,7 +247,7 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         if settings.RTMP_ENABLED and self.request.POST.get('update_stream_key'):
             user = self.get_object()
-            user.stream_key = generate_stream_key()
+            user.stream_key = None  # save() will regenerate if it's None
             user.save()
             messages.add_message(request, messages.SUCCESS,
                                  'Your stream key has successfully been updated. Copy the new value below.')

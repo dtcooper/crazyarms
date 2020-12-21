@@ -30,8 +30,6 @@ from dirtyfields import DirtyFieldsMixin
 from carb import constants
 
 
-STREAM_KEY_LENGTH = 80
-
 logger = logging.getLogger(f'carb.{__name__}')
 
 
@@ -58,12 +56,14 @@ class TimestampedModel(models.Model):
         abstract = True
 
 
-def generate_stream_key():
+def generate_random_string(length):
     # Needs to be non-urlencodable (just alphanum characters) for nginx-rtmp to work without escaping hell
-    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(STREAM_KEY_LENGTH))
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
 
 
 class User(DirtyFieldsMixin, AbstractUser):
+    STREAM_KEY_LENGTH = 80
+
     class HarborAuth(models.TextChoices):
         ALWAYS = 'a', 'always allowed'
         NEVER = 'n', 'never allowed'
@@ -81,8 +81,8 @@ class User(DirtyFieldsMixin, AbstractUser):
         (tz, tz.replace('_', ' ')) for tz in pytz.common_timezones], max_length=60, default=settings.TIME_ZONE)
     authorized_keys = models.TextField('SSH authorized keys', blank=True, help_text='Authorized public SSH keys for '
                                                                                     'SFTP and SCP (one per line).')
-    stream_key = models.CharField('RTMP stream key', max_length=STREAM_KEY_LENGTH, default=generate_stream_key,
-                                  unique=True, help_text=mark_safe('Users can reset this in their Profile.'))
+    stream_key = models.CharField('RTMP stream key', max_length=STREAM_KEY_LENGTH, unique=True,
+                                  help_text='Users can reset this by editing their Profile.')
     google_calender_entry_grace_minutes = models.PositiveIntegerField(
         'harbor entry grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>before</strong> a scheduled show that the user is allowed to enter the harbor.'))
@@ -98,8 +98,8 @@ class User(DirtyFieldsMixin, AbstractUser):
         super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        if 'password' in self.get_dirty_fields():
-            self.stream_key = generate_stream_key()
+        if self.stream_key is None or 'password' in self.get_dirty_fields():
+            self.stream_key = generate_random_string(self.STREAM_KEY_LENGTH)
         super().save(*args, **kwargs)
 
     def get_full_name(self):

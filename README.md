@@ -32,7 +32,7 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [ ] Clean up Dockerfiles stripping dev stuff
 - [ ] Go over `TODO`s and `XXX`s in codebase
 - [x] Unit tests for at least the Django app - _skeleton done_
-    - [ ] major second pass, fix broken tests, aim for high coverage _(or 100%)
+    - [ ] major second pass, fix broken tests, aim for high coverage _(or 100%)_
 - [x] Mature `strip_blank` implementation
 - [x] Convert some Django views to class-based
     - [x] `api` package
@@ -44,7 +44,7 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [x] Convert logging to redis queue (so web server doesn't have to be up to log)
     (decided to use `psql` to directly insert into the DB)
 - [x] Kick off DJs outside of calendar times (with a grace period)
-- [ ] Add make active/disable quick actions for playlists and stopsets
+- [x] Add make active/disable quick actions for playlists and stopsets
 - [ ] Schedule stopsets at specific times - necessary? nice-to-have
 - [ ] Compression and normalization on a per-DJ basis. (Add a liquidsoap `switch()` to
     change between compressed or not). Hard part is what are the rules for triggering this?
@@ -69,8 +69,11 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
     - [x] Deal with WinSCP's `.filepart` situation
     - [x] Add ability to use SSH authorized keys.
 - [x] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
-- [ ] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
-- [ ] Do we really need a postfix container? Can't we just configure Django to send email directly?
+- [ ] User emails
+    - [ ] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
+    - [ ] Do we really need a postfix container? Can't we just configure Django to send email directly?
+    - [ ] Create user flow that sends user an email (and possibly they fill out their details)
+- [x] rtmp streaming using nginx-rtmp
 
 ..._and more!_
 

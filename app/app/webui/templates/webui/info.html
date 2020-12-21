@@ -4,18 +4,20 @@
 {% with host=request.get_host %}
   <table class="first-td-right">
     <caption>Harbor Live DJ Access (Icecast 2)</caption>
-    <tr><th>Server Address (Hostname):</th><td><code>{{ host }}</code></td></tr>
-    <tr><th>Type:</th><td>Icecast 2</td></tr>
-    <tr><td colspan="2" class="right-text"><em>(<b><u>NOT</u></b> SHOUTCast, sometimes the "2" is omitted)</em></td>
+    <tr><th width="30%">Server Address (Hostname):</th><td width="70%"><code>{{ host }}</code></td></tr>
+    <tr><th>Type:</th><td>Icecast 2 (<b><u>not</u></b> SHOUTCast, sometimes the "2" is omitted)</td></tr>
     </tr>
     <tr><th>Port:</th><td><code>{{ settings.HARBOR_PORT }}</code></td></tr>
     <tr><th>Mountpoint:</th><td><code>stream</code></td></tr>
     <tr><th>Username:</th><td><code>{{ user.username }}</code></td></tr>
-    <tr><th>Password:</th><td><em><u class="orange"><code>your-password-here</code></u></em></td></tr>
+    <tr>
+      <th>Password:</th>
+      <td><em><u class="orange"><code>[your-password]</code></u></em> (replace with your password, don't include square brackets)</td>
+    </tr>
     <tr>
       <td colspan="2" class="right-text">
           <em>Older clients may only allow you to enter a password. In that case, use:
-            <code class="orange">{{ user.username}}:<u>your-password-here</u></code></em>
+            <code class="orange">{{ user.username}}:<u>[your-password]</u></code></em>
       </td>
     </tr>
   </table>
@@ -23,9 +25,21 @@
   {% if settings.RTMP_ENABLED %}
     <table class="first-td-right">
       <caption>Harbor Live DJ Access (RTMP)</caption>
-      <tr><th>Server Address:</th><td><code>rtmp://{{ host }}{% if settings.RTMP_PORT != 1935 %}:{{ settings.RTMP_PORT }}{% endif %}/stream</code></td></tr>
-      <tr><th>Port:</th><td><code>{{ settings.RTMP_PORT }}</code>{% if settings.RTMP_PORT == 1935 %} <em>(the default)</em>{% endif %}</td></tr>
-      <tr><th>Stream Key:</th><td><small><code>{{ user.stream_key }}</code></small></td></tr>
+      <tr>
+        <th width="30%">Server Address:</th>
+        <td width="70%"><code>rtmp://{{ host }}{% if settings.RTMP_PORT != 1935 %}:{{ settings.RTMP_PORT }}{% endif %}/stream</code></td>
+      </tr>
+      <tr>
+        <th>Port:</th>
+        <td><code>{{ settings.RTMP_PORT }}</code>{% if settings.RTMP_PORT == 1935 %} <em>(the default)</em>{% endif %}</td>
+      </tr>
+      <tr>
+        <th>Stream Key:</th>
+        <td>
+          <small><code>{{ user.stream_key }}</code></small><br>
+          (Generate a new on on your <a href="{% url 'profile' %}">Profile</a> page)
+        </td>
+      </tr>
     </table>
   {% endif %}
 
@@ -33,8 +47,8 @@
     <table class="first-td-right">
       <caption>Local Icecast Server</caption>
       <tr>
-        <th>Server Status:</th>
-        <td><code><a href="http://{{ host }}:{{ settings.ICECAST_PORT }}/" target="_blank">http://{{ host }}:{{ settings.ICECAST_PORT }}/</a></code></td>
+        <th width="30%">Server Status:</th>
+        <td width="70%"><code><a href="http://{{ host }}:{{ settings.ICECAST_PORT }}/" target="_blank">http://{{ host }}:{{ settings.ICECAST_PORT }}/</a></code></td>
       </tr>
       <tr>
         <th>Live Stream (direct &amp; insecure):</th>

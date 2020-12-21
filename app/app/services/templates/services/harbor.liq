@@ -195,15 +195,13 @@ dj_harbor = strip_blank(
 
     # Treat silence on pulseaudio as if it weren't connected
     zoom = strip_blank(
-        max_blank=MAX_SILENCE,
         id='zoom_strip',
+        max_blank=MAX_SILENCE,
         start_blank=true,
         min_noise=0.25,  # Higher threshold here since a microphone could be on but a room silent
         zoom,
     )
-    zoom = map_metadata(update=false, strip=true, fun(_) -> begin
-        [('title', !zoom_metadata)]
-    end, zoom)
+    zoom = map_metadata(id='zoom_metadata', update=false, strip=true, fun(_) -> [('title', !zoom_metadata)], zoom)
 {% endif %}
 
 # Pre-recorded broadcasts
@@ -391,10 +389,10 @@ add_timeout(fast=false, STATUS_UPDATE_CHECK_INTERVAL, fun() -> begin
     # See if there are any changes
     if status_without_timed_sources != !last_status_without_timed_sources or !force_status_update then
         last_status_without_timed_sources := status_without_timed_sources
-        force_status_update := false
+        force_status_update := false  # TODO use force_status_update in on_end
         post_to_sse(status_json_from_tuple(current_status_tuple))
     end
-    .STATUS_UPDATE_CHECK_INTERVAL
+    STATUS_UPDATE_CHECK_INTERVAL
 end)
 # Radio playout below
 

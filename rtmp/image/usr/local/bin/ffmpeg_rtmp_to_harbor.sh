@@ -20,7 +20,8 @@ fi
 
 trap 'on_die' TERM
 # Just use a wav container (that'll strip out video)
-ffmpeg $EXTRA_FFMPEG_ARGS -i "rtmp://localhost:1935/stream/$1" -f wav -content_type 'audio/wav' "icecast://!:$1@harbor:8001/stream" &
+ffmpeg $EXTRA_FFMPEG_ARGS -re -i "rtmp://localhost:1935/stream/$1" -f wav \
+    -content_type 'audio/wav' "icecast://!:$1@harbor:8001/stream" &
 wait
 
 # Disconnect when ffmpeg quits unexpectedly, ie harbor restart, boot, etc
