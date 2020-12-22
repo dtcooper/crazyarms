@@ -139,11 +139,12 @@ class User(DirtyFieldsMixin, AbstractUser):
 
         upcoming_show_times = []
         for show_time in self.show_times:
+            lower, upper = show_time
             # Current show
-            if (show_time.lower - entry_grace) <= now <= (show_time.upper + exit_grace):
+            if (lower - entry_grace) <= now <= (upper + exit_grace):
                 upcoming_show_times.append(show_time)
             # And future shows
-            elif show_time.lower > now:
+            elif lower > now:
                 upcoming_show_times.append(show_time)
         return upcoming_show_times
 
@@ -185,12 +186,12 @@ class User(DirtyFieldsMixin, AbstractUser):
                     entry_grace = datetime.timedelta(minutes=self.google_calender_entry_grace_minutes)
                     exit_grace = datetime.timedelta(minutes=self.google_calender_exit_grace_minutes)
                     for show_time in self.show_times:
-                        upper_bound = show_time.upper + exit_grace
-                        if (show_time.lower - entry_grace) <= now <= upper_bound:
+                        lower, upper = show_time
+                        if (lower - entry_grace) <= now <= (upper + exit_grace):
                             log(f'dj auth requested by {self}: allowed ({auth_log} and {now} in time bounds - '
-                                f'{timezone.localtime(show_time.lower)} [{entry_grace} entry grace] - '
-                                f'{timezone.localtime(show_time.upper)} [{exit_grace} exit grace])')
-                            return upper_bound
+                                f'{timezone.localtime(lower)} [{entry_grace} entry grace] - '
+                                f'{timezone.localtime(upper)} [{exit_grace} exit grace])')
+                            return upper + exit_grace
                     else:
                         log(f'dj auth requested by {self}: denied ({auth_log} with {now} not in time bounds for '
                             f'{len(self.show_times)} show times)')

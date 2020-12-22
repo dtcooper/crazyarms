@@ -3,12 +3,12 @@ import datetime
 import json
 import logging
 
-from dateutil.parser import parse as parse
+from dateutil.parser import parse
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
-from django.contrib.postgres.fields import ArrayField, DateTimeRangeField
 from django.core.cache import cache
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
 
@@ -21,15 +21,17 @@ from common.models import TimestampedModel, User
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-class GoogleCalendarShowTimes(TimestampedModel):
-    # TODO: This could be a arrayfield on User and we could scrape the gcal module
-    #     - sync code could be a task
+class DatetimeRangeListJSONDecoder(json.JSONDecoder):
+    def decode(self, obj):
+        return [(parse(lower), parse(upper)) for lower, upper in super().decode(obj)]
 
+
+class GoogleCalendarShowTimes(TimestampedModel):
     SYNC_RANGE_DAYS_MIN = datetime.timedelta(days=60)
     SYNC_RANGE_DAYS_MAX = datetime.timedelta(days=120)
 
     user = models.OneToOneField(User, db_index=True, on_delete=models.CASCADE, related_name='_show_times')
-    show_times = ArrayField(DateTimeRangeField())
+    show_times = models.JSONField(encoder=DjangoJSONEncoder, decoder=DatetimeRangeListJSONDecoder, default=list)
 
     def __str__(self):
         return f'{self.user} ({len(self.show_times)} shows)'

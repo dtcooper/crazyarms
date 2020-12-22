@@ -30,13 +30,13 @@ broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
 source with the highest priority _that is active_ will be what the harbor chooses
 to play.
 
-!!! note "Inactive Sources"
+!!! note "A Note About Inactive Sources"
     When a source goes from inactive to active, the harbor will smootly fade to it.
 
-    For the _"Live Sources"_ listed below (Zoom and Icecast), there's a feature
-    called **silence detection.** This means _if a DJ is **connected but broadcasting
-    silence,**_ that source will be **considered inactive** and the **first active
-    source with less priority will be broadcast.**
+    For the "Live Sources" listed below (Live DJ and Live Zoom Room), we provide
+    **silence detection.** This means **if a DJ is connected and broadcasting
+    silence,** that source will be considered inactive.**  In this case, the
+    first active source with less priority will be broadcast.
 
     The theory behind this feature is part of the _Idiot-Tolerant(tm)_ DJing
     philosophy of Crazy Arms. :wink:

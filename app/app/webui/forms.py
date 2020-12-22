@@ -32,7 +32,8 @@ SAMPLE_ROTATOR_ASSETS_URLS = {
 }
 CCMIXTER_API_URL = 'http://ccmixter.org/api/query'
 # Ask for a few month, since we only want ones with mp3s
-CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js', 'limit': round(NUM_SAMPLE_CCMIXTER_ASSETS * 1.5)}
+CCMIXTER_API_PARAMS = {'sinced': '1 month ago', 'sort': 'rank', 'f': 'js',
+                       'limit': round(NUM_SAMPLE_CCMIXTER_ASSETS * 1.5)}
 SAMPLE_STOPSETS = (
     ('id', 'ad', 'psa', 'ad', 'id'),
     ('id', 'ad', 'id'),

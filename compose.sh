@@ -221,7 +221,7 @@ if [ "$1" = '--test' -o "$1" = test ]; then
         shift $#
     fi
     if [ "$#" = 0 ]; then
-        set -- "$@" run app_test
+        set -- "$@" run --rm test
     fi
 else
     COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/base.yml"

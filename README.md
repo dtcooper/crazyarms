@@ -57,8 +57,9 @@ Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
 - [x] Thoroughly test new ffprobe + ffmpeg flows for audio assets + task
 - [x] Harbor: use an add_timeout poll to check for `status_json()` changes rather than
     hooks `update_status[_ref]()` hooks throughout the code.
-- [ ] GCal shows stored as `JSONField` with show name, useful for Zoom or Liquidsoap metadata
-    - am I sure I want this??? :tongue:
+- [x] GCal shows stored as `JSONField`
+    - [ ] add show name to JSON, useful for Zoom or Liquidsoap metadata am I sure I want this??? :tongue:
+    - [ ] scrap `gcal` package, moving to user model in `common` completely
 - [ ] Tasks to purge failed broadcasts/assets + unstuck processing ones, clean sftpgo files
 - [x] Re-try broadcasts for which underlying assets which aren't `READY` every 2 seconds.
     Fix asset's inline broadcasts.

@@ -23,6 +23,7 @@ unidecode
 watchdog
 
 # Testing, TODO: move this to separate container
+fakeredis
 pytest
 pytest-cov
 pytest-django

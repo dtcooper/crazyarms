@@ -44,10 +44,10 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
                     '\n',
                     '<li>{} - {}</li>',
                     ((
-                        date_format(timezone.localtime(t.lower), 'SHORT_DATETIME_FORMAT'),
-                        date_format(timezone.localtime(t.upper), 'SHORT_DATETIME_FORMAT'),
+                        date_format(timezone.localtime(lower), 'SHORT_DATETIME_FORMAT'),
+                        date_format(timezone.localtime(upper), 'SHORT_DATETIME_FORMAT'),
                      )
-                     for t in obj.show_times),
+                     for lower, upper in obj.show_times),
                 )
                 s += mark_safe('\n</ol>')
             return s

@@ -9,12 +9,14 @@ markdown_extensions:
     - pymdownx.emoji:
         emoji_index: !!python/name:materialx.emoji.twemoji
         emoji_generator: !!python/name:materialx.emoji.to_svg
+    - pymdownx.keys
     - pymdownx.smartsymbols
     - pymdownx.superfences:
         custom_fences:
           - name: mermaid
             class: mermaid
             format: !!python/name:pymdownx.superfences.fence_div_format
+    - pymdownx.tabbed
     - toc:
         permalink: True
 nav:
@@ -26,7 +28,7 @@ nav:
     - Admin's Guide:
         - AutoDJ: admin-guide/autodj.md
         - Configuration: admin-guide/configuration.md
-    - Installation: installation.md
+    - Server Setup: server-setup.md
     - Glossary of Terms: glossary.md
 repo_name: dtcooper/carb
 repo_url: https://github.com/dtcooper/carb
@@ -36,11 +38,13 @@ site_url: https://dtcooper.github.io/carb
 theme:
     favicon: img/favicon.svg
     name: material
-    navigation_depth: 3
     features:
-        - navigation.instant
+        - navigation.sections
         - navigation.tabs
     palette:
-        primary: blue
-    font: Inter
-copyright: Copyright &copy; 2020 David Cooper
+        primary: deep orange
+        accent: amber
+    font:
+        text: Inter
+        code: Inconsolata
+copyright: Copyright &copy; 2020-2021 David Cooper

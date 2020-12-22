@@ -2,25 +2,31 @@ import os
 import re
 import shutil
 from unittest.mock import patch
+import uuid
 
 import requests_mock
 
 from django.conf import settings
 from django.contrib.messages import get_messages
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 
 from constance import config
 
+from autodj.models import AudioAsset, Playlist, Rotator, StopsetRotator, Stopset
 from common.models import User
 from services.models import UpstreamServer
 
-from .forms import FirstRunForm
-from .tasks import CCMIXTER_API_URL
+from .forms import FirstRunForm, CCMIXTER_API_URL
 from .views import FirstRunView
 
 
-class FirstRunTests(TestCase):
+class MockedTaskId:
+    def __init__(self):
+        self.id = uuid.uuid4()
+
+
+class FirstRunTests(TransactionTestCase):
     def login_admin(self):
         admin = User.objects.create_superuser('admin', 'admin@example.com', 'password')
         self.client.login(username=admin.username, password='password')
@@ -38,12 +44,12 @@ class FirstRunTests(TestCase):
 
     @requests_mock.Mocker()
     @patch('services.services.ServiceBase.supervisorctl')
-    @patch('webui.tasks.NUM_SAMPLE_ASSETS', 2)
-    @patch('webui.forms.FirstRunForm.random_password', lambda self: 'random-pw')
+    @patch('webui.forms.generate_random_string', lambda *args, **kwargs: 'random-pw')
+    @patch('common.tasks.asset_download_external_url', lambda *args, **kwargs: MockedTaskId())
     def test_post(self, requests_mock, supervisor_mock):
         ccmixter_response = open(f'{settings.BASE_DIR}/carb/test_data/ccmixter.json', 'rb')
         requests_mock.register_uri('GET', CCMIXTER_API_URL, body=ccmixter_response)
-        requests_mock.register_uri('GET', re.compile(r'^http://ccmixter\.org/content/'), text='mp3')
+        requests_mock.register_uri('GET', re.compile(r'^http://ccmixter\.org/content/'), text='invalid-mp3-data')
         shutil.rmtree('/config', ignore_errors=True)
 
         self.assertEqual(User.objects.count(), 0)
@@ -106,6 +112,12 @@ class FirstRunTests(TestCase):
         self.assertIn({'xvfb-icewm', 'x11vnc', 'websockify'}, supervisor_start_calls)
         self.assertIn({'harbor', 'pulseaudio'}, supervisor_start_calls)
         self.assertIn({'local-icecast'}, supervisor_start_calls)
+
+        self.assertEqual(AudioAsset.objects.count(), 75)
+        self.assertEqual(Rotator.objects.count(), 3)
+        self.assertEqual(Playlist.objects.count(), 1)
+        self.assertEqual(Stopset.objects.count(), 3)
+        self.assertEqual(StopsetRotator.objects.count(), 13)
 
     def test_redirects_when_user_exists(self):
         User.objects.create_user('user')

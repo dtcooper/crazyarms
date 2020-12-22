@@ -40,11 +40,11 @@
         </tr>
       </thead>
       <tbody>
-        {% for show_time in user.upcoming_show_times %}
+        {% for lower, upper in user.upcoming_show_times %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td>{{ show_time.lower }}</td>
-            <td>{{ show_time.upper }}</td>
+            <td>{{ lower }}</td>
+            <td>{{ upper }}</td>
           </tr>
         {% endfor %}
       </tbody>
