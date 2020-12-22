@@ -34,7 +34,7 @@ repo_name: dtcooper/carb
 repo_url: https://github.com/dtcooper/carb
 site_dir: _docs
 site_name: Crazy Arms Radio Backend Documentation
-site_url: https://dtcooper.github.io/carb
+site_url: https://crazyarms.xyz
 theme:
     favicon: img/favicon.svg
     name: material

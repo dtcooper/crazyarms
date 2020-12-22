@@ -7,7 +7,7 @@ It's specifically written after its author built a few _fully decentralized_
 online radio stations with varying types of scheduling and finding no existing
 product fit some common needs out of the box.
 
-Read the [documentation for Crazy Arms here](https://dtcooper.github.io/carb).
+Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
 
 ## Technical TODOs
 
