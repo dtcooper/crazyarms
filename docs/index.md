@@ -13,7 +13,7 @@ online radio stations with varying types of scheduling and finding no existing
 product fit some common needs out of the box.
 
 If you're an technical user or a systems administrator wanting to install Crazy
-Arms, head over to the [installation docs](./installation.md).
+Arms, head over to the [installation instructions](./server-setup.md#installation).
 
 ## Audio Infrastructure Overview
 
