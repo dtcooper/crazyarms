@@ -1,7 +1,7 @@
 import os
 import re
 import shutil
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import uuid
 
 import requests_mock
@@ -19,11 +19,6 @@ from services.models import UpstreamServer
 
 from .forms import FirstRunForm, CCMIXTER_API_URL
 from .views import FirstRunView
-
-
-class MockedTaskId:
-    def __init__(self):
-        self.id = uuid.uuid4()
 
 
 class FirstRunTests(TransactionTestCase):
@@ -45,7 +40,7 @@ class FirstRunTests(TransactionTestCase):
     @requests_mock.Mocker()
     @patch('services.services.ServiceBase.supervisorctl')
     @patch('webui.forms.generate_random_string', lambda *args, **kwargs: 'random-pw')
-    @patch('common.tasks.asset_download_external_url', lambda *args, **kwargs: MockedTaskId())
+    @patch('common.tasks.asset_download_external_url', lambda *args, **kwargs: Mock(id=uuid.uuid4()))
     def test_post(self, requests_mock, supervisor_mock):
         ccmixter_response = open(f'{settings.BASE_DIR}/carb/test_data/ccmixter.json', 'rb')
         requests_mock.register_uri('GET', CCMIXTER_API_URL, body=ccmixter_response)
@@ -95,6 +90,7 @@ class FirstRunTests(TransactionTestCase):
         self.assertEqual(upstream.mime, '')
         self.assertIsNone(upstream.encoding_args)
 
+        # TODO: this should be tested in whatever tests services/services.py
         for config_file in (
             'icecast/icecast.xml',
             'harbor/harbor.liq',
