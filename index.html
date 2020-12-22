@@ -27,7 +27,7 @@
         
           
           
-          <meta name="theme-color" content="#2094f3">
+          <meta name="theme-color" content="#ff6e42">
         
       
     
@@ -36,8 +36,8 @@
       
         
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=:300,400,400i,700%7C&display=fallback">
-        <style>body,input{font-family:"",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"",SFMono-Regular,Consolas,Menlo,monospace}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,400i,700%7CInconsolata&display=fallback">
+        <style>body,input{font-family:"Inter",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Inconsolata",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
     
@@ -54,7 +54,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="blue" data-md-color-accent="">
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="deep-orange" data-md-color-accent="amber">
       
   
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -457,8 +457,8 @@
 
 
   <li class="md-nav__item">
-    <a href="installation/" class="md-nav__link">
-      Installation
+    <a href="server-setup/" class="md-nav__link">
+      Server Setup
     </a>
   </li>
 
@@ -564,7 +564,7 @@ written from the ground up.</p>
 online radio stations with varying types of scheduling and finding no existing
 product fit some common needs out of the box.</p>
 <p>If you're an technical user or a systems administrator wanting to install Crazy
-Arms, head over to the <a href="installation/">installation docs</a>.</p>
+Arms, head over to the <a href="./installation.md">installation docs</a>.</p>
 <h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">&para;</a></h2>
 <h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">&para;</a></h3>
 <p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> This is a
@@ -577,12 +577,12 @@ broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
 source with the highest priority <em>that is active</em> will be what the harbor chooses
 to play.</p>
 <div class="admonition note">
-<p class="admonition-title">Inactive Sources</p>
+<p class="admonition-title">A Note About Inactive Sources</p>
 <p>When a source goes from inactive to active, the harbor will smootly fade to it.</p>
-<p>For the <em>"Live Sources"</em> listed below (Zoom and Icecast), there's a feature
-called <strong>silence detection.</strong> This means <em>if a DJ is <strong>connected but broadcasting
-silence,</strong></em> that source will be <strong>considered inactive</strong> and the <strong>first active
-source with less priority will be broadcast.</strong></p>
+<p>For the "Live Sources" listed below (Live DJ and Live Zoom Room), we provide
+<strong>silence detection.</strong> This means <strong>if a DJ is connected and broadcasting
+silence,</strong> that source will be considered inactive.**  In this case, the
+first active source with less priority will be broadcast.</p>
 <p>The theory behind this feature is part of the <em>Idiot-Tolerant&trade;</em> DJing
 philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f609.svg" title=":wink:" /></p>
 </div>
@@ -742,7 +742,7 @@ module.</dd>
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright &copy; 2020 David Cooper
+            Copyright &copy; 2020-2021 David Cooper
           </div>
         
         Made with
@@ -763,7 +763,7 @@ module.</dd>
       <script>
         app = initialize({
           base: ".",
-          features: ['navigation.instant', 'navigation.tabs'],
+          features: ['navigation.sections', 'navigation.tabs'],
           search: Object.assign({
             worker: "assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)

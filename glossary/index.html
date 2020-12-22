@@ -27,7 +27,7 @@
         
           
           
-          <meta name="theme-color" content="#2094f3">
+          <meta name="theme-color" content="#ff6e42">
         
       
     
@@ -36,8 +36,8 @@
       
         
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=:300,400,400i,700%7C&display=fallback">
-        <style>body,input{font-family:"",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"",SFMono-Regular,Consolas,Menlo,monospace}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,400i,700%7CInconsolata&display=fallback">
+        <style>body,input{font-family:"Inter",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Inconsolata",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
     
@@ -54,7 +54,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="blue" data-md-color-accent="">
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="deep-orange" data-md-color-accent="amber">
       
   
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -386,8 +386,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../installation/" class="md-nav__link">
-      Installation
+    <a href="../server-setup/" class="md-nav__link">
+      Server Setup
     </a>
   </li>
 
@@ -530,7 +530,7 @@ example.</dd>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../installation/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../server-setup/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -539,7 +539,7 @@ example.</dd>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Installation
+                Server Setup
               </div>
             </div>
           </a>
@@ -553,7 +553,7 @@ example.</dd>
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright &copy; 2020 David Cooper
+            Copyright &copy; 2020-2021 David Cooper
           </div>
         
         Made with
@@ -574,7 +574,7 @@ example.</dd>
       <script>
         app = initialize({
           base: "..",
-          features: ['navigation.instant', 'navigation.tabs'],
+          features: ['navigation.sections', 'navigation.tabs'],
           search: Object.assign({
             worker: "../assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)

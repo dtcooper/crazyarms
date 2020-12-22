@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://dtcooper.github.io/carb/installation/">
+        <link rel="canonical" href="https://dtcooper.github.io/carb/server-setup/">
       
       
       <link rel="shortcut icon" href="../img/favicon.svg">
@@ -16,7 +16,7 @@
     
     
       
-        <title>Installation - Crazy Arms Radio Backend Documentation</title>
+        <title>Server Setup - Crazy Arms Radio Backend Documentation</title>
       
     
     
@@ -27,7 +27,7 @@
         
           
           
-          <meta name="theme-color" content="#2094f3">
+          <meta name="theme-color" content="#ff6e42">
         
       
     
@@ -36,8 +36,8 @@
       
         
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=:300,400,400i,700%7C&display=fallback">
-        <style>body,input{font-family:"",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"",SFMono-Regular,Consolas,Menlo,monospace}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,400i,700%7CInconsolata&display=fallback">
+        <style>body,input{font-family:"Inter",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Inconsolata",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
     
@@ -54,7 +54,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="blue" data-md-color-accent="">
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="deep-orange" data-md-color-accent="amber">
       
   
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#installation-guide" class="md-skip">
+        <a href="#server-setup" class="md-skip">
           Skip to content
         </a>
       
@@ -93,7 +93,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Installation
+              Server Setup
             
           </span>
         </div>
@@ -395,12 +395,12 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Installation
+        Server Setup
         <span class="md-nav__icon md-icon"></span>
       </label>
     
     <a href="./" class="md-nav__link md-nav__link--active">
-      Installation
+      Server Setup
     </a>
     
       
@@ -579,16 +579,22 @@
               
                 
                 
-                <h1 id="installation-guide">Installation Guide<a class="headerlink" href="#installation-guide" title="Permanent link">&para;</a></h1>
+                <h1 id="server-setup">Server Setup<a class="headerlink" href="#server-setup" title="Permanent link">&para;</a></h1>
 <p>This guide is intended for systems administrators only.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <h3 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h3>
-<p>Prerequisite: Linux or macOS with <a href="https://www.docker.com/">Docker</a> and
-<a href="https://docs.docker.com/compose/">docker-compose</a> installed.</p>
+<div class="admonition note">
+<p class="admonition-title">Prerequisites</p>
+<ul>
+<li>Operating System: Linux or macOS</li>
+<li><a href="https://www.docker.com/">Docker</a> <strong>and</strong>
+    <a href="https://docs.docker.com/compose/">docker-compose</a> installed.</li>
+</ul>
+</div>
 <p>In your terminal clone the repo and start the code. Building the containers may
 take several minutes.</p>
 <div class="highlight"><pre><span></span><code>git clone git@github.com:dtcooper/carb.git
-cd carb
+<span class="nb">cd</span> carb
 
 ./compose.sh up
 </code></pre></div>
@@ -598,7 +604,12 @@ When building is done, then in your browser go to
 about setting up your station.</p>
 <p>If you want a fairly preview of what the AutoDJ has to offer, be sure to select
 <em>"Preload the AutoDJ"</em> when setting up your station.</p>
-<p>To stop, in your terminal press <code>CTRL+C</code>.</p>
+<p>To stop, in your terminal press <span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd>C</kbd></span>.</p>
+<p>To run Crazy Arms in the background which is useful for deployment do the
+following,</p>
+<div class="highlight"><pre><span></span><code>./compose.sh up -d
+./compose.sh down
+</code></pre></div>
 <h3 id="unit-tests">Unit Tests<a class="headerlink" href="#unit-tests" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>./compose.sh test
 
@@ -668,7 +679,7 @@ about setting up your station.</p>
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright &copy; 2020 David Cooper
+            Copyright &copy; 2020-2021 David Cooper
           </div>
         
         Made with
@@ -689,7 +700,7 @@ about setting up your station.</p>
       <script>
         app = initialize({
           base: "..",
-          features: ['navigation.instant', 'navigation.tabs'],
+          features: ['navigation.sections', 'navigation.tabs'],
           search: Object.assign({
             worker: "../assets/javascripts/worker/search.4ac00218.min.js"
           }, typeof search !== "undefined" && search)
