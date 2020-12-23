@@ -172,6 +172,24 @@ class UserProfileForm(forms.ModelForm):
         if not config.AUTODJ_ENABLED or not self.instance.has_perm('autodj.change_audioasset'):
             del self.fields['authorized_keys']
 
+        if settings.EMAIL_ENABLED and not self.instance.is_superuser:
+            del self.fields['email']
+            self.fields['update_email'] = forms.EmailField(
+                label='Email address', required=True, initial=self.instance.email,
+                max_length=User._meta.get_field('email').max_length)
+
+        self.order_fields(('username', 'email', 'new_email', 'timezone', 'first_name', 'last_name', 'harbor_auth',
+                           'google_calender_entry_grace_minutes', 'google_calender_exit_grace_minutes',
+                           'authorized_keys'))
+
+    def clean_update_email(self):
+        email = self.cleaned_data['update_email']
+        if email != self.instance.email:
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError('User with this Email address already exists.')
+            return email
+        return None
+
     class Meta:
         model = User
         fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth',

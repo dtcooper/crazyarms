@@ -12,10 +12,12 @@ from django.contrib import messages
 from django.contrib.auth import login, views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core import signing
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.functional import cached_property
@@ -28,7 +30,7 @@ from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
 from carb import constants
-from common.models import filter_inactive_group_queryset, User
+from common.models import filter_inactive_group_queryset, generate_random_string, User
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
@@ -40,7 +42,16 @@ from .tasks import stop_zoom_broadcast
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-class FirstRunView(SuccessMessageMixin, FormView):
+class FormErrorMessageMixin:
+    error_message = 'There was a problem submitting the form. Please correct any errors below.'
+
+    # TODO add to all formviews, even ones outside of this module (move views in in carb/urls.py to here)
+    def form_invalid(self, form):
+        messages.error(self.request, self.error_message)
+        return super().form_invalid(form)
+
+
+class FirstRunView(SuccessMessageMixin, FormErrorMessageMixin, FormView):
     template_name = 'webui/form.html'
     form_class = FirstRunForm
     success_url = reverse_lazy('status')
@@ -135,13 +146,14 @@ class BanListView(PermissionRequiredMixin, TemplateView):
         return {**super().get_context_data(**kwargs), 'bans': [ban[1:] for ban in sorted(bans)]}
 
     def post(self, request):
+        # TODO: simple formview with a model choice field for user?
         user = get_object_or_404(User, id=request.POST.get('user_id'))
         cache.delete(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{user.id}')
         messages.success(request, f'The ban on {user.get_full_name()} has been lifted.')
         return redirect('banlist')
 
 
-class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, FormView):
     template_name = 'webui/zoom.html'
     form_class = ZoomForm
     success_url = reverse_lazy('zoom')
@@ -187,12 +199,11 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
                         if task_id:
                             djhuey.revoke_by_id(task_id)
                         stop_zoom_broadcast.call_local()
-                        messages.add_message(request, messages.INFO, 'Zoom broadcast was stopped.')
+                        messages.info(request, 'Zoom broadcast was stopped.')
                         return redirect('zoom')
                 return super().post(request)
         except TaskLockedException:
-            messages.add_message(request, messages.WARNING,
-                                 'Zoom action blocked. Multiple users editing configuration. Please try again.')
+            messages.warning(request, 'Zoom action blocked. Multiple users editing configuration. Please try again.')
             return redirect('zoom')
 
     def get_form_kwargs(self):
@@ -238,7 +249,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
         }
 
 
-class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, UpdateView):
     form_class = UserProfileForm
     success_message = 'Your user profile was successfully updated.'
     success_url = reverse_lazy('profile')
@@ -254,16 +265,60 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     def get_object(self, **kwargs):
         return self.request.user
 
+    def form_valid(self, form):
+        email = form.cleaned_data.get('update_email')
+        if email:
+            session_token = self.request.session['update_email_token'] = generate_random_string(12)
+            token = signing.dumps([self.request.user.id, session_token, email], salt='update:email', compress=True)
+            url = self.request.build_absolute_uri(reverse('profile_email_update', kwargs={'token': token}))
+
+            messages.warning(self.request, f'A verification email was sent to {email}. To complete your email address '
+                                           'update, please open it and follow the verification link.')
+
+            # TODO: From (not just from this, but also from password reset)
+            send_mail(from_email=None, recipient_list=[email], subject='Verify New Email Address',
+                      message=f'Please go to the following URL to verify your email address update: {url}')
+
+        return super().form_valid(form)
+
     def post(self, request, *args, **kwargs):
         if settings.RTMP_ENABLED and self.request.POST.get('update_stream_key'):
             user = self.get_object()
             user.stream_key = None  # save() will regenerate if it's None
             user.save()
-            messages.add_message(request, messages.SUCCESS,
-                                 'Your stream key has successfully been updated. Copy the new value below.')
+            messages.success(request, 'Your stream key has successfully been updated. Copy the new value below.')
             return redirect(self.success_url)
         else:
             return super().post(request, *args, **kwargs)
+
+
+class UserProfileEmailUpdateView(LoginRequiredMixin, View):
+    LINK_MAX_AGE = 60 * 60 * 12
+
+    def get(self, request, token, *args, **kwargs):
+        success = False
+
+        try:
+            user_id, session_token, email = signing.loads(token, salt='update:email', max_age=self.LINK_MAX_AGE)
+        except signing.SignatureExpired:
+            messages.error(request, 'The link you provided to change your email has expired. Please try again.')
+        except signing.BadSignature:
+            pass
+        else:
+            user = self.request.user
+            current_session_token = self.request.session.pop('update_email_token', None)
+
+            if (not User.objects.filter(email=email).exists() and user_id == self.request.user.id
+                    and current_session_token is not None and current_session_token == session_token):
+                user.email = email
+                user.save()
+                success = True
+                messages.success(request, f'Your email address was updated to {email}.')
+
+        if not success:
+            messages.error(request, 'The link you provided to change your password was invalid. Please try again.')
+
+        return redirect('profile')
 
 
 class GCalView(LoginRequiredMixin, TemplateView):
@@ -276,7 +331,7 @@ class GCalView(LoginRequiredMixin, TemplateView):
         return super().dispatch(*args, **kwargs)
 
 
-class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
+class PasswordChangeView(SuccessMessageMixin, FormErrorMessageMixin, auth_views.PasswordChangeView):
     success_url = reverse_lazy('profile')
     template_name = 'webui/form.html'
     title = 'Change Your Password'

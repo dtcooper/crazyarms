@@ -30,9 +30,8 @@ class BroadcastInline(admin.TabularInline):
 
 def message_broadcast_added(request, broadcast):
     scheduled_time = date_format(timezone.localtime(broadcast.scheduled_time), 'SHORT_DATETIME_FORMAT')
-    messages.add_message(request, messages.WARNING,
-                         f'Your broadcast of {broadcast.asset.title} has been queued for {scheduled_time}. '
-                         'Come back at that time to check whether it was successfully played.')
+    messages.warning(request, f'Your broadcast of {broadcast.asset.title} has been queued for {scheduled_time}. '
+                              'Come back at that time to check whether it was successfully played.')
 
 
 class BroadcastAssetAdmin(AudioAssetAdminBase):

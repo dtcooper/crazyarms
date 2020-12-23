@@ -18,7 +18,7 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
     - [ ] Add streaming instructions page for users
     - [ ] AutoDJ weighting concept
     - [ ] Harbor architecture and concepts
-- [ ] AutoDJ
+- [x] AutoDJ
     - [x] Playlists
     - [x] Ad rotators + stopsets
     - [x] Weighting similar to [Tomato](https://github.com/dtcooper/tomato) (playlists are weighted,
@@ -71,14 +71,21 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
     - [x] Add ability to use SSH authorized keys.
 - [x] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
 - [ ] User emails
-    - [ ] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
+    - [x] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
     - [ ] Do we really need a postfix container? Can't we just configure Django to send email directly?
     - [ ] Create user flow that sends user an email (and possibly they fill out their details)
+    - [ ] Consistent "From: " emails
 - [x] rtmp streaming using nginx-rtmp
 - [ ] Move liquidsoap harbor source editing into webui, but only link it from admin.
     Remove `@admin.site.register_view()`, associated code, and simplify admin links.
     Rename _"Miscellaneous Configuration"_ to _"Additional Modules"._
 - [ ] huey logs seem to print twice / django logging seems overly verbose (maybe just in gunicorn?)
+- [ ] use [multirun](https://github.com/nicolas-van/multirun) for nginx (nginx + certbot),
+    and icecast (icecast + notify) containers
+- [ ] investigate whether asset models should use `clean()` or `full_clean()`?
+    (Does it only matter with unique indexes?)
+- [ ] "There were errors on this page" message for forms with errors at top of page. Possible mixin
+    that adds a message when `form_invalid(...)`
 
 ..._and more!_
 

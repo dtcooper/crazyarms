@@ -89,13 +89,11 @@ class AudioAssetAdminBase(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
         if obj.run_download_after_save_url:
-            messages.add_message(request, messages.WARNING,
-                                 f'The audio file is being downloaded from {obj.run_download_after_save_url}. Please '
-                                 'refresh the page or come back later to check on its progress.')
+            messages.warning(request, f'The audio file is being downloaded from {obj.run_download_after_save_url}. '
+                                      'Please refresh the page or come back later to check on its progress.')
         elif obj.run_conversion_after_save:
-            messages.add_message(request, messages.WARNING,
-                                 f'The audio file is being converted to {config.ASSET_ENCODING} format. Please refresh '
-                                 'the page or come back later to check on its progress.')
+            messages.warning(request, f'The audio file is being converted to {config.ASSET_ENCODING} format. Please '
+                                      'refresh the page or come back later to check on its progress.')
 
 
 class HarborAuthListFilter(admin.SimpleListFilter):

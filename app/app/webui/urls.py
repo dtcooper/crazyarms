@@ -15,6 +15,7 @@ urlpatterns = [
     path('info/', views.InfoView.as_view(), name='info'),
     path('playout-log/', views.PlayoutLogView.as_view(), name='playout_log'),
     path('profile/', views.UserProfileView.as_view(), name='profile'),
+    path('profile/email/<token>/', views.UserProfileEmailUpdateView.as_view(), name='profile_email_update'),
     path('scheduled-shows/', views.GCalView.as_view(), name='gcal'),
     path('status/autodj-request/', views.AutoDJRequestAJAXFormView.as_view(), name='autodj_request'),
     path('status/autodj-request/choices/', views.AutoDJRequestChoicesView.as_view(), name='autodj_request_choices'),

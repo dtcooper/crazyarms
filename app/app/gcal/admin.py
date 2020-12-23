@@ -81,8 +81,7 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
 
         cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, 'currently running', timeout=None)
         sync_google_calendar_api()
-        messages.add_message(request, messages.INFO,
-                             "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")
+        messages.info(request,  "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")
         return redirect('admin:gcal_googlecalendarshowtimes_changelist')
 
     def changelist_view(self, request, extra_context=None):

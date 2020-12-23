@@ -8,6 +8,7 @@ from django.views.static import serve
 from constance import config
 
 
+# Move these to webui
 class PasswordResetView(SuccessMessageMixin, auth_views.PasswordResetView):
     success_message = ('A password reset email has been sent to %(email)s. If an account exists with that email '
                        "address, you should should receive it shortly. If you don’t receive an email, make sure you've"
