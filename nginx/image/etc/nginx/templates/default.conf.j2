@@ -78,7 +78,7 @@ server {
         internal;
 
         nchan_subscriber eventsource;
-        nchan_channel_id sse;
+        nchan_channel_id status;
         nchan_eventsource_ping_interval 15;
         nchan_eventsource_ping_event "";
         nchan_eventsource_ping_comment " ping";
@@ -152,7 +152,7 @@ server {
 
     location = /sse {
         nchan_subscriber eventsource;
-        nchan_channel_id sse;
+        nchan_channel_id status;
         nchan_eventsource_ping_interval 15;
         nchan_eventsource_ping_event "";
         nchan_eventsource_ping_comment " ping";
@@ -160,7 +160,7 @@ server {
 
     location = /message {
         nchan_publisher http;
-        nchan_channel_id sse;
+        nchan_channel_id status;
         nchan_store_messages off;
     }
 

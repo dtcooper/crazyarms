@@ -148,7 +148,7 @@ add_timeout(fast=false, LIVE_DJ_KICKOFF_INTERVAL, fun() -> begin
 end)
 
 reset_status = ("", "", "", "", "", "")
-last_status_without_timed_sources = ref reset_status
+last_status_without_timed_sources = ref ("", "", "", "", "", "")
 
 ### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
 {{ section1 }}
@@ -359,13 +359,11 @@ def status_json()
     status_json_from_tuple(status_tuple())
 end
 
-force_status_update = ref false
-
 server.register(usage='status', description='Get status of sources in JSON', 'status', fun(_) -> status_json())
 server.register(usage='status_pretty', description='Get status of sources in JSON (pretty-printed)', 'status_pretty',
                 fun(_) -> get_process_output('echo #{safe_quote(status_json())} | jq -SM'))
 server.register(usage='status_update', description='Force a status update on the SSE service', 'status_update', fun(_) -> begin
-    force_status_update := true
+    last_status_without_timed_sources := reset_status
     'Done!'
 end)
 
@@ -387,9 +385,8 @@ add_timeout(fast=false, STATUS_UPDATE_CHECK_INTERVAL, fun() -> begin
     let (a, b, c, d, e, f, _) = current_status_tuple
     status_without_timed_sources = (a, b, c, d, e, f)
     # See if there are any changes
-    if status_without_timed_sources != !last_status_without_timed_sources or !force_status_update then
+    if status_without_timed_sources != !last_status_without_timed_sources then
         last_status_without_timed_sources := status_without_timed_sources
-        force_status_update := false  # TODO use force_status_update in on_end
         post_to_sse(status_json_from_tuple(current_status_tuple))
     end
     STATUS_UPDATE_CHECK_INTERVAL
