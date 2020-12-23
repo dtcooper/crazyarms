@@ -132,7 +132,7 @@ class BanListView(PermissionRequiredMixin, TemplateView):
                     # Reverse sort by seconds left
                     -seconds_left, user.get_full_name(), user_id, date_format(banned_until, 'DATETIME_FORMAT')))
 
-        return {**super().get_context_data(**kwargs), 'bans': sorted(bans)}
+        return {**super().get_context_data(**kwargs), 'bans': [ban[1:] for ban in sorted(bans)]}
 
     def post(self, request):
         user = get_object_or_404(User, id=request.POST.get('user_id'))
@@ -153,6 +153,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
         self.redis = get_redis_connection()
         self.room_env = self.redis.get(constants.REDIS_KEY_ROOM_INFO)
         self.room_ttl = max(self.redis.ttl(constants.REDIS_KEY_ROOM_INFO), 0)
+        self.currently_authorized = False
 
         if self.room_env:
             self.room_env = dotenv_values(stream=StringIO(self.room_env.decode('utf-8')))
@@ -163,7 +164,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
         self.service = ZoomService()
 
     def dispatch(self, request, *args, **kwargs):
-        if not settings.ZOOM_ENABLED:
+        if not settings.ZOOM_ENABLED or request.user.harbor_auth == User.HarborAuth.NEVER:
             return redirect('status')
 
         try:
@@ -195,8 +196,16 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
             return redirect('zoom')
 
     def get_form_kwargs(self):
-        return {'user': self.request.user, 'zoom_is_running': self.zoom_is_running_cached,
-                'room_env': self.room_env, **super().get_form_kwargs()}
+        now = timezone.now()
+        current_auth = self.request.user.currently_harbor_authorized(now=now, should_log=False)
+        self.currently_authorized = bool(current_auth)
+
+        bound = None
+        if isinstance(current_auth, datetime.datetime):
+            bound = min(current_auth, now + datetime.timedelta(minutes=config.ZOOM_DEFAULT_SHOW_LENTH_MINUTES))
+
+        return {'zoom_is_running': self.zoom_is_running_cached, 'currently_authorized': self.currently_authorized,
+                'now': now, 'user': self.request.user, 'authorization_time_bound': bound, **super().get_form_kwargs()}
 
     def form_valid(self, form):
         logger.info(f'User {self.request.user} starting Zoom show')
@@ -217,20 +226,15 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormView):
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
-        # TODO: Enforce harbor auth windows better
-        current_auth = self.request.user.currently_harbor_authorized(should_log=False)
         return {
             **super().get_context_data(**kwargs),
-            'authorization_time_bound': current_auth if isinstance(current_auth, datetime.datetime) else None,
-            'currently_authorized': bool(current_auth),
-            # convert TTL to an end time.
-            'room_ttl_hours': self.room_ttl // (60 * 60) if self.room_ttl else None,
-            'room_ttl_minutes': (self.room_ttl % (60 * 60)) // 60 if self.room_ttl else None,
+            'currently_authorized': self.currently_authorized,
             'submit_text': 'Start Zoom Broadcast Now',
             'title': 'Zoom Broadcasting',
             'zoom_is_running': self.zoom_is_running_cached,
             'zoom_belongs_to_current_user': self.zoom_user == self.request.user,
             'zoom_user': self.zoom_user,
+            'zoom_ttl': (timezone.now() + datetime.timedelta(seconds=self.room_ttl)) if self.room_ttl else None,
         }
 
 

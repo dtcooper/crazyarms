@@ -26,8 +26,11 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
     - [x] [select2](https://django-easy-select2.readthedocs.io/) requests in webui (add a new list in
         redis that gets popped from?)
 - [x] Finish Zoom broadcasting
-    - [ ] needs a second pass, and a better show length picker
-    - [ ] time remaining of current Zoom Show
+    - [x] needs a second pass, and a better show length picker that limits users time based on google calendar
+    - [x] time remaining of current Zoom Show
+    - [x] Indicator about why the zoom form doesn't show for calendar based auth
+    - [ ] Show live info about zoom on status page, similar to `dj_harbor_source` + `live_user`
+        in status JSON
 - [ ] Potential for S3 as a storage source using [django-storages](https://django-storages.readthedocs.io/)
 - [ ] Clean up Dockerfiles stripping dev stuff
 - [ ] Go over `TODO`s and `XXX`s in codebase
@@ -49,7 +52,6 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
 - [ ] Compression and normalization on a per-DJ basis. (Add a liquidsoap `switch()` to
     change between compressed or not). Hard part is what are the rules for triggering this?
 - [x] Add scheduled time inline to broadcasts asset creation
-- [ ] Indicator about why the zoom form doesn't show for calendar based auth
 - [x] Hide skip track button for lower precedence sources
 - [ ] Radio buttons for ban times
 - [x] Copy change: rename "precedence" -> "priority"
@@ -76,6 +78,7 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
 - [ ] Move liquidsoap harbor source editing into webui, but only link it from admin.
     Remove `@admin.site.register_view()`, associated code, and simplify admin links.
     Rename _"Miscellaneous Configuration"_ to _"Additional Modules"._
+- [ ] huey logs seem to print twice / django logging seems overly verbose (maybe just in gunicorn?)
 
 ..._and more!_
 

@@ -9,19 +9,12 @@
     {% if zoom_belongs_to_current_user %}
       <span class="orange">Zoom is currently running in your room</span>.
     {% else%}
-      <span class="red">Zoom is currently in use</span> by {{ zoom_user.get_full_name }}.
+      <span class="red">Zoom is currently in use</span> by {% if zoom_user %}{{ zoom_user.get_full_name }}{% else %}unknown{% endif %}.
       You will <u class="red"><b>NOT</b></u> be able to broadcast until after the current show ends.
     {% endif %}
-    {% if room_ttl_hours or room_ttl_minutes %}
+    {% if zoom_ttl %}
       <br>
-      In
-      {% if room_ttl_hours %}
-        {{ room_ttl_hours }} hour{{ room_ttl_hours|pluralize }}{% if room_ttl_minutes %},{% endif %}
-      {% endif %}
-      {% if room_ttl_minutes %}
-        {{ room_ttl_minutes }} minute{{ room_ttl_minutes|pluralize }}
-      {% endif %}
-      {% if zoom_belongs_to_current_user %}your{% else %}the current{% endif %} show ends.
+      The current show is scheduled to end at {{ zoom_ttl }}.
     {% endif %}
     {% if user.is_superuser or zoom_belongs_to_current_user %}
       <br>
@@ -35,31 +28,36 @@
       </form>
     {% endif %}
   {% else %}
-    <span class="green">Zoom is not currently running</span>.<br>
+    <span class="green">Zoom is <strong><u>ready to run</u></strong></span>.<br>
     {% if currently_authorized %}
-      Start a show by filling out the form below.
+      You can start show now by filling out the form below.
     {% else %}
-      <span class="error">You are currently not authorized to broadcast.</span>
-      {% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
+      <span class="error">You are currently not authorized to broadcast on the harbor.</span>
+    {% endif %}
+    <br>
+    {% if user.upcoming_show_times %}
+      Your upcoming show: <strong class="green">{{ user.upcoming_show_times|first|first }}
+        to {{ user.upcoming_show_times|first|last }} ({{ user.timezone }})</strong>
+      {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
         <br>
-        {% if user.upcoming_show_times %}
-          Your next scheduled show: <strong class="green">{{ user.upcoming_show_times|first|first }}
-            &mdash; {{ user.upcoming_show_times|first|last }} ({{ user.timezone }})</strong>
-          {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
-            <br>
-              {% if user.google_calender_entry_grace_minutes > 0 %}
-                You can start your show up to {{ user.google_calender_entry_grace_minutes }} minutes early
-              {% endif %}
-              {% if user.google_calender_exit_grace_minutes > 0 %}
-                {% if user.google_calender_entry_grace_minutes > 0 %}and{% else %}You can{% endif %}
-                keep broadcasting up to {{ user.google_calender_exit_grace_minutes }} minutes afterwards.
-              {% endif %}
+          {% if user.google_calender_entry_grace_minutes > 0 %}
+            You can start your show up to {{ user.google_calender_entry_grace_minutes }} minute{{ user.google_calender_entry_grace_minutes|pluralize }} early
           {% endif %}
-          <br>Come back to this page then.
-        {% else %}
-          <span class="error">You have no upcoming scheduled shows.</span>
-        {% endif %}
+          {% if user.google_calender_exit_grace_minutes > 0 %}
+            {% if user.google_calender_entry_grace_minutes > 0 %}and{% else %}You can{% endif %}
+            keep broadcasting up to {{ user.google_calender_exit_grace_minutes }} minute{{ user.google_calender_exit_grace_minutes|pluralize }} afterwards.
+          {% endif %}
       {% endif %}
+      {% if not currently_authorized and user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
+        <br>Come back to this page then.
+      {% endif %}
+    {% else %}
+      <span{% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %} class="warning"{% endif %}>
+        You have no upcoming scheduled shows.
+        {% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
+          Please contact the station administration if you believe this in error.
+        {% endif %}
+      </span>
     {% endif %}
   {% endif %}
 </p>
@@ -72,7 +70,15 @@
   {# Show form if the user is authorized and Zoom isn't currently running #}
   {{ block.super}}
 {% else %}
-  {{ form.errors }}
+  {# Otherwise we'll want to see errors if we have them #}
+  {% if form.errors %}
+    <p>
+      Errors:
+      {% for errors in form.errors.values %}
+        {{ errors }}
+      {% endfor %}
+    </p>
+  {% endif %}
 {% endif %}
 
 {% endblock %}

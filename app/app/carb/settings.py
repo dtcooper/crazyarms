@@ -223,6 +223,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     'positive_int': ['django.forms.IntegerField', {'min_value': 0}],
     'nonzero_positive_int': ['django.forms.IntegerField', {'min_value': 1}],
     'positive_float': ['django.forms.FloatField', {'min_value': 0.0}],
+    'zoom_minutes': ['django.forms.IntegerField', {'min_value': 30, 'max_value': 60 * 24}],
 }
 
 CONSTANCE_CONFIG = OrderedDict((
@@ -287,12 +288,15 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
 
 if ZOOM_ENABLED:
     CONSTANCE_CONFIG.update(OrderedDict((
-        ('ZOOM_MAX_SHOW_LENTH_MINUTES', (120, mark_safe(
-            'Maximum show length (in minutes) of an <em>unscheduled</em> Zoom broadcast. (Note shows scheduled through '
-            'Google Calendar can to the length of the calendar event.)'), 'nonzero_positive_int')),
+        ('ZOOM_MAX_SHOW_LENTH_MINUTES', (5 * 60, mark_safe(
+            'Maximum show length (in minutes) of an <em>unscheduled</em> Zoom broadcast.'), 'zoom_minutes')),
+        ('ZOOM_DEFAULT_SHOW_LENTH_MINUTES', (2 * 60, mark_safe(
+            'Default show length (in minutes) of an <em>unscheduled</em> Zoom broadcast. Note shows scheduled through '
+            'Google Calendar will default to the length of the calendar event (or the maximum show length above, '
+            'whichever is shorter).'), 'zoom_minutes')),
     )))
     CONSTANCE_CONFIG_FIELDSETS.update(OrderedDict((
-        ('Zoom Settings', ('ZOOM_MAX_SHOW_LENTH_MINUTES',)),
+        ('Zoom Settings', ('ZOOM_MAX_SHOW_LENTH_MINUTES', 'ZOOM_DEFAULT_SHOW_LENTH_MINUTES')),
     )))
 
 if ICECAST_ENABLED:

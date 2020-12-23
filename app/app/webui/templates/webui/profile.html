@@ -6,12 +6,17 @@
 {% endblock %}
 
 {% block form_table %}
+{# hack from https://stackoverflow.com/a/9491141 to make sure pressing enter submits (not generate stream key) #}
+<button style="overflow: visible !important; height: 0 !important; width: 0 !important; margin: 0 !important; border: 0 !important; padding: 0 !important; display: block !important;" type="submit" />
+
 {% if user.is_superuser or groups %}
   <tr>
     <th>Permissions:</th>
     <td>
       {% if user.is_superuser %}
-        <strong class="green">All permissions (you're an administrator)</strong>
+        <strong class="green">All permissions. You're an administrator.</strong><br>
+        (Regular users can only edit parts of this form like first name, last name, timezone, and SSH
+        {% if settings.RTMP_ENABLED %}and RTMP{% endif %} keys)
       {% else %}
         <ul>
           {% for group in groups %}
@@ -27,7 +32,7 @@
 
 {% if settings.RTMP_ENABLED %}
   <tr>
-    <th>RTMP Stream Key:</th>
+    <th>RTMP stream key:</th>
     <td>
       <p><small><code>{{ user.stream_key }}</code></small></p>
       <p class="center-text">

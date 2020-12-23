@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for _, username, user_id, banned_until in bans %}
+        {% for username, user_id, banned_until in bans %}
           <tr>
             <td>{{ username }}</td>
             <td>{{ banned_until }}</td>

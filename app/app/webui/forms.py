@@ -1,5 +1,6 @@
 import datetime
 import logging
+import math
 import re
 from urllib.parse import parse_qs, urlparse
 
@@ -61,8 +62,8 @@ class FirstRunForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.pop('autofocus', None)
-        self.order_fields(['station_name', 'username', 'email', 'password1', 'password2', 'icecast_admin_password',
-                           'generate_sample_assets'])
+        self.order_fields(('station_name', 'username', 'email', 'password1', 'password2', 'icecast_admin_password',
+                           'generate_sample_assets'))
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -144,63 +145,102 @@ class AutoDJRequestsForm(forms.Form):
 class UserProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.instance or not self.instance.is_superuser:
+        if not self.instance.is_superuser:
             # Make sure these fields are only editable by superusers
-            for field_name in ('username', 'email', 'harbor_auth'):
+            for field_name in (
+                'username', 'email', 'harbor_auth', 'google_calender_entry_grace_minutes',
+                'google_calender_exit_grace_minutes'
+            ):
                 field = self.fields[field_name]
                 field.disabled = True
-                field.help_text = "Read-only. (Ask an administrator to update this for you.)"
+                field.help_text += " (Read-only. Ask an administrator to update this for you.)"
 
         self.fields['timezone'].help_text = f'Currently {date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")}'
 
-        if not config.GOOGLE_CALENDAR_ENABLED:
+        remove_grace_fields = False
+        if config.GOOGLE_CALENDAR_ENABLED:
+            remove_grace_fields = self.instance.harbor_auth != User.HarborAuth.GOOGLE_CALENDAR
+        else:
             self.fields['harbor_auth'].choices = list(filter(
                 lambda c: c[0] != User.HarborAuth.GOOGLE_CALENDAR, User.HarborAuth.choices))
+            remove_grace_fields = True
+
+        if remove_grace_fields:
+            del self.fields['google_calender_entry_grace_minutes']
+            del self.fields['google_calender_exit_grace_minutes']
+
+        if not config.AUTODJ_ENABLED or not self.instance.has_perm('autodj.change_audioasset'):
+            del self.fields['authorized_keys']
 
     class Meta:
         model = User
-        fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth', 'authorized_keys')
+        fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth',
+                  'google_calender_entry_grace_minutes', 'google_calender_exit_grace_minutes', 'authorized_keys')
 
 
 class ZoomForm(forms.Form):
     TTL_RE = re.compile(r'^(?:(\d+):)?(\d+)$')
-    MAX_SHOW_LENGTH_HOURS = 4
+    MINUTE_STEP_AMOUNT = 15
 
     show_name = forms.CharField(label='Show Name', required=False,
                                 help_text="The name of your show for the stream's metadata. Can be left blank.")
-    ttl = forms.CharField(label='Show Length', help_text=mark_safe(
-        # Use dropdown with choices. Make util/template filter to convert seconds to a pretty duration
-        # and use that in zoom.html
-        'In <code>HH:MM</code> or<code>HH</code> format, ie <code>2:00</code> or <code>2</code> for two hours.'),
-        widget=forms.TextInput(attrs={'placeholder': '2:00'}))
-    zoom_room = forms.URLField(label='Room Link', help_text='Pasted from Zoom. See broadcasting instructions above.',
+    zoom_room = forms.URLField(label='Room Link', help_text='Pasted from Zoom. Consult Help Docs for more info.',
                                widget=forms.TextInput(attrs={
                                    'placeholder': 'https://zoom.us/j/91234567890?pwd=XYZ0XYZ0XYZ0XYZ0XYZ0XYZ0XYZ'}))
 
-    def __init__(self, user, zoom_is_running, room_env, *args, **kwargs):
-        self.user = user
+    @staticmethod
+    def pretty_seconds(seconds):
+        minutes = int(seconds / 60)
+        s = ''
+        if minutes > 60:
+            hours = minutes // 60
+            minutes = minutes % 60
+            s += f'{hours} hour{"s" if hours != 1 else ""}, '
+        return f'{s}{minutes} minute{"s" if minutes != 1 else ""}'
+
+    def __init__(self, user, now, zoom_is_running, currently_authorized, authorization_time_bound, *args, **kwargs):
         self.zoom_is_running = zoom_is_running
-        self.room_env = room_env
+        self.currently_authorized = currently_authorized
+        self.values = {}
         super().__init__(*args, **kwargs)
+
+        choices = []
+        initial = 'default'
+        self.values['max'] = config.ZOOM_MAX_SHOW_LENTH_MINUTES * 60
+
+        if authorization_time_bound:
+            grace = authorization_time_bound
+            self.values['grace'] = self.values['max'] = math.ceil((grace - now).total_seconds())
+
+            default = authorization_time_bound - datetime.timedelta(minutes=user.google_calender_exit_grace_minutes)
+            if default > now:
+                choices.append(
+                    ('default', f'Until {date_format(timezone.localtime(default), "SHORT_DATETIME_FORMAT")} (current '
+                                'scheduled show)'))
+                self.values['default'] = math.ceil((default - now).total_seconds())
+            else:
+                initial = 'grace'
+
+            choices.append(('grace', f'Until {date_format(timezone.localtime(grace), "SHORT_DATETIME_FORMAT")} '
+                                     f'(current scheduled show, including {user.google_calender_exit_grace_minutes} '
+                                     'minute grace period)'))
+        else:
+            self.values['default'] = 60 * min(config.ZOOM_MAX_SHOW_LENTH_MINUTES,
+                                              config.ZOOM_DEFAULT_SHOW_LENTH_MINUTES)
+            choices.append(('default', f'{self.pretty_seconds(self.values["default"])} (default show length)'))
+
+        for seconds in range(self.MINUTE_STEP_AMOUNT * 60, self.values['max'], self.MINUTE_STEP_AMOUNT * 60):
+            choices.append((seconds, self.pretty_seconds(seconds)))
+        choices.append(('max', f'{self.pretty_seconds(self.values["max"])} (maximum show length)'))
+
+        self.fields['ttl'] = forms.ChoiceField(label='Show Duration', choices=choices, initial=initial, help_text=(
+            "If you're not totally sure, go for little longer than expected. You can always can come here and stop the "
+            f'show early with this form. Otherwise, your show might end too soon. (Timezone {user.timezone})'))
+        self.order_fields(('show_name', 'ttl', 'zoom_room'))
 
     def clean_ttl(self):
         ttl = self.cleaned_data['ttl']
-        match = self.TTL_RE.search(ttl)
-        if match:
-            hours, minutes = match.group(1), match.group(2)
-            if not hours:
-                hours, minutes = minutes, '0'
-            hours, minutes = int(hours), int(minutes)
-            if minutes >= 60:
-                raise forms.ValidationError(f'Invalid number of minutes ({minutes}). Must be between 00 and 59.')
-
-            show_length = datetime.timedelta(hours=hours, minutes=minutes)
-            if show_length > datetime.timedelta(hours=self.MAX_SHOW_LENGTH_HOURS):
-                raise forms.ValidationError(f'Show can be at maximum {self.MAX_SHOW_LENGTH_HOURS} hours.')
-
-            return int(show_length.total_seconds())
-        else:
-            raise forms.ValidationError('Invalid show length.')
+        return int(ttl) if ttl.isdigit() else self.values[ttl]
 
     def clean_zoom_room(self):
         zoom_room = self.cleaned_data['zoom_room']
@@ -213,6 +253,9 @@ class ZoomForm(forms.Form):
         return (meeting_id, meeting_pwd)
 
     def clean(self):
+        cleaned_data = super().clean()
+        if not self.currently_authorized:
+            raise forms.ValidationError("You are not currently authorized. Can't start a new show.")
         if self.zoom_is_running:
             raise forms.ValidationError("Zoom is currently running. Can't start a new show.")
-        return self.cleaned_data
+        return cleaned_data
