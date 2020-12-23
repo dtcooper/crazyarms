@@ -1,28 +1,30 @@
 {% extends 'webui/base.html' %}
 
 {% block content %}
-{% if user.harbor_auth == user.HarborAuth.NEVER %}
+{% if user.harbor_auth_actual == user.HarborAuth.NEVER %}
   <p class="red bold">
     You are currently <u>NOT</u> authorized on the harbor. Please contact the station administration.
   </p>
 {% else %}
-  {% if user.harbor_auth == user.HarborAuth.ALWAYS %}
-    <p><em>Note: you are <strong><u>ALWAYS</u></strong> authorized to broadcast on the harbor.</em></p>
-  {% endif %}
-  {% if user.harbor_auth == user.HarborAuth.GOOGLE_CALENDAR %}
-    {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
-      Your login grace period:
-      <ul>
-        {% if user.google_calender_entry_grace_minutes > 0 %}
-          <li>You can start broadcasting up to
-            <strong><u>{{ user.google_calender_entry_grace_minutes }} minutes early</u></strong>.</li>
-        {% endif %}
-        {% if user.google_calender_exit_grace_minutes > 0 %}
-          <li>You can <em>keep</em> broadcasting up to
-              <strong><u>{{ user.google_calender_exit_grace_minutes }} minutes <em>after</em> your scheduled time</u></strong>.</li>
-        {% endif %}
-      </ul>
-    {% endif %}
+  <p>
+    {% if user.harbor_auth_actual == user.HarborAuth.ALWAYS %}
+      <em>Note: you are <strong><u>ALWAYS</u></strong> authorized to broadcast on the harbor.</em><
+    {% elif user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
+        You are only authorized to broadcast during your scheduled times.
+      {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
+        Your login grace period:
+        <ul>
+          {% if user.google_calender_entry_grace_minutes > 0 %}
+            <li>You can start broadcasting up to
+              <strong><u>{{ user.google_calender_entry_grace_minutes }} minutes early</u></strong>.</li>
+          {% endif %}
+          {% if user.google_calender_exit_grace_minutes > 0 %}
+            <li>You can <em>keep</em> broadcasting up to
+                <strong><u>{{ user.google_calender_exit_grace_minutes }} minutes <em>after</em> your scheduled time</u></strong>.</li>
+          {% endif %}
+        </ul>
+      {% endif %}
+  </p>
   {% endif %}
   {% if user.upcoming_show_times %}
     <table>

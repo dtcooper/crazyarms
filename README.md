@@ -73,6 +73,9 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
     - [ ] Do we really need a postfix container? Can't we just configure Django to send email directly?
     - [ ] Create user flow that sends user an email (and possibly they fill out their details)
 - [x] rtmp streaming using nginx-rtmp
+- [ ] Move liquidsoap harbor source editing into webui, but only link it from admin.
+    Remove `@admin.site.register_view()`, associated code, and simplify admin links.
+    Rename _"Miscellaneous Configuration"_ to _"Additional Modules"._
 
 ..._and more!_
 

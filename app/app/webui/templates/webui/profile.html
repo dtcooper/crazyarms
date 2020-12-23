@@ -5,7 +5,26 @@
 {{ block.super }}
 {% endblock %}
 
-{% block extra_table %}
+{% block form_table %}
+{% if user.is_superuser or groups %}
+  <tr>
+    <th>Permissions:</th>
+    <td>
+      {% if user.is_superuser %}
+        <strong class="green">All permissions (you're an administrator)</strong>
+      {% else %}
+        <ul>
+          {% for group in groups %}
+            <li>{{ group }}{% if forloop.last %}.{% else %};{% if forloop.revcounter == 2 %} and {% endif %}{% endif %}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </td>
+  </tr>
+{% endif %}
+
+{{ form.as_table }}
+
 {% if settings.RTMP_ENABLED %}
   <tr>
     <th>RTMP Stream Key:</th>

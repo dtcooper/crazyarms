@@ -61,6 +61,17 @@ def generate_random_string(length):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
 
 
+def filter_inactive_group_queryset(queryset):
+    for setting, perm_codename in (
+        (settings.ZOOM_ENABLED, 'view_websockify'),
+        (settings.HARBOR_TELNET_WEB_ENABLED, 'view_telnet'),
+        (config.AUTODJ_ENABLED, 'change_audioasset'),
+    ):
+        if not setting:
+            queryset = queryset.exclude(permissions__codename=perm_codename)
+    return queryset
+
+
 class User(DirtyFieldsMixin, AbstractUser):
     STREAM_KEY_LENGTH = 80
 
@@ -102,9 +113,15 @@ class User(DirtyFieldsMixin, AbstractUser):
             self.stream_key = generate_random_string(self.STREAM_KEY_LENGTH)
         super().save(*args, **kwargs)
 
-    def get_full_name(self):
-        s = ' '.join(filter(None, (self.first_name, self.last_name))).strip()
-        return s or self.username
+    def get_full_name(self, short=False):
+        full_name = ' '.join(filter(None, (self.first_name, self.last_name))).strip()
+        if full_name:
+            if short:
+                return full_name
+            else:
+                return f'{self.username} ({full_name})'
+        else:
+            return self.username
 
     def harbor_auth_actual(self):
         if self.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR and not config.GOOGLE_CALENDAR_ENABLED:

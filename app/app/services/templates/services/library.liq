@@ -1,7 +1,7 @@
 {% load services %}
 
 # Things common to harbor.liq and upstream.liq
-TABLE_NAME = {{ table_name|liqval }}
+PLAYOUT_LOG_ENTRY_TABLE_NAME = {{ playout_log_entry_table_name|liqval }}
 
 {% for var, value in event_types %}
     EVENT_{{ var }} = {{ value|liqval }}
@@ -31,7 +31,7 @@ def log_event(~extras=[], ~type=EVENT_GENERAL, ~async=true, description)
             # Quote values (wrap in single quotes and double all single quotes in value)
             values = list.map(fun(v) -> "'" ^ string.replace(pattern="'", fun(_) -> "''", snd(v)) ^ "'", values)
             values = string.concat(separator=', ', values)
-            sql = 'INSERT INTO #{TABLE_NAME} (created, #{columns}) VALUES (NOW(), #{values});'
+            sql = 'INSERT INTO #{PLAYOUT_LOG_ENTRY_TABLE_NAME} (created, #{columns}) VALUES (NOW(), #{values});'
 
             cmd = 'PGPASSWORD=postgres psql -U postgres -h db -c #{safe_quote(sql)}'
             if not test_process(cmd) then

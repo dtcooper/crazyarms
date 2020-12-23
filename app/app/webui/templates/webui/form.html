@@ -9,8 +9,9 @@
   <form method="post">
     {% csrf_token %}
     <table class="first-td-right form-table">
-      {{ form.as_table }}
-      {% block extra_table %}{% endblock %}
+      {% block form_table %}
+        {{ form.as_table }}
+      {% endblock %}
     </table>
     <p>
       <button class="bg-green" type="submit">{{ submit_text|default:'Submit' }}</button>

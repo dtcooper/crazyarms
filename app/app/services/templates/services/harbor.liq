@@ -10,7 +10,7 @@ set('server.timeout', -1.)
 set('scheduler.fast_queues', 2)
 set('scheduler.generic_queues', 4)
 
-API_HEADERS = [('X-CARB-Secret-Key', {{ settings.SECRET_KEY|liqval:False }})]
+API_HEADERS = [('X-CARB-Secret-Key', getenv('SECRET_KEY'))]
 API_PREFIX = 'http://app:8000/api/'
 BUFFER = 5.
 FAILSAFE_SOURCE_NAME = 'Failsafe Audio'

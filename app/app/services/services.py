@@ -98,7 +98,7 @@ class HarborService(ServiceBase):
         from .models import PlayoutLogEntry
 
         self.render_conf_file('library.liq', context={
-            'table_name': PlayoutLogEntry._meta.db_table,
+            'playout_log_entry_table_name': PlayoutLogEntry._meta.db_table,
             'event_types': zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values)})
         self.render_conf_file('harbor.liq', context=cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT))
         kwargs = {'environment': 'HOME="/tmp/pulse"', 'user': 'liquidsoap'}
@@ -140,7 +140,7 @@ class UpstreamService(ServiceBase):
 
         if UpstreamServer.objects.exists():
             self.render_conf_file('library.liq', context={
-                'table_name': PlayoutLogEntry._meta.db_table,
+                'playout_log_entry_table_name': PlayoutLogEntry._meta.db_table,
                 'event_types': zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values)})
 
         for upstream in UpstreamServer.objects.all():

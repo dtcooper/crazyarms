@@ -28,7 +28,7 @@ from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
 from carb import constants
-from common.models import User
+from common.models import filter_inactive_group_queryset, User
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
@@ -240,6 +240,12 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_url = reverse_lazy('profile')
     template_name = 'webui/profile.html'
     extra_context = {'title': 'Edit Your User Profile', 'submit_text': 'Update User Profile'}
+
+    def get_context_data(self, *args, **kwargs):
+        groups = None
+        if not self.request.user.is_superuser:
+            groups = sorted(filter_inactive_group_queryset(self.request.user.groups.values_list('name', flat=True)))
+        return {**super().get_context_data(*args, **kwargs), 'groups': groups}
 
     def get_object(self, **kwargs):
         return self.request.user

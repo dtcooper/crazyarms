@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Admin (with CSS variables!)
+    'variable_admin',
     'carb.apps.CARBAdminConfig',
 
     # Third-party
@@ -212,15 +215,18 @@ CONSTANCE_ADDITIONAL_FIELDS = {
         'choices': (('disabled', 'Disabled (nobody)'), ('user', 'Users'),
                     ('perm', 'Users with "Program the AutoDJ" permissions'), ('superuser', 'Superusers')),
     }],
-    'file': ['django.forms.FileField', {'widget': 'common.widgets.AlwaysClearableFileInput', 'required': False}],
+    'clearable_file': ['django.forms.FileField', {'widget': 'common.widgets.AlwaysClearableFileInput',
+                                                  'required': False}],
     'email': ['django.forms.EmailField', {}],
     'char': ['django.forms.CharField', {'required': False}],
+    'required_char': ['django.forms.CharField', {'required': True}],
     'positive_int': ['django.forms.IntegerField', {'min_value': 0}],
+    'nonzero_positive_int': ['django.forms.IntegerField', {'min_value': 1}],
     'positive_float': ['django.forms.FloatField', {'min_value': 0.0}],
 }
 
 CONSTANCE_CONFIG = OrderedDict((
-    ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.', 'char')),
+    ('STATION_NAME', ('Crazy Arms Radio Station', 'The name of your radio station.', 'required_char')),
     ('PLAYOUT_LOG_PURGE_DAYS', (14, "The number of days to keep playout log entries after which they're purged. "
                                 'Set to 0 to keep playout log entries forever.', 'positive_int')),
     ('HARBOR_COMPRESSION_NORMALIZATION', (True, 'Enable compression and normalization on harbor stream.')),
@@ -228,18 +234,18 @@ CONSTANCE_CONFIG = OrderedDict((
                                    'Set to 0 for no fadeout.', 'positive_float')),
     ('HARBOR_TRANSITION_WITH_SWOOSH', (False, 'Transition between harbor sources with a ~1 second swoosh effect.')),
     ('HARBOR_SWOOSH_AUDIO_FILE', (False, 'Audio file for the swoosh (if enabled). Sound be short, ie under 3-4 '
-                                  'seconds.', 'file')),
+                                  'seconds.', 'clearable_file')),
     ('HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE', (15, 'The maximum number of seconds of silence on a live source '
                                                          '(eg. Zoom or live DJs) until it will be considered inactive, '
                                                          'ie until we would treat it as if it were offline.',
-                                                     'positive_int')),
+                                                     'nonzero_positive_int')),
     ('HARBOR_FAILSAFE_AUDIO_FILE', (False, "Failsafe audio file that the harbor should play if there's nothing else to "
-                                    'stream.', 'file')),
+                                    'stream.', 'clearable_file')),
     ('UPSTREAM_FAILSAFE_AUDIO_FILE', (False, 'Failsafe audio file that should be broadcast to upstream servers if we '
-                                      "can't connect to the harbor, ie the harbor failed to start.", 'file')),
+                                      "can't connect to the harbor, ie the harbor failed to start.", 'clearable_file')),
     ('AUTODJ_ENABLED', (True, 'Whether or not to run an AutoDJ on the harbor.')),
     ('AUTODJ_REQUESTS', ('disabled', 'AutoDJ requests enabled for the following users.', 'autodj_requests')),
-    ('AUTODJ_REQUESTS_NUM', (5, 'The maximum number of pending AutoDJ requests (if enabled)', 'positive_int')),
+    ('AUTODJ_REQUESTS_NUM', (5, 'The maximum number of pending AutoDJ requests (if enabled)', 'nonzero_positive_int')),
     ('AUTODJ_STOPSETS_ENABLED', (False, 'Whether or not the AutoDJ plays stop sets (for ADs, PSAs, Station IDs, etc)')),
     ('AUTODJ_STOPSETS_ONCE_PER_MINUTES', (20, mark_safe(
         'How often a stop set should <em>approximately</em> be played (in minutes)'), 'positive_int')),
@@ -264,19 +270,6 @@ CONSTANCE_CONFIG = OrderedDict((
                       '/authentication/getting-started" target="_blank">click here</a>.'))),
 ))
 
-if ICECAST_ENABLED:
-    CONSTANCE_CONFIG.update(OrderedDict((
-        ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server.', 'char')),
-        ('ICECAST_ADMIN_EMAIL', (f'admin@{DOMAIN_NAME}', 'The admin email setting for the Icecast server.', 'email')),
-        ('ICECAST_ADMIN_PASSWORD', ('', 'Admin password for the Icecast server.', 'char')),
-        ('ICECAST_SOURCE_PASSWORD', ('', 'Source password for the Icecast server.', 'char')),
-        ('ICECAST_RELAY_PASSWORD', ('', 'Relay password for the Icecast server.', 'char')),
-        ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited).',
-                                 'positive_int')),
-        ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited).',
-                                 'positive_int')),
-    )))
-
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
     ('General Options', ('STATION_NAME', 'PLAYOUT_LOG_PURGE_DAYS')),
     ('AutoDJ Configuration', ('AUTODJ_ENABLED', 'AUTODJ_REQUESTS', 'AUTODJ_REQUESTS_NUM',
@@ -292,7 +285,28 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict((
                                               'GOOGLE_CALENDAR_CREDENTIALS_JSON')),
 ))
 
+if ZOOM_ENABLED:
+    CONSTANCE_CONFIG.update(OrderedDict((
+        ('ZOOM_MAX_SHOW_LENTH_MINUTES', (120, mark_safe(
+            'Maximum show length (in minutes) of an <em>unscheduled</em> Zoom broadcast. (Note shows scheduled through '
+            'Google Calendar can to the length of the calendar event.)'), 'nonzero_positive_int')),
+    )))
+    CONSTANCE_CONFIG_FIELDSETS.update(OrderedDict((
+        ('Zoom Settings', ('ZOOM_MAX_SHOW_LENTH_MINUTES',)),
+    )))
+
 if ICECAST_ENABLED:
+    CONSTANCE_CONFIG.update(OrderedDict((
+        ('ICECAST_LOCATION', ('The World', 'Location setting for the Icecast server.', 'char')),
+        ('ICECAST_ADMIN_EMAIL', (f'admin@{DOMAIN_NAME}', 'The admin email setting for the Icecast server.', 'email')),
+        ('ICECAST_ADMIN_PASSWORD', ('default', 'Admin password for the Icecast server.', 'required_char')),
+        ('ICECAST_SOURCE_PASSWORD', ('default', 'Source password for the Icecast server.', 'required_char')),
+        ('ICECAST_RELAY_PASSWORD', ('default', 'Relay password for the Icecast server.', 'required_char')),
+        ('ICECAST_MAX_CLIENTS', (0, 'Max connected clients allowed the Iceacst server (0 for unlimited).',
+                                 'positive_int')),
+        ('ICECAST_MAX_SOURCES', (0, 'Max sources allowed to connect to the Icecast server (0 for unlimited).',
+                                 'positive_int')),
+    )))
     CONSTANCE_CONFIG_FIELDSETS.update(OrderedDict((
         ('Icecast Settings', ('ICECAST_LOCATION', 'ICECAST_ADMIN_EMAIL', 'ICECAST_ADMIN_PASSWORD',
                               'ICECAST_SOURCE_PASSWORD', 'ICECAST_RELAY_PASSWORD', 'ICECAST_MAX_CLIENTS',

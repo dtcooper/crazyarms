@@ -91,6 +91,7 @@ services:
       - ./media:/media_root:ro
     environment:
       CONTAINER_NAME: harbor
+      SECRET_KEY: ${SECRET_KEY}
       TZ: ${TIMEZONE:-US/Pacific}
 
   upstream:

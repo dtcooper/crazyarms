@@ -7,13 +7,12 @@ from django.contrib import admin, messages
 from django.contrib.admin.templatetags.admin_list import _boolean_icon
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.cache import cache
-from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView
 
 from constance import config
 
@@ -22,7 +21,7 @@ from carb import constants
 from .forms import HarborCustomConfigForm
 from .liquidsoap import upstream
 from .models import PlayoutLogEntry, UpstreamServer
-from .services import init_services, HarborService, SERVICES
+from .services import init_services, HarborService
 
 
 @admin.site.register_view(route='harbor-custom-config/', title='Liquidsoap harbor source code')
@@ -64,28 +63,6 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
         })
         context['form_with_code'] = render_to_string('services/harbor.liq', context=harbor_liq_context)
         return context
-
-
-@admin.site.register_view(route='service-status/', title='Service status')
-class ServiceStatusAdminView(admin.site.AdminBaseContextMixin, TemplateView):
-    template_name = 'admin/services/service_status.html'
-
-    def post(self, request):
-        if request.user.is_superuser:
-            service, specific_service = request.POST.get('restart').split()
-            init_services(service, subservices=specific_service)
-        return redirect('admin:service_status')
-
-    def get_context_data(self, **kwargs):
-        services = []
-
-        for service_name, service_cls in SERVICES.items():
-            service = service_cls()
-            if service.supervisor_enabled:
-                status = service.supervisorctl('status', 'all')
-                services.append([service_name] + list(status.split(None, 1)))
-
-        return {**super().get_context_data(**kwargs), 'services': services}
 
 
 class UpstreamServerAdmin(admin.ModelAdmin):

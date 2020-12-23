@@ -2,10 +2,15 @@
 
 {% load static %}
 
+{% block welcome-msg %}
+  Welcome,
+  <strong>{{ user.get_full_name }}</strong>.
+{% endblock %}
+
 {% block userlinks %}
-  <a href="{% url 'status' %}">Back to Status Page</a> /
-  <a href="https://crazyarms.xyz" target="_blank">Help Docs</a> /
-  {{ block.super }}
+<a href="{% url 'status' %}">Back to Status Page</a> /
+<a href="https://crazyarms.xyz" target="_blank">Help Docs</a> /
+{{ block.super }}
 {% endblock %}
 
 {% block extrastyle %}
@@ -14,6 +19,21 @@
 <style>
   .help {
     font-size: 14px !important;
+  }
+
+  /* Dark mode to come, but this is a fine stopget until then. */
+  :root {
+    --primary: #222;
+    --header-bg: #000;
+    --header-branding-color: #fff;
+  }
+
+  #user-tools a:focus, #user-tools a:hover {
+    color: var(--breadcrumbs-fg);
+  }
+
+  #branding h1, #branding h1 a:link, #branding h1 a:visited {
+    color: #fff;
   }
 </style>
 {% endblock %}

@@ -38,7 +38,7 @@ def create_groups(sender, **kwargs):
     # Consult common/admin.py:UserAdmin.formfield_for_manytomany to remove these from displayed groups
     groups_created = [
         create_perm_group_for_models(PlayoutLogEntry, 'Advanced view of the playout log in admin site'),
-        create_perm_group_for_models('autodj', 'Program the AutoDJ (if enabled)'),
+        create_perm_group_for_models('autodj', 'Program the AutoDJ'),
         create_perm_group_for_models('broadcast', 'Program prerecorded broadcasts'),
         create_user_perm_group('view_telnet', 'Access Liquidsoap harbor over telnet (experimental)'),
         create_user_perm_group('view_websockify', 'Can configure and administrate Zoom over VNC'),

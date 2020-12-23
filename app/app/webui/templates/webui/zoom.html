@@ -35,12 +35,31 @@
       </form>
     {% endif %}
   {% else %}
-    {# TODO: say whether current user can broadcast based on harbor_auth #}
     <span class="green">Zoom is not currently running</span>.<br>
     {% if currently_authorized %}
       Start a show by filling out the form below.
     {% else %}
       <span class="error">You are currently not authorized to broadcast.</span>
+      {% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
+        <br>
+        {% if user.upcoming_show_times %}
+          Your next scheduled show: <strong class="green">{{ user.upcoming_show_times|first|first }}
+            &mdash; {{ user.upcoming_show_times|first|last }} ({{ user.timezone }})</strong>
+          {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
+            <br>
+              {% if user.google_calender_entry_grace_minutes > 0 %}
+                You can start your show up to {{ user.google_calender_entry_grace_minutes }} minutes early
+              {% endif %}
+              {% if user.google_calender_exit_grace_minutes > 0 %}
+                {% if user.google_calender_entry_grace_minutes > 0 %}and{% else %}You can{% endif %}
+                keep broadcasting up to {{ user.google_calender_exit_grace_minutes }} minutes afterwards.
+              {% endif %}
+          {% endif %}
+          <br>Come back to this page then.
+        {% else %}
+          <span class="error">You have no upcoming scheduled shows.</span>
+        {% endif %}
+      {% endif %}
     {% endif %}
   {% endif %}
 </p>

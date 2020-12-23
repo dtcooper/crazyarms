@@ -9,7 +9,7 @@ from constance import config
 from constance import admin as constance_admin
 
 from .forms import ConstanceForm
-from .models import User
+from .models import filter_inactive_group_queryset, User
 
 
 def swap_title_fields(method):
@@ -150,10 +150,7 @@ class UserAdmin(auth_admin.UserAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         queryset = Group.objects.order_by('name')
         if db_field.name == 'groups':
-            if not settings.ZOOM_ENABLED:
-                queryset = queryset.exclude(permissions__codename='view_websockify')
-            if not settings.HARBOR_TELNET_WEB_ENABLED:
-                queryset = queryset.exclude(permissions__codename='view_telnet')
+            queryset = filter_inactive_group_queryset(queryset)
         kwargs['queryset'] = queryset
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
