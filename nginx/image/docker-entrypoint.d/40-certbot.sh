@@ -18,7 +18,7 @@ if [ "$HTTPS_ENABLED" -a "$HTTPS_ENABLED" != '0' ]; then
 
     CERTBOT_LOG=/var/log/certbot_daemon.log
     echo >&3 "$ME: running certbot daemon (https), log in $CERTBOT_LOG"
-    nohup certbot_daemon.sh >"$CERTBOT_LOG" 2>&1 &
+    nohup certbot-daemon.sh >"$CERTBOT_LOG" 2>&1 &
 else
     echo >&3 "$ME: https disabled by configuration"
 fi

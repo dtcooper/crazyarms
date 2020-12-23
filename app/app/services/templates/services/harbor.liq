@@ -23,7 +23,7 @@ MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE
     REQUEST_RETRY_DELAY = 5.
     REQUEST_TIMEOUT = 30.
 {% endif %}
-SSE_MESSAGE_URL = 'http://sse:3000/message'
+SSE_MESSAGE_URL = 'http://nginx:3000/message'
 STATION_NAME = {{ config.STATION_NAME|liqval }}
 {% if config.HARBOR_TRANSITION_SECONDS %}
     TRANSITION_SECONDS = {{ config.HARBOR_TRANSITION_SECONDS|liqval }}
@@ -373,8 +373,8 @@ end)
 def post_to_sse(json)
     log('hitting SSE service with status JSON')
     let ((_, status_code, _), _, _) = http.post(SSE_MESSAGE_URL, data=json)
-    if status_code != 204 then
-        log.severe('ERROR: failed to update sse service, expected status code 204 (got #{status_code})')
+    if not (status_code == 201 or status_code == 202) then
+        log.severe('ERROR: failed to update sse service, expected status code 201/202 (got #{status_code})')
     end
 end
 

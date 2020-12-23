@@ -12,7 +12,6 @@ services:
     depends_on:
       - app
       - logs
-      - sse
     volumes:
       - static_root:/static_root:ro
       - ./media:/media_root:ro
@@ -56,15 +55,6 @@ services:
       - redis
     environment:
       RUN_HUEY: 1
-      TZ: ${TIMEZONE:-US/Pacific}
-
-  sse:
-    container_name: sse
-    image: dtcooper/carb-sse:${CARB_VERSION:-latest}
-    restart: always
-    build:
-      context: ./sse
-    environment:
       TZ: ${TIMEZONE:-US/Pacific}
 
   db:

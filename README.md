@@ -63,9 +63,7 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
 - [ ] Tasks to purge failed broadcasts/assets + unstuck processing ones, clean sftpgo files
 - [x] Re-try broadcasts for which underlying assets which aren't `READY` every 2 seconds.
     Fix asset's inline broadcasts.
-- [ ] Remove `sse` service and use the nginx package in Ubuntu 20.04 container,
-    which has the [nchan](https://nchan.io/) module in the
-    [extras package](https://packages.ubuntu.com/bionic/nginx-extras).
+- [x] Remove `sse` service and use nginx module [nchan](https://nchan.io/)
 - [x] Add sftp service using sftpgo
     - [x] Deal with WinSCP's `.filepart` situation
     - [x] Add ability to use SSH authorized keys.

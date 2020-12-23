@@ -22,10 +22,6 @@ upstream logs {
     server logs:8080;
 }
 
-upstream sse {
-    server sse:3000;
-}
-
 {% if ZOOM_ENABLED|int %}
     upstream zoom {
         server zoom:6080;
@@ -78,13 +74,14 @@ server {
         proxy_cache off;
     }
 
-    # Use = sign here to ONLY allow base URL to be accessed by X-Accel-Redirect,
-    # which means a logged in user can't send a message.
     location = /protected/sse {
         internal;
-        proxy_pass http://sse/;
-        proxy_buffering off;
-        proxy_cache off;
+
+        nchan_subscriber eventsource;
+        nchan_channel_id sse;
+        nchan_eventsource_ping_interval 15;
+        nchan_eventsource_ping_event "";
+        nchan_eventsource_ping_comment " ping";
     }
 
     {% if HARBOR_TELNET_WEB_ENABLED|int %}
@@ -146,5 +143,29 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_redirect off;
         proxy_pass http://app;
+    }
+}
+
+# Not publicly exposed
+server {
+    listen 3000;
+
+    location = /sse {
+        nchan_subscriber eventsource;
+        nchan_channel_id sse;
+        nchan_eventsource_ping_interval 15;
+        nchan_eventsource_ping_event "";
+        nchan_eventsource_ping_comment " ping";
+    }
+
+    location = /message {
+        nchan_publisher http;
+        nchan_channel_id sse;
+        nchan_store_messages off;
+    }
+
+    location = /test {
+        root /usr/share/nginx/html;
+        try_files /test_sse.html =404;
     }
 }

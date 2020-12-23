@@ -1,0 +1,32 @@
+<html>
+<!--
+
+Not publicly viewable. To test, in docker-compose/overrides.yml add,
+
+services:
+  nginx:
+    ports:
+      - "127.0.0.1:3000:3000"
+
+And then in your browser go to http://localhost:3000/test
+-->
+<head>
+  <title>Crazy Arms Server-Sent Event Testing</title>
+</head>
+<body>
+  <h1>Crazy Arms Server-Sent Event Testing</h1>
+  <h2>Messages: <span id="received">0</span> received</h2>
+  <pre id="response"></pre>
+  <script>
+    var evtSource = new EventSource('/sse')
+    var received = 0
+    evtSource.onmessage = function(e) {
+        received += 1
+        var message = (new Date()) + ': ' + JSON.stringify(JSON.parse(e.data), null, 2) + "\n\n"
+        var elem = document.getElementById('response')
+        elem.innerText = message + elem.innerText
+        document.getElementById('received').innerText = received
+    }
+  </script>
+</body>
+</html>
