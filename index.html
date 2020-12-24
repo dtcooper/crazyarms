@@ -1,638 +1,364 @@
 
-<!doctype html>
-<html lang="en" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-      
-      
-      
-        <link rel="canonical" href="https://crazyarms.xyz/">
-      
-      <link rel="shortcut icon" href="img/favicon.svg">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.2">
-    
-    
-      
-        <title>Crazy Arms Radio Backend Documentation</title>
-      
-    
-    
-      <link rel="stylesheet" href="assets/stylesheets/main.73f7c429.min.css">
-      
-        
-        <link rel="stylesheet" href="assets/stylesheets/palette.39b8e14a.min.css">
-        
-          
-          
-          <meta name="theme-color" content="#000000">
-        
-      
-    
-    
-    
-      
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,400i,700%7C&display=fallback">
-        <style>body,input{font-family:"Inter",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"",SFMono-Regular,Consolas,Menlo,monospace}</style>
-      
-    
-    
-    
-    
-      
-    
-    
-  </head>
-  
-  
-    
-    
-    
-    
-    
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="amber">
-      
-  
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#crazy-arms-radio-backend" class="md-skip">
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="https://crazyarms.xyz/" rel="canonical"/>
+<link href="img/favicon.svg" rel="shortcut icon"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-6.2.2" name="generator"/>
+<title>Crazy Arms Radio Backend Documentation</title>
+<link href="assets/stylesheets/main.73f7c429.min.css" rel="stylesheet"/>
+<link href="assets/stylesheets/palette.39b8e14a.min.css" rel="stylesheet"/>
+<meta content="#e92063" name="theme-color"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Inter:300,400,400i,700%7C&amp;display=fallback" rel="stylesheet"/>
+<style>body,input{font-family:"Inter",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"",SFMono-Regular,Consolas,Menlo,monospace}</style>
+</head>
+<body data-md-color-accent="light-blue" data-md-color-primary="pink" data-md-color-scheme="slate" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#crazy-arms-radio-backend">
           Skip to content
         </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-      
-
+</div>
+<div data-md-component="announce">
+</div>
 <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="https://crazyarms.xyz" title="Crazy Arms Radio Backend Documentation" class="md-header-nav__button md-logo" aria-label="Crazy Arms Radio Backend Documentation">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
-
-    </a>
-    <label class="md-header-nav__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
-    </label>
-    <div class="md-header-nav__title" data-md-component="header-title">
-      <div class="md-header-nav__ellipsis">
-        <div class="md-header-nav__topic">
-          <span class="md-ellipsis">
+<nav aria-label="Header" class="md-header-nav md-grid">
+<a aria-label="Crazy Arms Radio Backend Documentation" class="md-header-nav__button md-logo" href="https://crazyarms.xyz" title="Crazy Arms Radio Backend Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+<label class="md-header-nav__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
+</label>
+<div class="md-header-nav__title" data-md-component="header-title">
+<div class="md-header-nav__ellipsis">
+<div class="md-header-nav__topic">
+<span class="md-ellipsis">
             Crazy Arms Radio Backend Documentation
           </span>
-        </div>
-        <div class="md-header-nav__topic">
-          <span class="md-ellipsis">
+</div>
+<div class="md-header-nav__topic">
+<span class="md-ellipsis">
             
               Home
             
           </span>
-        </div>
-      </div>
-    </div>
-    
-      <label class="md-header-nav__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-      </label>
-      
+</div>
+</div>
+</div>
+<label class="md-header-nav__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+</label>
 <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
-      <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" data-md-state="active" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</label>
+<button aria-label="Clear" class="md-search__icon md-icon" data-md-component="search-reset" tabindex="-1" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
+</button>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+<ol class="md-search-result__list"></ol>
 </div>
-    
-    
-      <div class="md-header-nav__source">
-        
-<a href="https://github.com/dtcooper/carb" title="Go to repository" class="md-source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
-  </div>
-  <div class="md-source__repository">
+</div>
+</div>
+</div>
+</div>
+<div class="md-header-nav__source">
+<a class="md-source" href="https://github.com/dtcooper/carb" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 496 512" xmlns="http://www.w3.org/2000/svg"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg>
+</div>
+<div class="md-source__repository">
     dtcooper/carb
   </div>
 </a>
-      </div>
-    
-  </nav>
+</div>
+</nav>
 </header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-          
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-tabs__inner md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
-    
-  
-
-
-  <li class="md-tabs__item">
-    <a href="." class="md-tabs__link md-tabs__link--active">
+<div class="md-container" data-md-component="container">
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-tabs__inner md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link md-tabs__link--active" href=".">
       Home
     </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  
-  
-  
-    
-
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="users-guide/dj/icecast/" class="md-tabs__link">
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="users-guide/autodj/">
         User's Guide
       </a>
-    </li>
-  
-
-  
-
-      
-        
-  
-  
-
-
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="admin-guide/autodj/" class="md-tabs__link">
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="admin-guide/autodj/">
         Admin's Guide
       </a>
-    </li>
-  
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="server-setup/" class="md-tabs__link">
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="server-setup/">
       Server Setup
     </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="glossary/" class="md-tabs__link">
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="glossary/">
       Glossary of Terms
     </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="about/license/" class="md-tabs__link">
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="about/license/">
         About
       </a>
-    </li>
-  
-
-      
-    </ul>
-  </div>
+</li>
+</ul>
+</div>
 </nav>
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-
-
-  
-
-
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href="https://crazyarms.xyz" title="Crazy Arms Radio Backend Documentation" class="md-nav__button md-logo" aria-label="Crazy Arms Radio Backend Documentation">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
-
-    </a>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Crazy Arms Radio Backend Documentation" class="md-nav__button md-logo" href="https://crazyarms.xyz" title="Crazy Arms Radio Backend Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
     Crazy Arms Radio Backend Documentation
   </label>
-  
-    <div class="md-nav__source">
-      
-<a href="https://github.com/dtcooper/carb" title="Go to repository" class="md-source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
-  </div>
-  <div class="md-source__repository">
+<div class="md-nav__source">
+<a class="md-source" href="https://github.com/dtcooper/carb" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 496 512" xmlns="http://www.w3.org/2000/svg"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg>
+</div>
+<div class="md-source__repository">
     dtcooper/carb
   </div>
 </a>
-    </div>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-      
-
-
-  
-
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
+</div>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
         Home
         <span class="md-nav__icon md-icon"></span>
-      </label>
-    
-    <a href="." class="md-nav__link md-nav__link--active">
+</label>
+<a class="md-nav__link md-nav__link--active" href=".">
       Home
     </a>
-    
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#audio-infrastructure-overview" class="md-nav__link">
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-infrastructure-overview">
     Audio Infrastructure Overview
   </a>
-  
-    <nav class="md-nav" aria-label="Audio Infrastructure Overview">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sources-harbor-and-upstreams-explained" class="md-nav__link">
+<nav aria-label="Audio Infrastructure Overview" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sources-harbor-and-upstreams-explained">
     Sources, Harbor, and Upstreams Explained
   </a>
-  
+<nav aria-label="Sources, Harbor, and Upstreams Explained" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#the-harbor">
+    The Harbor
+  </a>
 </li>
-        
-      </ul>
-    </nav>
-  
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sources">
+    Sources
+  </a>
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#features-at-a-glance" class="md-nav__link">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#upstream-servers">
+    Upstream Servers
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#harbor-flow-diagram">
+    Harbor Flow Diagram
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sources-details">
+    Sources Details
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#customization">
+    Customization
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#features-at-a-glance">
     Features At a Glance
   </a>
-  
-    <nav class="md-nav" aria-label="Features At a Glance">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#non-features" class="md-nav__link">
+<nav aria-label="Features At a Glance" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#non-features">
     Non-Features
   </a>
-  
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
+</ul>
 </nav>
-    
-  </li>
-
-    
-      
-      
-      
-
-
-
-  
-  <li class="md-nav__item md-nav__item--nested">
-    
-    
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
-    
-    <label class="md-nav__link" for="nav-2">
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" id="nav-2" type="checkbox"/>
+<label class="md-nav__link" for="nav-2">
       User's Guide
       <span class="md-nav__icon md-icon"></span>
-    </label>
-    <nav class="md-nav" aria-label="User's Guide" data-md-level="1">
-      <label class="md-nav__title" for="nav-2">
-        <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="User's Guide" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="nav-2">
+<span class="md-nav__icon md-icon"></span>
         User's Guide
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
-          
-          
-          
-
-
-
-  
-    
-  
-  <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-    
-    
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-1" type="checkbox" id="nav-2-1" >
-    
-    <label class="md-nav__link" for="nav-2-1">
-      Live DJing
-      <span class="md-nav__icon md-icon"></span>
-    </label>
-    <nav class="md-nav" aria-label="Live DJing" data-md-level="2">
-      <label class="md-nav__title" for="nav-2-1">
-        <span class="md-nav__icon md-icon"></span>
-        Live DJing
-      </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="users-guide/dj/icecast/" class="md-nav__link">
-      Icecast 2
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="users-guide/dj/zoom/" class="md-nav__link">
-      Zoom
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
-
-    
-      
-      
-      
-
-
-
-  
-  <li class="md-nav__item md-nav__item--nested">
-    
-    
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
-    
-    <label class="md-nav__link" for="nav-3">
-      Admin's Guide
-      <span class="md-nav__icon md-icon"></span>
-    </label>
-    <nav class="md-nav" aria-label="Admin's Guide" data-md-level="1">
-      <label class="md-nav__title" for="nav-3">
-        <span class="md-nav__icon md-icon"></span>
-        Admin's Guide
-      </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="admin-guide/autodj/" class="md-nav__link">
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="users-guide/autodj/">
       AutoDJ
     </a>
-  </li>
-
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="admin-guide/configuration/" class="md-nav__link">
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="users-guide/prerecorded-broadcasts/">
+      Prerecorded Broadcasts
+    </a>
+</li>
+<li class="md-nav__item md-nav__item--section md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-3" id="nav-2-3" type="checkbox"/>
+<label class="md-nav__link" for="nav-2-3">
+      Live DJing
+      <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Live DJing" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="nav-2-3">
+<span class="md-nav__icon md-icon"></span>
+        Live DJing
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="users-guide/dj/icecast/">
+      Icecast 2
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="users-guide/dj/zoom/">
+      Zoom
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="users-guide/dj/rtmp/">
+      RTMP
+    </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" id="nav-3" type="checkbox"/>
+<label class="md-nav__link" for="nav-3">
+      Admin's Guide
+      <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="Admin's Guide" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="nav-3">
+<span class="md-nav__icon md-icon"></span>
+        Admin's Guide
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="admin-guide/autodj/">
+      AutoDJ
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="admin-guide/configuration/">
       Configuration
     </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
-
-    
-      
-      
-      
-
-
-
-  <li class="md-nav__item">
-    <a href="server-setup/" class="md-nav__link">
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="server-setup/">
       Server Setup
     </a>
-  </li>
-
-    
-      
-      
-      
-
-
-
-  <li class="md-nav__item">
-    <a href="glossary/" class="md-nav__link">
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="glossary/">
       Glossary of Terms
     </a>
-  </li>
-
-    
-      
-      
-      
-
-
-
-  
-  <li class="md-nav__item md-nav__item--nested">
-    
-    
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" >
-    
-    <label class="md-nav__link" for="nav-6">
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" id="nav-6" type="checkbox"/>
+<label class="md-nav__link" for="nav-6">
       About
       <span class="md-nav__icon md-icon"></span>
-    </label>
-    <nav class="md-nav" aria-label="About" data-md-level="1">
-      <label class="md-nav__title" for="nav-6">
-        <span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-label="About" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="nav-6">
+<span class="md-nav__icon md-icon"></span>
         About
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="about/license/" class="md-nav__link">
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="about/license/">
       License
     </a>
-  </li>
-
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="about/changelog/" class="md-nav__link">
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="about/changelog/">
       Changelog
     </a>
-  </li>
-
-        
-          
-          
-          
-
-
-
-  <li class="md-nav__item">
-    <a href="about/author-miscellany/" class="md-nav__link">
-      Author & Miscellany
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="about/author-miscellany/">
+      Author &amp; Miscellany
     </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
-
-    
-  </ul>
+</li>
+</ul>
 </nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-          
-          <div class="md-content">
-            <article class="md-content__inner md-typeset">
-              
-                
-                
-                <h1 id="crazy-arms-radio-backend">Crazy Arms Radio Backend<a class="headerlink" href="#crazy-arms-radio-backend" title="Permanent link">&para;</a></h1>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content">
+<article class="md-content__inner md-typeset">
+<h1 id="crazy-arms-radio-backend">Crazy Arms Radio Backend<a class="headerlink" href="#crazy-arms-radio-backend" title="Permanent link">¶</a></h1>
 <div class="admonition danger">
 <p class="admonition-title">Crazy Arms is under active development</p>
 <p>Crazy Arms is currently under active development, however you can preview
@@ -646,28 +372,63 @@ online radio stations with varying types of scheduling and finding no existing
 product fit some common needs out of the box.</p>
 <p>If you're an technical user or a systems administrator wanting to install Crazy
 Arms, head over to the <a href="server-setup/#installation">installation instructions</a>.</p>
-<h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">&para;</a></h2>
-<h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">&para;</a></h3>
-<p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> This is a
-customizable script, implemented in <a href="https://www.liquidsoap.info/">Liquidsoap</a>
-that takes care of choosing what to broadcast and when. Think of the Harbor as a
-robot taking several sources and deciding which one is best to broadcast from
-based on some simple rules.</p>
-<p>The harbor has several input <strong>sources</strong>. These are things like pre-recorded
-broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
-source with the highest priority <em>that is active</em> will be what the harbor chooses
-to play.</p>
-<div class="admonition note">
-<p class="admonition-title">A Note About Inactive Sources</p>
-<p>When a source goes from inactive to active, the harbor will smootly fade to it.</p>
-<p>For the "Live Sources" listed below (Live DJ and Live Zoom Room), we provide
-<strong>silence detection.</strong> This means <strong>if a DJ is connected and broadcasting
-silence,</strong> that source will be considered inactive.**  In this case, the
-first active source with less priority will be broadcast.</p>
-<p>The theory behind this feature is part of the <em>Idiot-Tolerant&trade;</em> DJing
-philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f609.svg" title=":wink:" /></p>
+<h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">¶</a></h2>
+<h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">¶</a></h3>
+<h4 id="the-harbor">The Harbor<a class="headerlink" href="#the-harbor" title="Permanent link">¶</a></h4>
+<p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> It takes care
+of choosing what to broadcast based on some simple rules. In a sense, it's a
+stream picker. Think of the Harbor as a robot sitting at an imaginary console,
+deciding what play and when, using its <em>crazy arms</em> turning volume knobs, and
+pushin' and pullin' on faders at exactly the right moment. <em>(And just like that,
+we arrive at the reason for the name! Okay, it's not the
+<a href="https://www.youtube.com/watch?v=GurizZaR0Ms">only reason...</a>)</em></p>
+<h4 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">¶</a></h4>
+<p>The harbor has several input <strong>sources.</strong> A source is any audio input feeding
+into the harbor. In our robot at the console example above, think of sources as
+input channels on the console. Out of the box examples include the
+<a href="users-guide/autodj/">AutoDJ</a>,
+<a href="users-guide/prerecorded-broadcasts/">scheduled, pre-recorded broadcasts</a>,
+and live DJs streaming with <a href="users-guide/dj/icecast/">Icecast 2</a>,
+<a href="users-guide/dj/rtmp/">RTMP</a> (experimental), or a <a href="users-guide/dj/zoom/">Zoom room</a>.
+Each input is assigned a priority, and the source with the highest priority
+<em>that is active</em> will be what the robot chooses to play. We call this concept
+<strong>priority-based streaming.</strong></p>
+<div class="admonition info">
+<p class="admonition-title">Active and Inactive Sources, Silence Detection</p>
+<p>When a source goes from inactive to active, the Harbor will smoothly fade to
+it. What exactly constitutes <em>active</em> and <em>inactive</em> depends on the source?</p>
+<p>For example, in the case of the AutoDJ source, Crazy Arms will always have
+music to play so that source is always considered to be always active.
+<em>(You did upload music, right?)</em> The AutoDJ has low priority so it's sort of
+an always-on default.</p>
+<p>On the other hand, take a "live source" like a live DJ streaming using
+Icecast 2. When the DJ connects and starts streaming, that source is active.</p>
+<p>That's not the whole story. The harbor uses <strong>silence detection</strong> for live
+sources. This means if a live DJ is connected and streaming, but is
+broadcasting silence the source is considered inactive. Suppose their
+microphone isn't working or a fader on their mixer is accidentally pulled
+down. Or maybe they forgot to disconnect. We wouldn't want your station
+silent, would we? In short, if a live source is connected but silent, it will
+be considered inactive. The amount of silence before fading is configurable</p>
+<p>but defaults to 15 seconds.</p>
+<p>The theory behind this feature is part of the <em>Idiot-Tolerant™</em> DJing
+philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f609.svg" title=":wink:"/></p>
 </div>
-<div class="mermaid">flowchart LR
+<h4 id="upstream-servers">Upstream Servers<a class="headerlink" href="#upstream-servers" title="Permanent link">¶</a></h4>
+<p>The last thing you need to know about are we Crazy Arms called <strong>upstream servers.</strong>
+These are simply places where your station is being broadcast to, usually Icecast
+2 servers. That's where listeners connect to. They're the final output of the
+Harbor. Some radio automation suites call these <em>"encoders."</em> These might be
+remote partners like <a href="https://www.iheart.com/">iHeart</a> or <a href="http://siriusxm.com">SiriusXM</a>,
+a streaming provider like <a href="https://www.streamguys.com/">StreamGuys</a> or your own
+infrastructure. You can configure as many upstream servers as you like. For
+convenience and to kickstart your station, Crazy Arms bundles a local Icecast 2
+server it streams MP3 at <code>128kbps</code> to by default, using the popular
+<a href="https://github.com/karlheyes/icecast-kh">icecast-kh</a> branch.</p>
+<h4 id="harbor-flow-diagram">Harbor Flow Diagram<a class="headerlink" href="#harbor-flow-diagram" title="Permanent link">¶</a></h4>
+<p>Now that you understand the basic concepts with the Harbor, here's what it looks
+like.</p>
+<details class="note" open="open"><summary>Harbor Flow Diagram</summary><div class="highlight"><pre><span></span><code>flowchart LR
     subgraph sources ["Priority-Based Sources"]
         prerecord("1. Pre-recorded Broadcast&lt;br&gt;(Scheduled, long-format shows)")
         subgraph live-sources ["Live Sources (Silence Detection)"]
@@ -678,7 +439,7 @@ philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.m
         failsafe(5. Failsafe Audio File)
     end
 
-    harbor(("Harbor Service&lt;br&gt;(Intelligent stream picker)"))
+    harbor(("Harbor&lt;br&gt;(Intelligent stream picker)"))
 
     prerecord --&gt;|highest priority| harbor
     dj --&gt; harbor
@@ -686,7 +447,7 @@ philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.m
     autodj --&gt; harbor
     failsafe --&gt;|lowest priority| harbor
 
-    subgraph upstreams ["Upstream Services (Examples)"]
+    subgraph upstreams ["Upstream Servers"]
         icecast1("Local Icecast 2 Server (mp3)")
         icecast2("External Icecast 2 Server (aac)")
         icecastOthers("Other Icecast 2 Servers")
@@ -700,8 +461,72 @@ philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.m
 
     icecast1 --&gt; listeners
     icecast2 --&gt; listeners
-    icecastOthers --&gt; listeners</div>
-<h2 id="features-at-a-glance">Features At a Glance<a class="headerlink" href="#features-at-a-glance" title="Permanent link">&para;</a></h2>
+    icecastOthers --&gt; listeners
+</code></pre></div>
+</details>
+<h4 id="sources-details">Sources Details<a class="headerlink" href="#sources-details" title="Permanent link">¶</a></h4>
+<table>
+<thead>
+<tr>
+<th align="right"><strong>Priority</strong></th>
+<th align="left"><strong>Source</strong></th>
+<th align="center"><strong>Silence Detection </strong></th>
+<th align="left"><strong>Description</strong></th>
+<th align="left"><strong>Example</strong></th>
+<th align="center"><strong>Optional</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">1</td>
+<td align="left">Pre-recorded Broadcasts</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="left">Audio uploaded into the admin site, then scheduled for airplay at a specific time.</td>
+<td align="left">MP3 of a two hour show called <em>Friday Night Mix</em> uploaded on Thursday and scheduled to air Friday from 9:00pm to 11:00pm.</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="left">Live DJ</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
+<td align="left">Live DJ streaming using either Icecast 2 or RMTP.</td>
+<td align="left">Jane uses <a href="https://rogueamoeba.com/audiohijack/">Audio HiJack</a> from her laptop to broadcast a live two hour show Wednesday at 6:00pm.</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="left">Zoom Room</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
+<td align="left">Live streaming using a Zoom room.</td>
+<td align="left">John starts a Zoom room, enters the room link into Crazy Arms web interface and starts a one hour broadcast at 10:00am on Saturday.</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="left">AutoDJ</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="left">Audio uploaded into the admin site that plays at random.</td>
+<td align="left">Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during the above shows.</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td align="left">Failsafe Audio</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="left">Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.)</td>
+<td align="left">Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are annoyed!</td>
+<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="customization">Customization<a class="headerlink" href="#customization" title="Permanent link">¶</a></h3>
+<p>Behind the scenes, the Harbor is a highly customizable script, implemented in
+<a href="https://www.liquidsoap.info/">Liquidsoap</a>. Technical users can add additional
+sources or program the Harbor to do all sorts of novel things. This level of
+customization, while for advanced used, is an important feature of Crazy Arms.
+Ever station is and its use case are different, so there may be no one size fits
+all solution for everytone.</p>
+<h2 id="features-at-a-glance">Features At a Glance<a class="headerlink" href="#features-at-a-glance" title="Permanent link">¶</a></h2>
 <dl>
 <dt>Priority-based Streaming</dt>
 <dd>Crazy Arms operates on the concept of priority. This means it chooses the
@@ -713,7 +538,7 @@ See <a href="#sources-harbor-and-upstreams-explained">more info on this concept 
 <p>Scheduling of live DJs using Google Calendar. An invite to a calendar event means
 a DJ is authorized to play. Simple as that.</p>
 <p>Rather than re-invent the wheel, Google Calendar was chosen because of its wide
-adoption and east of use &mdash; and implementation of recurring events.. Your
+adoption and east of use — and implementation of recurring events.. Your
 web front-end can integrate with that, rather than a complex, custom API.</p>
 </dd>
 <dt>Scheduled playout of long-format audio files, ie prerecorded shows</dt>
@@ -724,7 +549,7 @@ them to play at specific times, superseding the AutoDJ.</dd>
 bash script does its best to connect to a user's Zoom room and listen in.
 It's inherently a bit brittle, but can be troubleshooted somewhat easily in
 a web browser running <a href="https://novnc.com/info.html">noVNC</a> by an admin.</dd>
-<dt><em>Idiot-Tolerant&trade;</em> DJing</dt>
+<dt><em>Idiot-Tolerant™</em> DJing</dt>
 <dd>If a live DJ or Zoom room is broadcasting silence, Crazy Arms picks another
 source to stream from.</dd>
 <dt>Completely <a href="https://www.docker.com/">Docker</a>-ized</dt>
@@ -767,7 +592,7 @@ Harbor scripts. This gives pretty high flexibility for various use cases.</dd>
 like <a href="https://obsproject.com/">Open Source Broadcaster (OBS)</a> can stream to
 the harbor. Of course, video is discarded.</dd>
 </dl>
-<h3 id="non-features">Non-Features<a class="headerlink" href="#non-features" title="Permanent link">&para;</a></h3>
+<h3 id="non-features">Non-Features<a class="headerlink" href="#non-features" title="Permanent link">¶</a></h3>
 <p><em>The following are non-features of Crazy Arms.</em></p>
 <dl>
 <dt>Front-end Not Included</dt>
@@ -782,66 +607,47 @@ programming. The technical reason for why is that we chose to build it on
 top of <a href="https://docs.djangoproject.com/en/3.1/ref/contrib/admin/">Django's admin site</a>
 module.</dd>
 </dl>
-                
-              
-              
-                
-
-
-              
-            </article>
-          </div>
-        </div>
-      </main>
-      
-        
+</article>
+</div>
+</div>
+</main>
 <footer class="md-footer">
-  
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
-        
-        
-          <a href="users-guide/dj/icecast/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
+<div class="md-footer-nav">
+<nav aria-label="Footer" class="md-footer-nav__inner md-grid">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="users-guide/autodj/" rel="next">
+<div class="md-footer-nav__title">
+<div class="md-ellipsis">
+<span class="md-footer-nav__direction">
                   Next
                 </span>
-                Icecast 2
+                AutoDJ
               </div>
-            </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-footer-copyright">
-        
-          <div class="md-footer-copyright__highlight">
-            Copyright &copy; 2020-2021 David Cooper
+</div>
+<div class="md-footer-nav__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
+</div>
+</a>
+</nav>
+</div>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-footer-copyright">
+<div class="md-footer-copyright__highlight">
+            Copyright © 2020-2021 David Cooper
           </div>
         
         Made with
-        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+        <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
           Material for MkDocs
         </a>
-      </div>
-      
-    </div>
-  </div>
+</div>
+</div>
+</div>
 </footer>
-      
-    </div>
-    
-      <script src="assets/javascripts/vendor.08c56446.min.js"></script>
-      <script src="assets/javascripts/bundle.6ced434e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
-      
-      <script>
+</div>
+<script src="assets/javascripts/vendor.08c56446.min.js"></script>
+<script src="assets/javascripts/bundle.6ced434e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+<script>
         app = initialize({
           base: ".",
           features: ['navigation.instant', 'navigation.sections', 'navigation.tabs', 'toc.integrate'],
@@ -850,9 +656,5 @@ module.</dd>
           }, typeof search !== "undefined" && search)
         })
       </script>
-      
-        <script src="https://unpkg.com/mermaid@8.8.4/dist/mermaid.js"></script>
-      
-    
-  </body>
+</body>
 </html>
