@@ -24,16 +24,16 @@ Arms, head over to the [installation instructions](./server-setup.md#installatio
 The main audio component of Crazy Arms is called the **Harbor.** It takes care
 of choosing what to broadcast based on some simple rules. In a sense, it's a
 stream picker. Think of the Harbor as a robot sitting at an imaginary console,
-deciding what play and when, using its _crazy arms_ turning volume knobs, and
-pushin' and pullin' on faders at exactly the right moment. _(And just like that,
-we arrive at the reason for the name! Okay, it's not the
+deciding what to play and when, using its _crazy arms_ turning volume knobs, and
+pushing and pulling on faders at exactly the right moment. _(And just like that,
+we arrive at the reason for the project's name! Okay, it's not the
 [only reason...](https://www.youtube.com/watch?v=GurizZaR0Ms))_
 
 #### Sources
 
 The harbor has several input **sources.** A source is any audio input feeding
-into the harbor. In our robot at the console example above, think of sources as
-input channels on the console. Out of the box examples include the
+into the harbor. In our robot example above, think of sources as input channels
+on the console. Out of the box examples of sources include the
 [AutoDJ](users-guide/autodj.md),
 [scheduled, pre-recorded broadcasts](users-guide/prerecorded-broadcasts.md),
 and live DJs streaming with [Icecast 2](users-guide/dj/icecast.md),
@@ -45,12 +45,13 @@ _that is active_ will be what the robot chooses to play. We call this concept
 !!! info "Active and Inactive Sources, Silence Detection"
     {# TODO: link "smoothly fade" to that setting #}
     When a source goes from inactive to active, the Harbor will smoothly fade to
-    it. What exactly constitutes _active_ and _inactive_ depends on the source?
+    it. What exactly constitutes _active_ and _inactive?_ The answer is that it
+    depends on the source.
 
     For example, in the case of the AutoDJ source, Crazy Arms will always have
-    music to play so that source is always considered to be always active.
-    _(You did upload music, right?)_ The AutoDJ has low priority so it's sort of
-    an always-on default.
+    music to play so that source is always considered to be active. _(You did
+    upload music into the AutoDJ, right!?)_ The AutoDJ has low priority so it's
+    sort of an always-on default.
 
     On the other hand, take a "live source" like a live DJ streaming using
     Icecast 2. When the DJ connects and starts streaming, that source is active.
@@ -62,11 +63,29 @@ _that is active_ will be what the robot chooses to play. We call this concept
     down. Or maybe they forgot to disconnect. We wouldn't want your station
     silent, would we? In short, if a live source is connected but silent, it will
     be considered inactive. The amount of silence before fading is configurable
-    {# TODO: reference constance #}
+    {# TODO: reference constance -#}
     but defaults to 15 seconds.
 
-    The theory behind this feature is part of the _Idiot-Tolerant(tm)_ DJing
+    The theory behind this feature is part of the **_Idiot-Tolerant(tm)_ DJing**
     philosophy of Crazy Arms. :wink:
+
+!!! hint "Failsafe Audio, the _Real_ Always-on Default"
+    Remember when I called the AutoDJ an "always-on default" just a couple
+    paragraphs ago. Well, the AutoDJ _can be disabled or end up in an erroneous
+    state,_ for example if it chokes up on an invalid audio file[^1], or you
+    start deleting music off the disk. If that happens, the AutoDJ will be an
+    inactive source and as noted above Crazy Arms doesn't like to broadcast silence.
+
+    For this reason, it's not _really_ the always-on default source with the
+    lowest priority. It just acts like it. Enter, the **failsafe audio.** This
+    is a track that plays on simple repeat. The preloaded track is ridiculously
+    annoying hold music but can be changed using the Station Configuration
+    module in the admin site.
+
+[^1]:
+    Crazy Arms tries very hard to reject invalid audio files, but it is
+    theoretically possible for it happen, in which case the AutoDJ will fail
+    and become inactive.
 
 #### Upstream Servers
 
@@ -75,7 +94,7 @@ These are simply places where your station is being broadcast to, usually Icecas
 2 servers. That's where listeners connect to. They're the final output of the
 Harbor. Some radio automation suites call these _"encoders."_ These might be
 remote partners like [iHeart](https://www.iheart.com/) or [SiriusXM](http://siriusxm.com),
-a streaming provider like [StreamGuys](https://www.streamguys.com/) or your own
+a streaming provider like [StreamGuys](https://www.streamguys.com/), or your own
 infrastructure. You can configure as many upstream servers as you like. For
 convenience and to kickstart your station, Crazy Arms bundles a local Icecast 2
 server it streams MP3 at `128kbps` to by default, using the popular
@@ -86,7 +105,7 @@ server it streams MP3 at `128kbps` to by default, using the popular
 Now that you understand the basic concepts with the Harbor, here's what it looks
 like.
 
-???+ note "Harbor Flow Diagram"
+!!! note "Harbor Flow Diagram"
 
     ```mermaid
     flowchart LR
@@ -127,13 +146,14 @@ like.
 
 #### Sources Details
 
+{# Switch to tabs from this table -#}
 | **Priority** | **Source**              | **Silence Detection ** | **Description**                                                                                               | **Example**                                                                                                                                     | **Optional**     |
 | -----------: | :---------------------- | :--------------------: | :------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------- | :--------------: |
-| 1            | Pre-recorded Broadcasts | :material-close:       | Audio uploaded into the admin site, then scheduled for airplay at a specific time.                            | MP3 of a two hour show called _Friday Night Mix_ uploaded on Thursday and scheduled to air Friday from 9:00pm to 11:00pm.                       | :material-close: |
-| 2            | Live DJ                 | :material-check:       | Live DJ streaming using either Icecast 2 or RMTP.                                                             | Jane uses [Audio HiJack](https://rogueamoeba.com/audiohijack/) from her laptop to broadcast a live two hour show Wednesday at 6:00pm.           | :material-close: |
+| 1            | Pre-recorded Broadcasts |                        | Audio uploaded into the admin site, then scheduled for airplay at a specific time.                            | MP3 of a two hour show called _Friday Night Mix_ uploaded on Thursday and scheduled to air Friday from 9:00pm to 11:00pm.                       |                  |
+| 2            | Live DJ                 | :material-check:       | Live DJ streaming using either Icecast 2 or RMTP.                                                             | Jane uses [Audio HiJack](https://rogueamoeba.com/audiohijack/) from her laptop to broadcast a live two hour show Wednesday at 6:00pm.           |                  |
 | 3            | Zoom Room               | :material-check:       | Live streaming using a Zoom room.                                                                             | John starts a Zoom room, enters the room link into Crazy Arms web interface and starts a one hour broadcast at 10:00am on Saturday.             | :material-check: |
-| 4            | AutoDJ                  | :material-close:       | Audio uploaded into the admin site that plays at random.                                                      | Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during the above shows.         | :material-check: |
-| 5            | Failsafe Audio          | :material-close:       | Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.) | Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are annoyed! | :material-close: |
+| 4            | AutoDJ                  |                        | Audio uploaded into the admin site that plays at random.                                                      | Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during the above shows.         | :material-check: |
+| 5            | Failsafe Audio          |                        | Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.) | Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are annoyed! |                  |
 
 
 ### Customization

@@ -4,11 +4,17 @@ markdown_extensions:
     - admonition
     - attr_list
     - def_list
+    - footnotes
     - pymdownx.details
     - pymdownx.emoji:
         emoji_index: !!python/name:materialx.emoji.twemoji
         emoji_generator: !!python/name:materialx.emoji.to_svg
-    - pymdownx.superfences
+    - pymdownx.superfences:
+      # make exceptions to highlighting of code:
+        custom_fences:
+            - name: mermaid
+              class: mermaid
+              format: !!python/name:mermaid2.fence_mermaid
     - pymdownx.keys
     - pymdownx.smartsymbols
     - pymdownx.tabbed
@@ -60,4 +66,4 @@ theme:
         text: Inter
     icon:
         repo: fontawesome/brands/github
-copyright: Copyright &copy; 2020-2021 David Cooper
+copyright: Copyright &copy; 2020 David Cooper
