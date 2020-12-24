@@ -19,64 +19,131 @@ Arms, head over to the [installation instructions](./server-setup.md#installatio
 
 ### Sources, Harbor, and Upstreams Explained
 
-The main audio component of Crazy Arms is called the **Harbor.** This is a
-customizable script, implemented in [Liquidsoap](https://www.liquidsoap.info/)
-that takes care of choosing what to broadcast and when. Think of the Harbor as a
-robot taking several sources and deciding which one is best to broadcast from
-based on some simple rules.
+#### The Harbor
 
-The harbor has several input **sources**. These are things like pre-recorded
-broadcasts, live DJs, or the AutoDJ. Each are each assigned a priority, and the
-source with the highest priority _that is active_ will be what the harbor chooses
-to play.
+The main audio component of Crazy Arms is called the **Harbor.** It takes care
+of choosing what to broadcast based on some simple rules. In a sense, it's a
+stream picker. Think of the Harbor as a robot sitting at an imaginary console,
+deciding what play and when, using its _crazy arms_ turning volume knobs, and
+pushin' and pullin' on faders at exactly the right moment. _(And just like that,
+we arrive at the reason for the name! Okay, it's not the
+[only reason...](https://www.youtube.com/watch?v=GurizZaR0Ms))_
 
-!!! note "A Note About Inactive Sources"
-    When a source goes from inactive to active, the harbor will smootly fade to it.
+#### Sources
 
-    For the "Live Sources" listed below (Live DJ and Live Zoom Room), we provide
-    **silence detection.** This means **if a DJ is connected and broadcasting
-    silence,** that source will be considered inactive.**  In this case, the
-    first active source with less priority will be broadcast.
+The harbor has several input **sources.** A source is any audio input feeding
+into the harbor. In our robot at the console example above, think of sources as
+input channels on the console. Out of the box examples include the
+[AutoDJ](users-guide/autodj.md),
+[scheduled, pre-recorded broadcasts](users-guide/prerecorded-broadcasts.md),
+and live DJs streaming with [Icecast 2](users-guide/dj/icecast.md),
+[RTMP](users-guide/dj/rtmp.md) (experimental), or a [Zoom room](users-guide/dj/zoom.md).
+Each input is assigned a priority, and the source with the highest priority
+_that is active_ will be what the robot chooses to play. We call this concept
+**priority-based streaming.**
+
+!!! info "Active and Inactive Sources, Silence Detection"
+    {# TODO: link "smoothly fade" to that setting #}
+    When a source goes from inactive to active, the Harbor will smoothly fade to
+    it. What exactly constitutes _active_ and _inactive_ depends on the source?
+
+    For example, in the case of the AutoDJ source, Crazy Arms will always have
+    music to play so that source is always considered to be always active.
+    _(You did upload music, right?)_ The AutoDJ has low priority so it's sort of
+    an always-on default.
+
+    On the other hand, take a "live source" like a live DJ streaming using
+    Icecast 2. When the DJ connects and starts streaming, that source is active.
+
+    That's not the whole story. The harbor uses **silence detection** for live
+    sources. This means if a live DJ is connected and streaming, but is
+    broadcasting silence the source is considered inactive. Suppose their
+    microphone isn't working or a fader on their mixer is accidentally pulled
+    down. Or maybe they forgot to disconnect. We wouldn't want your station
+    silent, would we? In short, if a live source is connected but silent, it will
+    be considered inactive. The amount of silence before fading is configurable
+    {# TODO: reference constance #}
+    but defaults to 15 seconds.
 
     The theory behind this feature is part of the _Idiot-Tolerant(tm)_ DJing
     philosophy of Crazy Arms. :wink:
 
-```mermaid
-flowchart LR
-    subgraph sources ["Priority-Based Sources"]
-        prerecord("1. Pre-recorded Broadcast<br>(Scheduled, long-format shows)")
-        subgraph live-sources ["Live Sources (Silence Detection)"]
-            dj("2. Live DJ<br>(Icecast 2, RTMP)")
-            zoom("3. Live Zoom Room<br>(optional)")
+#### Upstream Servers
+
+The last thing you need to know about are we Crazy Arms called **upstream servers.**
+These are simply places where your station is being broadcast to, usually Icecast
+2 servers. That's where listeners connect to. They're the final output of the
+Harbor. Some radio automation suites call these _"encoders."_ These might be
+remote partners like [iHeart](https://www.iheart.com/) or [SiriusXM](http://siriusxm.com),
+a streaming provider like [StreamGuys](https://www.streamguys.com/) or your own
+infrastructure. You can configure as many upstream servers as you like. For
+convenience and to kickstart your station, Crazy Arms bundles a local Icecast 2
+server it streams MP3 at `128kbps` to by default, using the popular
+[icecast-kh](https://github.com/karlheyes/icecast-kh) branch.
+
+#### Harbor Flow Diagram
+
+Now that you understand the basic concepts with the Harbor, here's what it looks
+like.
+
+???+ note "Harbor Flow Diagram"
+
+    ```mermaid
+    flowchart LR
+        subgraph sources ["Priority-Based Sources"]
+            prerecord("1. Pre-recorded Broadcast<br>(Scheduled, long-format shows)")
+            subgraph live-sources ["Live Sources (Silence Detection)"]
+                dj("2. Live DJ<br>(Icecast 2, RTMP)")
+                zoom("3. Live Zoom Room<br>(optional)")
+            end
+            autodj("4. AutoDJ<br>(optional)")
+            failsafe(5. Failsafe Audio File)
         end
-        autodj("4. AutoDJ<br>(optional)")
-        failsafe(5. Failsafe Audio File)
-    end
 
-    harbor(("Harbor Service<br>(Intelligent stream picker)"))
+        harbor(("Harbor<br>(Intelligent stream picker)"))
 
-    prerecord -->|highest priority| harbor
-    dj --> harbor
-    zoom --> harbor
-    autodj --> harbor
-    failsafe -->|lowest priority| harbor
+        prerecord -->|highest priority| harbor
+        dj --> harbor
+        zoom --> harbor
+        autodj --> harbor
+        failsafe -->|lowest priority| harbor
 
-    subgraph upstreams ["Upstream Services (Examples)"]
-        icecast1("Local Icecast 2 Server (mp3)")
-        icecast2("External Icecast 2 Server (aac)")
-        icecastOthers("Other Icecast 2 Servers")
-    end
+        subgraph upstreams ["Upstream Servers"]
+            icecast1("Local Icecast 2 Server (mp3)")
+            icecast2("External Icecast 2 Server (aac)")
+            icecastOthers("Other Icecast 2 Servers")
+        end
 
-    harbor --> icecast1
-    harbor --> icecast2
-    harbor --> icecastOthers
+        harbor --> icecast1
+        harbor --> icecast2
+        harbor --> icecastOthers
 
-    listeners(("Listeners"))
+        listeners(("Listeners"))
 
-    icecast1 --> listeners
-    icecast2 --> listeners
-    icecastOthers --> listeners
-```
+        icecast1 --> listeners
+        icecast2 --> listeners
+        icecastOthers --> listeners
+    ```
+
+#### Sources Details
+
+| **Priority** | **Source**              | **Silence Detection ** | **Description**                                                                                               | **Example**                                                                                                                                     | **Optional**     |
+| -----------: | :---------------------- | :--------------------: | :------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------- | :--------------: |
+| 1            | Pre-recorded Broadcasts | :material-close:       | Audio uploaded into the admin site, then scheduled for airplay at a specific time.                            | MP3 of a two hour show called _Friday Night Mix_ uploaded on Thursday and scheduled to air Friday from 9:00pm to 11:00pm.                       | :material-close: |
+| 2            | Live DJ                 | :material-check:       | Live DJ streaming using either Icecast 2 or RMTP.                                                             | Jane uses [Audio HiJack](https://rogueamoeba.com/audiohijack/) from her laptop to broadcast a live two hour show Wednesday at 6:00pm.           | :material-close: |
+| 3            | Zoom Room               | :material-check:       | Live streaming using a Zoom room.                                                                             | John starts a Zoom room, enters the room link into Crazy Arms web interface and starts a one hour broadcast at 10:00am on Saturday.             | :material-check: |
+| 4            | AutoDJ                  | :material-close:       | Audio uploaded into the admin site that plays at random.                                                      | Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during the above shows.         | :material-check: |
+| 5            | Failsafe Audio          | :material-close:       | Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.) | Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are annoyed! | :material-close: |
+
+
+### Customization
+
+Behind the scenes, the Harbor is a highly customizable script, implemented in
+[Liquidsoap](https://www.liquidsoap.info/). Technical users can add additional
+sources or program the Harbor to do all sorts of novel things. This level of
+customization, while for advanced used, is an important feature of Crazy Arms.
+Ever station is and its use case are different, so there may be no one size fits
+all solution for everytone.
 
 ## Features At a Glance
 
