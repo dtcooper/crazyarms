@@ -256,7 +256,9 @@
   
 
 
-<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="https://crazyarms.xyz" title="Crazy Arms Radio Backend Documentation" class="md-nav__button md-logo" aria-label="Crazy Arms Radio Backend Documentation">
       
@@ -554,84 +556,6 @@
               </div>
             
             
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quickstart" class="md-nav__link">
-    Quickstart
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#unit-tests" class="md-nav__link">
-    Unit Tests
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#upgrading" class="md-nav__link">
-    Upgrading
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#development" class="md-nav__link">
-    Development
-  </a>
-  
-    <nav class="md-nav" aria-label="Development">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#helpful-practices" class="md-nav__link">
-    Helpful Practices
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
@@ -759,7 +683,7 @@ following,</p>
       <script>
         app = initialize({
           base: "..",
-          features: ['navigation.instant', 'navigation.sections', 'navigation.tabs'],
+          features: ['navigation.instant', 'navigation.sections', 'navigation.tabs', 'toc.integrate'],
           search: Object.assign({
             worker: "../assets/javascripts/worker/search.8c7e0a7e.min.js"
           }, typeof search !== "undefined" && search)
