@@ -378,14 +378,14 @@ Arms, head over to the <a href="server-setup/#installation">installation instruc
 <p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> It takes care
 of choosing what to broadcast based on some simple rules. In a sense, it's a
 stream picker. Think of the Harbor as a robot sitting at an imaginary console,
-deciding what play and when, using its <em>crazy arms</em> turning volume knobs, and
-pushin' and pullin' on faders at exactly the right moment. <em>(And just like that,
-we arrive at the reason for the name! Okay, it's not the
+deciding what to play and when, using its <em>crazy arms</em> turning volume knobs, and
+pushing and pulling on faders at exactly the right moment. <em>(And just like that,
+we arrive at the reason for the project's name! Okay, it's not the
 <a href="https://www.youtube.com/watch?v=GurizZaR0Ms">only reason...</a>)</em></p>
 <h4 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">¶</a></h4>
 <p>The harbor has several input <strong>sources.</strong> A source is any audio input feeding
-into the harbor. In our robot at the console example above, think of sources as
-input channels on the console. Out of the box examples include the
+into the harbor. In our robot example above, think of sources as input channels
+on the console. Out of the box examples of sources include the
 <a href="users-guide/autodj/">AutoDJ</a>,
 <a href="users-guide/prerecorded-broadcasts/">scheduled, pre-recorded broadcasts</a>,
 and live DJs streaming with <a href="users-guide/dj/icecast/">Icecast 2</a>,
@@ -396,11 +396,12 @@ Each input is assigned a priority, and the source with the highest priority
 <div class="admonition info">
 <p class="admonition-title">Active and Inactive Sources, Silence Detection</p>
 <p>When a source goes from inactive to active, the Harbor will smoothly fade to
-it. What exactly constitutes <em>active</em> and <em>inactive</em> depends on the source?</p>
+it. What exactly constitutes <em>active</em> and <em>inactive?</em> The answer is that it
+depends on the source.</p>
 <p>For example, in the case of the AutoDJ source, Crazy Arms will always have
-music to play so that source is always considered to be always active.
-<em>(You did upload music, right?)</em> The AutoDJ has low priority so it's sort of
-an always-on default.</p>
+music to play so that source is always considered to be active. <em>(You did
+upload music into the AutoDJ, right!?)</em> The AutoDJ has low priority so it's
+sort of an always-on default.</p>
 <p>On the other hand, take a "live source" like a live DJ streaming using
 Icecast 2. When the DJ connects and starts streaming, that source is active.</p>
 <p>That's not the whole story. The harbor uses <strong>silence detection</strong> for live
@@ -409,10 +410,23 @@ broadcasting silence the source is considered inactive. Suppose their
 microphone isn't working or a fader on their mixer is accidentally pulled
 down. Or maybe they forgot to disconnect. We wouldn't want your station
 silent, would we? In short, if a live source is connected but silent, it will
-be considered inactive. The amount of silence before fading is configurable</p>
-<p>but defaults to 15 seconds.</p>
-<p>The theory behind this feature is part of the <em>Idiot-Tolerant™</em> DJing
+be considered inactive. The amount of silence before fading is configurable
+but defaults to 15 seconds.</p>
+<p>The theory behind this feature is part of the <strong><em>Idiot-Tolerant™</em> DJing</strong>
 philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f609.svg" title=":wink:"/></p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Failsafe Audio, the <em>Real</em> Always-on Default</p>
+<p>Remember when I called the AutoDJ an "always-on default" just a couple
+paragraphs ago. Well, the AutoDJ <em>can be disabled or end up in an erroneous
+state,</em> for example if it chokes up on an invalid audio file<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, or you
+start deleting music off the disk. If that happens, the AutoDJ will be an
+inactive source and as noted above Crazy Arms doesn't like to broadcast silence.</p>
+<p>For this reason, it's not <em>really</em> the always-on default source with the
+lowest priority. It just acts like it. Enter, the <strong>failsafe audio.</strong> This
+is a track that plays on simple repeat. The preloaded track is ridiculously
+annoying hold music but can be changed using the Station Configuration
+module in the admin site.</p>
 </div>
 <h4 id="upstream-servers">Upstream Servers<a class="headerlink" href="#upstream-servers" title="Permanent link">¶</a></h4>
 <p>The last thing you need to know about are we Crazy Arms called <strong>upstream servers.</strong>
@@ -420,7 +434,7 @@ These are simply places where your station is being broadcast to, usually Icecas
 2 servers. That's where listeners connect to. They're the final output of the
 Harbor. Some radio automation suites call these <em>"encoders."</em> These might be
 remote partners like <a href="https://www.iheart.com/">iHeart</a> or <a href="http://siriusxm.com">SiriusXM</a>,
-a streaming provider like <a href="https://www.streamguys.com/">StreamGuys</a> or your own
+a streaming provider like <a href="https://www.streamguys.com/">StreamGuys</a>, or your own
 infrastructure. You can configure as many upstream servers as you like. For
 convenience and to kickstart your station, Crazy Arms bundles a local Icecast 2
 server it streams MP3 at <code>128kbps</code> to by default, using the popular
@@ -428,18 +442,20 @@ server it streams MP3 at <code>128kbps</code> to by default, using the popular
 <h4 id="harbor-flow-diagram">Harbor Flow Diagram<a class="headerlink" href="#harbor-flow-diagram" title="Permanent link">¶</a></h4>
 <p>Now that you understand the basic concepts with the Harbor, here's what it looks
 like.</p>
-<details class="note" open="open"><summary>Harbor Flow Diagram</summary><div class="highlight"><pre><span></span><code>flowchart LR
+<div class="admonition note">
+<p class="admonition-title">Harbor Flow Diagram</p>
+<div class="mermaid">flowchart LR
     subgraph sources ["Priority-Based Sources"]
-        prerecord("1. Pre-recorded Broadcast&lt;br&gt;(Scheduled, long-format shows)")
+        prerecord("1. Pre-recorded Broadcast<br/>(Scheduled, long-format shows)")
         subgraph live-sources ["Live Sources (Silence Detection)"]
-            dj("2. Live DJ&lt;br&gt;(Icecast 2, RTMP)")
-            zoom("3. Live Zoom Room&lt;br&gt;(optional)")
+            dj("2. Live DJ<br/>(Icecast 2, RTMP)")
+            zoom("3. Live Zoom Room<br/>(optional)")
         end
-        autodj("4. AutoDJ&lt;br&gt;(optional)")
+        autodj("4. AutoDJ<br/>(optional)")
         failsafe(5. Failsafe Audio File)
     end
 
-    harbor(("Harbor&lt;br&gt;(Intelligent stream picker)"))
+    harbor(("Harbor<br/>(Intelligent stream picker)"))
 
     prerecord --&gt;|highest priority| harbor
     dj --&gt; harbor
@@ -462,8 +478,8 @@ like.</p>
     icecast1 --&gt; listeners
     icecast2 --&gt; listeners
     icecastOthers --&gt; listeners
-</code></pre></div>
-</details>
+</div>
+</div>
 <h4 id="sources-details">Sources Details<a class="headerlink" href="#sources-details" title="Permanent link">¶</a></h4>
 <table>
 <thead>
@@ -480,10 +496,10 @@ like.</p>
 <tr>
 <td align="right">1</td>
 <td align="left">Pre-recorded Broadcasts</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="center"></td>
 <td align="left">Audio uploaded into the admin site, then scheduled for airplay at a specific time.</td>
 <td align="left">MP3 of a two hour show called <em>Friday Night Mix</em> uploaded on Thursday and scheduled to air Friday from 9:00pm to 11:00pm.</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="center"></td>
 </tr>
 <tr>
 <td align="right">2</td>
@@ -491,7 +507,7 @@ like.</p>
 <td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
 <td align="left">Live DJ streaming using either Icecast 2 or RMTP.</td>
 <td align="left">Jane uses <a href="https://rogueamoeba.com/audiohijack/">Audio HiJack</a> from her laptop to broadcast a live two hour show Wednesday at 6:00pm.</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="center"></td>
 </tr>
 <tr>
 <td align="right">3</td>
@@ -504,7 +520,7 @@ like.</p>
 <tr>
 <td align="right">4</td>
 <td align="left">AutoDJ</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="center"></td>
 <td align="left">Audio uploaded into the admin site that plays at random.</td>
 <td align="left">Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during the above shows.</td>
 <td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
@@ -512,10 +528,10 @@ like.</p>
 <tr>
 <td align="right">5</td>
 <td align="left">Failsafe Audio</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="center"></td>
 <td align="left">Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.)</td>
 <td align="left">Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are annoyed!</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+<td align="center"></td>
 </tr>
 </tbody>
 </table>
@@ -607,6 +623,16 @@ programming. The technical reason for why is that we chose to build it on
 top of <a href="https://docs.djangoproject.com/en/3.1/ref/contrib/admin/">Django's admin site</a>
 module.</dd>
 </dl>
+<div class="footnote">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>Crazy Arms tries very hard to reject invalid audio files, but it is
+theoretically possible for it happen, in which case the AutoDJ will fail
+and become inactive. <a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">↩</a></p>
+</li>
+</ol>
+</div>
 </article>
 </div>
 </div>
@@ -633,7 +659,7 @@ module.</dd>
 <div class="md-footer-meta__inner md-grid">
 <div class="md-footer-copyright">
 <div class="md-footer-copyright__highlight">
-            Copyright © 2020-2021 David Cooper
+            Copyright © 2020 David Cooper
           </div>
         
         Made with
@@ -656,5 +682,7 @@ module.</dd>
           }, typeof search !== "undefined" && search)
         })
       </script>
-</body>
+<script src="https://unpkg.com/mermaid@8.8.0/dist/mermaid.min.js"></script><script>mermaid.initialize({
+    theme: "dark"
+});</script></body>
 </html>
