@@ -13,7 +13,12 @@
   <script src="{% static 'webui/js/base.js' %}"></script>
   {% block extrahead %}{% endblock %}
 </head>
-<body>
+<body{% if settings.DEBUG %} class="show-debug-warning"{% endif %}>
+  {% if settings.DEBUG %}
+    <div id="debug-warning">
+      <strong>Warning: running in DEBUG mode. This should not be done in a production environment.</strong>
+    </div>
+  {% endif %}
   {% block header %}
     <header>
       <h1>

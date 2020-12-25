@@ -13,6 +13,23 @@ body {
   padding: 0.5rem;
 }
 
+body.show-debug-warning {
+  padding-top: 2.25rem;
+}
+
+#debug-warning {
+  position: fixed;
+  right: 0;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  height: 1.75rem;
+  text-align: center;
+  background-color: var(--mt-red);
+  font-weight: bold;
+  color: #ffffff;
+}
+
 * { hyphens: auto; }
 code, pre { hyphens: none; }
 
@@ -26,7 +43,7 @@ input[type="reset"]:focus,
 input[type="reset"]:enabled:hover,
 input[type="button"]:focus,
 input[type="button"]:enabled:hover {
-  filter: brightness(80%);
+  filter: brightness(92%);
 }
 
 input[type=text], input[type=password], input[type=email], textarea { width: 100%; }
