@@ -11,13 +11,13 @@ Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-en
 written from the ground up.
 
 It's specifically written after its author built a few _fully decentralized_
-online radio stations with some common needs finding no existing product fit.
+online radio stations with some common needs, but found no existing product fit.
 Crazy Arms seeks to fit those needs needs out of the box, but allows for
 stations to customize their stream if necessary to fit their unique use cases.
 
 ## Installation
 
-If you're an technical user or a systems administrator wanting to install Crazy
+If you're a technical user or a systems administrator wanting to install Crazy
 Arms, head over to the [installation instructions](./server-setup.md#installation).
 
 ## Audio Infrastructure Overview
@@ -305,5 +305,5 @@ station admin site Look and Feel
     not necessarily a beautiful, easy to use interface but instead meant for
     somewhat technical users. This is by design and was chosen for ease of
     programming. The technical reason for why is that we chose to build it on
-    top of [Django's station admin site](https://docs.djangoproject.com/en/3.1/ref/contrib/admin/)
+    top of [Django's admin module](https://docs.djangoproject.com/en/3.1/ref/contrib/admin/)
     module.
