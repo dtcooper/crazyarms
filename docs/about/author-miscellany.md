@@ -1,9 +1,9 @@
-# Author & Miscellany
+# About the Author and Other Miscellany
+
 
 ## David Cooper
 
 Crazy Arms Radio Back is written by [David Cooper](https://dtcooper.com). :eyeglasses:
-
 
 David is a comedian :rolling_on_the_floor_laughing:, radio personality :radio:,
 and podcaster :studio_microphone:. His background in engineering is from having formerly been
@@ -37,9 +37,6 @@ David has deployed Crazy Arms to the following online stations,
 * [820hz](https://820hz.fm)
 * [BMIR 94.5](https://bmir.org) for their 2020 online-only broadcast
 
-## Support
-
-Paid support is available. Reach out to David at <david@dtcooper.com>.
 
 ## Donations
 
@@ -51,6 +48,7 @@ donate against your better judgment, David's Bitcoin address is as follows,
 ```
 1PoDcAStyJoB7zZz2mny4KjtjiEu8S44ns
 ```
+
 
 ## Final Note
 

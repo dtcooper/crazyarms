@@ -1,16 +1,21 @@
 # Crazy Arms Radio Backend
 
-!!! danger "Crazy Arms is under active development"
-    Crazy Arms is currently under active development, however you can preview
-    things right now. This documentation is incomplete, is missing sections, and
-    may include incorrect information until the first release.
+!!! danger "Danger: Hic Sunt Dracones (Here Be Dragons)"
+    Crazy Arms is currently **under active development**, however you can preview
+    things right now.
+
+    This documentation is a **work in progress.** There are missing sections, and
+    it may include incorrect information until the first release.
 
 Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-end
 written from the ground up.
 
 It's specifically written after its author built a few _fully decentralized_
-online radio stations with varying types of scheduling and finding no existing
-product fit some common needs out of the box.
+online radio stations with some common needs finding no existing product fit.
+Crazy Arms seeks to fit those needs needs out of the box, but allows for
+stations to customize their stream if necessary to fit their unique use cases.
+
+## Installation
 
 If you're an technical user or a systems administrator wanting to install Crazy
 Arms, head over to the [installation instructions](./server-setup.md#installation).
@@ -69,7 +74,7 @@ _that is active_ will be what the robot chooses to play. We call this concept
     The theory behind this feature is part of the **_Idiot-Tolerant(tm)_ DJing**
     philosophy of Crazy Arms. :wink:
 
-!!! hint "Failsafe Audio, the _Real_ Always-on Default"
+!!! hint "The Failsafe, the _Real_ Always-on Default"
     Remember when I called the AutoDJ an "always-on default" just a couple
     paragraphs ago. Well, the AutoDJ _can be disabled or end up in an erroneous
     state,_ for example if it chokes up on an invalid audio file[^1], or you
@@ -77,7 +82,7 @@ _that is active_ will be what the robot chooses to play. We call this concept
     inactive source and as noted above Crazy Arms doesn't like to broadcast silence.
 
     For this reason, it's not _really_ the always-on default source with the
-    lowest priority. It just acts like it. Enter, the **failsafe audio.** This
+    lowest priority. It just acts like it. Enter, the **failsafe.** This
     is a track that plays on simple repeat. The preloaded track is ridiculously
     annoying hold music but can be changed using the Station Configuration
     module in the admin site.
@@ -113,10 +118,10 @@ like.
             prerecord("1. Pre-recorded Broadcast<br>(Scheduled, long-format shows)")
             subgraph live-sources ["Live Sources (Silence Detection)"]
                 dj("2. Live DJ<br>(Icecast 2, RTMP)")
-                zoom("3. Live Zoom Room<br>(optional)")
+                zoom("3. Live Zoom Room<br>(if available)")
             end
-            autodj("4. AutoDJ<br>(optional)")
-            failsafe(5. Failsafe Audio File)
+            autodj("4. AutoDJ<br>(if available)")
+            failsafe(5. Failsafe)
         end
 
         harbor(("Harbor<br>(Intelligent stream picker)"))
@@ -146,24 +151,70 @@ like.
 
 #### Sources Details
 
-{# Switch to tabs from this table -#}
-| **Priority** | **Source**              | **Silence Detection ** | **Description**                                                                                               | **Example**                                                                                                                                     | **Optional**     |
-| -----------: | :---------------------- | :--------------------: | :------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------- | :--------------: |
-| 1            | Pre-recorded Broadcasts |                        | Audio uploaded into the admin site, then scheduled for airplay at a specific time.                            | MP3 of a two hour show called _Friday Night Mix_ uploaded on Thursday and scheduled to air Friday from 9:00pm to 11:00pm.                       |                  |
-| 2            | Live DJ                 | :material-check:       | Live DJ streaming using either Icecast 2 or RMTP.                                                             | Jane uses [Audio HiJack](https://rogueamoeba.com/audiohijack/) from her laptop to broadcast a live two hour show Wednesday at 6:00pm.           |                  |
-| 3            | Zoom Room               | :material-check:       | Live streaming using a Zoom room.                                                                             | John starts a Zoom room, enters the room link into Crazy Arms web interface and starts a one hour broadcast at 10:00am on Saturday.             | :material-check: |
-| 4            | AutoDJ                  |                        | Audio uploaded into the admin site that plays at random.                                                      | Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during the above shows.         | :material-check: |
-| 5            | Failsafe Audio          |                        | Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.) | Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are annoyed! |                  |
+{#- TODO: these could be snippets, available to certain page #}
+
+=== "Pre-recorded Broadcasts"
+    !!! important "Source Details"
+        |    |    | {# Hack to have an empty header #}
+        | -: | :- |
+        | Priority: | 1 (highest)
+        | Silence Detection: | Disabled :material-close:
+        | Description: | Audio uploaded into the admin site, then scheduled for airplay at a specific time.
+        | Availability: | Pre-recorded broadcasts are _always available_ in Crazy Arms to users with the _Program and schedule pre-recorded broadcasts_ permission.
+        | Example: | Two hour show recorded to an mp3 called `friday_night_mix.mp3`. This file is uploaded into the web UI by Alison Administrator on Monday, where she then schedules it to air Tuesday from 9:00pm to 11:00pm.
+
+=== "Live DJ"
+    !!! important "Source Details"
+        |    |    |
+        | -: | :- |
+        | Priority: | 2
+        | Silence Detection: | Enabled :material-check:
+        | Description: | Live DJ streaming using either Icecast 2 or RMTP.
+        | Availability: | The ability to live DJ is _always available_ to users provided they are [authorized on the harbor](admin-guide/permissions.md#harbor-authorization).
+        | Example: | Diana Disk Jockey uses [Audio HiJack](https://rogueamoeba.com/audiohijack/) from her Macbook to broadcast a live show with USB microphone and iTunes on Wednesday from 6:00pm to 8:00pm.
+
+=== "Zoom Room"
+    !!! important "Source Details"
+        |    |    |
+        | -: | :- |
+        | Priority: | 3
+        | Silence Detection: | Enabled :material-check:
+        | Description: | Live streaming using a Zoom room.
+        | Availability: | The ability to use a Zoom room is _only available_ if it is enabled for your installation ([`ZOOM_ENABLED=1` in your `.env` file](admin-guide/configuration/#the-environment-file-env-static-settings)). Furthermore it is only available to users provided they are [authorized on the harbor](admin-guide/permissions.md#harbor-authorization).
+        | Example: | Video Conference Charlie starts a [Zoom room](https://zoom.us), enters the room link into Crazy Arms web interface and click start for one hour broadcast at 10:00am on Thursday.
+
+=== "AutoDJ"
+    !!! important "Source Details"
+        |    |    |
+        | -: | :- |
+        | Priority: | 4
+        | Silence Detection: | Disabled :material-close:
+        | Description: | Audio uploaded into the admin site that plays at random. [More information here](admin-guide/autodj.md).
+        | Availability: | The autodj is _available_ if the [station configuration `AUTODJ_ENABLED` is set to `True`](admin-guide/configuration/#autodj-configuration), which is the default.
+        | Example: | Steel Guitar Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during for the shows with higher priority scheduled on Tuesday, Wednesday and Thursday.
+
+=== "Failsafe"
+    !!! important "Source Details"
+        |    |    |
+        | -: | :- |
+        | Priority: | 5 (Lowest, always available)
+        | Silence Detection: | Disabled :material-close:
+        | Description: | Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.)
+        | Availability: | The failsafe is _always on._ That's kind of the point, right?
+        | Example: | Station Manager Mike Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are probably annoyed! For shame, Mike!
 
 
-### Customization
+### Customization & Settings
 
-Behind the scenes, the Harbor is a highly customizable script, implemented in
-[Liquidsoap](https://www.liquidsoap.info/). Technical users can add additional
-sources or program the Harbor to do all sorts of novel things. This level of
-customization, while for advanced used, is an important feature of Crazy Arms.
-Ever station is and its use case are different, so there may be no one size fits
-all solution for everytone.
+The Harbor is customizable. There are several settings you can choose from and
+technical users can add additional sources or program the Harbor to do all sorts
+of novel things. This level of customization, while for advanced users, is an
+important feature of Crazy Arms. Every station is different some may have
+nonstandard cases, so there may be no one size fits all
+solution for everyone.
+
+If you're an administrator, find out how to customize the Harbor by
+[reading more here](admin-guide/configuration.md).
 
 ## Features At a Glance
 
@@ -178,7 +229,7 @@ Live scheduling via Google Calendar
     a DJ is authorized to play. Simple as that.
 
     Rather than re-invent the wheel, Google Calendar was chosen because of its wide
-    adoption and east of use &mdash; and implementation of recurring events.. Your
+    adoption and east of use --- and implementation of recurring events.. Your
     web front-end can integrate with that, rather than a complex, custom API.
 
 Scheduled playout of long-format audio files, ie prerecorded shows

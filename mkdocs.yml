@@ -18,6 +18,7 @@ markdown_extensions:
     - pymdownx.keys
     - pymdownx.smartsymbols
     - pymdownx.tabbed
+    - smarty
     - toc:
         permalink: True
 nav:
@@ -30,17 +31,20 @@ nav:
             - Zoom: users-guide/dj/zoom.md
             - RTMP: users-guide/dj/rtmp.md
     - Admin's Guide:
-        - AutoDJ: admin-guide/autodj.md
         - Configuration: admin-guide/configuration.md
+        - AutoDJ: admin-guide/autodj.md
+        - User Permissions: admin-guide/permissions.md
+        - Google Calendar Scheduling: admin-guide/google-calendar.md
     - Server Setup: server-setup.md
     - Glossary of Terms: glossary.md
-    - About:
+    - About & Support:
+        - Issues & Support: about/support.md
         - License: about/license.md
         - Changelog: about/changelog.md
         - Author & Miscellany: about/author-miscellany.md
 plugins:
     - macros:
-        module_name: docs_macros
+        module_name: mkdocs_macros
     - mermaid2:
         arguments:
             theme: dark

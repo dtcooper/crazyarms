@@ -4,11 +4,11 @@
 
 - [ ] Documentation - _underway using mkdocs_
     - [x] Initial setup
-    - [ ] env file
+    - [x] env file
     - [ ] docker build process + describing `./compose.sh` + `overrides.yml`
     - [ ] Add streaming instructions page for users
     - [ ] AutoDJ weighting concept
-    - [ ] Harbor architecture and concepts
+    - [x] Harbor architecture and concepts
 - [x] AutoDJ
     - [x] Playlists
     - [x] Ad rotators + stopsets
@@ -39,7 +39,6 @@
 - [x] Add make active/disable quick actions for playlists and stopsets
 - [x] Add scheduled time inline to broadcasts asset creation
 - [x] Hide skip track button for lower precedence sources
-- [ ] Radio buttons for ban times
 - [x] Copy change: rename "precedence" -> "priority"
 - [x] BUG: Edit profile seems to have re-enabled harbor access type
 - [x] Thoroughly test new ffprobe + ffmpeg flows for audio assets + task
@@ -71,6 +70,7 @@
     that adds a message when `form_invalid(...)`
 - [ ] Don't organize assets by folder prefixes that say where they came from like `upload/`, `external/`, etc
     instead organize by `<artist-normalized-and-non-empty>/<album-normalized-and-non-empty>/`
+- [ ] Remove bulk upload ui now that sftp works
 
 ## Future Version
 
@@ -82,3 +82,4 @@
 - [ ] Move liquidsoap harbor source editing into webui, but we could still only link it from admin.
     Remove `@admin.site.register_view()`, associated code, and simplify admin links.
     Rename _"Miscellaneous Configuration"_ to _"Additional Modules"._ Rethink how admin nav links are generated.
+- [ ] Radio buttons for ban times
