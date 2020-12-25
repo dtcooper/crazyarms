@@ -106,7 +106,7 @@
       </a>
 </li>
 <li class="md-tabs__item">
-<a class="md-tabs__link" href="admin-guide/autodj/">
+<a class="md-tabs__link" href="admin-guide/configuration/">
         Admin's Guide
       </a>
 </li>
@@ -121,8 +121,8 @@
     </a>
 </li>
 <li class="md-tabs__item">
-<a class="md-tabs__link" href="about/license/">
-        About
+<a class="md-tabs__link" href="about/support/">
+        About &amp; Support
       </a>
 </li>
 </ul>
@@ -167,6 +167,11 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="#installation">
+    Installation
+  </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="#audio-infrastructure-overview">
     Audio Infrastructure Overview
   </a>
@@ -207,8 +212,8 @@
 </nav>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#customization">
-    Customization
+<a class="md-nav__link" href="#customization-settings">
+    Customization &amp; Settings
   </a>
 </li>
 </ul>
@@ -299,13 +304,23 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="admin-guide/configuration/">
+      Configuration
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="admin-guide/autodj/">
       AutoDJ
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="admin-guide/configuration/">
-      Configuration
+<a class="md-nav__link" href="admin-guide/permissions/">
+      User Permissions
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="admin-guide/google-calendar/">
+      Google Calendar Scheduling
     </a>
 </li>
 </ul>
@@ -324,15 +339,20 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" id="nav-6" type="checkbox"/>
 <label class="md-nav__link" for="nav-6">
-      About
+      About &amp; Support
       <span class="md-nav__icon md-icon"></span>
 </label>
-<nav aria-label="About" class="md-nav" data-md-level="1">
+<nav aria-label="About &amp; Support" class="md-nav" data-md-level="1">
 <label class="md-nav__title" for="nav-6">
 <span class="md-nav__icon md-icon"></span>
-        About
+        About &amp; Support
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="about/support/">
+      Issues &amp; Support
+    </a>
+</li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="about/license/">
       License
@@ -360,28 +380,31 @@
 <article class="md-content__inner md-typeset">
 <h1 id="crazy-arms-radio-backend">Crazy Arms Radio Backend<a class="headerlink" href="#crazy-arms-radio-backend" title="Permanent link">¶</a></h1>
 <div class="admonition danger">
-<p class="admonition-title">Crazy Arms is under active development</p>
-<p>Crazy Arms is currently under active development, however you can preview
-things right now. This documentation is incomplete, is missing sections, and
-may include incorrect information until the first release.</p>
+<p class="admonition-title">Danger: Hic Sunt Dracones (Here Be Dragons)</p>
+<p>Crazy Arms is currently <strong>under active development</strong>, however you can preview
+things right now.</p>
+<p>This documentation is a <strong>work in progress.</strong> There are missing sections, and
+it may include incorrect information until the first release.</p>
 </div>
 <p>Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-end
 written from the ground up.</p>
-<p>It's specifically written after its author built a few <em>fully decentralized</em>
-online radio stations with varying types of scheduling and finding no existing
-product fit some common needs out of the box.</p>
-<p>If you're an technical user or a systems administrator wanting to install Crazy
+<p>It’s specifically written after its author built a few <em>fully decentralized</em>
+online radio stations with some common needs finding no existing product fit.
+Crazy Arms seeks to fit those needs needs out of the box, but allows for
+stations to customize their stream if necessary to fit their unique use cases.</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">¶</a></h2>
+<p>If you’re an technical user or a systems administrator wanting to install Crazy
 Arms, head over to the <a href="server-setup/#installation">installation instructions</a>.</p>
 <h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">¶</a></h2>
 <h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">¶</a></h3>
 <h4 id="the-harbor">The Harbor<a class="headerlink" href="#the-harbor" title="Permanent link">¶</a></h4>
 <p>The main audio component of Crazy Arms is called the <strong>Harbor.</strong> It takes care
-of choosing what to broadcast based on some simple rules. In a sense, it's a
+of choosing what to broadcast based on some simple rules. In a sense, it’s a
 stream picker. Think of the Harbor as a robot sitting at an imaginary console,
 deciding what to play and when, using its <em>crazy arms</em> turning volume knobs, and
 pushing and pulling on faders at exactly the right moment. <em>(And just like that,
-we arrive at the reason for the project's name! Okay, it's not the
-<a href="https://www.youtube.com/watch?v=GurizZaR0Ms">only reason...</a>)</em></p>
+we arrive at the reason for the project’s name! Okay, it’s not the
+<a href="https://www.youtube.com/watch?v=GurizZaR0Ms">only reason…</a>)</em></p>
 <h4 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">¶</a></h4>
 <p>The harbor has several input <strong>sources.</strong> A source is any audio input feeding
 into the harbor. In our robot example above, think of sources as input channels
@@ -400,15 +423,15 @@ it. What exactly constitutes <em>active</em> and <em>inactive?</em> The answer i
 depends on the source.</p>
 <p>For example, in the case of the AutoDJ source, Crazy Arms will always have
 music to play so that source is always considered to be active. <em>(You did
-upload music into the AutoDJ, right!?)</em> The AutoDJ has low priority so it's
+upload music into the AutoDJ, right!?)</em> The AutoDJ has low priority so it’s
 sort of an always-on default.</p>
-<p>On the other hand, take a "live source" like a live DJ streaming using
+<p>On the other hand, take a “live source” like a live DJ streaming using
 Icecast 2. When the DJ connects and starts streaming, that source is active.</p>
-<p>That's not the whole story. The harbor uses <strong>silence detection</strong> for live
+<p>That’s not the whole story. The harbor uses <strong>silence detection</strong> for live
 sources. This means if a live DJ is connected and streaming, but is
 broadcasting silence the source is considered inactive. Suppose their
-microphone isn't working or a fader on their mixer is accidentally pulled
-down. Or maybe they forgot to disconnect. We wouldn't want your station
+microphone isn’t working or a fader on their mixer is accidentally pulled
+down. Or maybe they forgot to disconnect. We wouldn’t want your station
 silent, would we? In short, if a live source is connected but silent, it will
 be considered inactive. The amount of silence before fading is configurable
 but defaults to 15 seconds.</p>
@@ -416,14 +439,14 @@ but defaults to 15 seconds.</p>
 philosophy of Crazy Arms. <img alt="😉" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/1f609.svg" title=":wink:"/></p>
 </div>
 <div class="admonition hint">
-<p class="admonition-title">Failsafe Audio, the <em>Real</em> Always-on Default</p>
-<p>Remember when I called the AutoDJ an "always-on default" just a couple
+<p class="admonition-title">The Failsafe, the <em>Real</em> Always-on Default</p>
+<p>Remember when I called the AutoDJ an “always-on default” just a couple
 paragraphs ago. Well, the AutoDJ <em>can be disabled or end up in an erroneous
 state,</em> for example if it chokes up on an invalid audio file<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, or you
 start deleting music off the disk. If that happens, the AutoDJ will be an
-inactive source and as noted above Crazy Arms doesn't like to broadcast silence.</p>
-<p>For this reason, it's not <em>really</em> the always-on default source with the
-lowest priority. It just acts like it. Enter, the <strong>failsafe audio.</strong> This
+inactive source and as noted above Crazy Arms doesn’t like to broadcast silence.</p>
+<p>For this reason, it’s not <em>really</em> the always-on default source with the
+lowest priority. It just acts like it. Enter, the <strong>failsafe.</strong> This
 is a track that plays on simple repeat. The preloaded track is ridiculously
 annoying hold music but can be changed using the Station Configuration
 module in the admin site.</p>
@@ -431,8 +454,8 @@ module in the admin site.</p>
 <h4 id="upstream-servers">Upstream Servers<a class="headerlink" href="#upstream-servers" title="Permanent link">¶</a></h4>
 <p>The last thing you need to know about are we Crazy Arms called <strong>upstream servers.</strong>
 These are simply places where your station is being broadcast to, usually Icecast
-2 servers. That's where listeners connect to. They're the final output of the
-Harbor. Some radio automation suites call these <em>"encoders."</em> These might be
+2 servers. That’s where listeners connect to. They’re the final output of the
+Harbor. Some radio automation suites call these <em>“encoders.”</em> These might be
 remote partners like <a href="https://www.iheart.com/">iHeart</a> or <a href="http://siriusxm.com">SiriusXM</a>,
 a streaming provider like <a href="https://www.streamguys.com/">StreamGuys</a>, or your own
 infrastructure. You can configure as many upstream servers as you like. For
@@ -440,7 +463,7 @@ convenience and to kickstart your station, Crazy Arms bundles a local Icecast 2
 server it streams MP3 at <code>128kbps</code> to by default, using the popular
 <a href="https://github.com/karlheyes/icecast-kh">icecast-kh</a> branch.</p>
 <h4 id="harbor-flow-diagram">Harbor Flow Diagram<a class="headerlink" href="#harbor-flow-diagram" title="Permanent link">¶</a></h4>
-<p>Now that you understand the basic concepts with the Harbor, here's what it looks
+<p>Now that you understand the basic concepts with the Harbor, here’s what it looks
 like.</p>
 <div class="admonition note">
 <p class="admonition-title">Harbor Flow Diagram</p>
@@ -449,10 +472,10 @@ like.</p>
         prerecord("1. Pre-recorded Broadcast<br/>(Scheduled, long-format shows)")
         subgraph live-sources ["Live Sources (Silence Detection)"]
             dj("2. Live DJ<br/>(Icecast 2, RTMP)")
-            zoom("3. Live Zoom Room<br/>(optional)")
+            zoom("3. Live Zoom Room<br/>(if available)")
         end
-        autodj("4. AutoDJ<br/>(optional)")
-        failsafe(5. Failsafe Audio File)
+        autodj("4. AutoDJ<br/>(if available)")
+        failsafe(5. Failsafe)
     end
 
     harbor(("Harbor<br/>(Intelligent stream picker)"))
@@ -481,67 +504,191 @@ like.</p>
 </div>
 </div>
 <h4 id="sources-details">Sources Details<a class="headerlink" href="#sources-details" title="Permanent link">¶</a></h4>
+<div class="tabbed-set" data-tabs="1:5"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><label for="__tabbed_1_1">Pre-recorded Broadcasts</label><div class="tabbed-content">
+<div class="admonition important">
+<p class="admonition-title">Source Details</p>
 <table>
 <thead>
 <tr>
-<th align="right"><strong>Priority</strong></th>
-<th align="left"><strong>Source</strong></th>
-<th align="center"><strong>Silence Detection </strong></th>
-<th align="left"><strong>Description</strong></th>
-<th align="left"><strong>Example</strong></th>
-<th align="center"><strong>Optional</strong></th>
+<th align="right"></th>
+<th align="left"></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="right">1</td>
-<td align="left">Pre-recorded Broadcasts</td>
-<td align="center"></td>
+<td align="right">Priority:</td>
+<td align="left">1 (highest)</td>
+</tr>
+<tr>
+<td align="right">Silence Detection:</td>
+<td align="left">Disabled <span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">Description:</td>
 <td align="left">Audio uploaded into the admin site, then scheduled for airplay at a specific time.</td>
-<td align="left">MP3 of a two hour show called <em>Friday Night Mix</em> uploaded on Thursday and scheduled to air Friday from 9:00pm to 11:00pm.</td>
-<td align="center"></td>
 </tr>
 <tr>
-<td align="right">2</td>
-<td align="left">Live DJ</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
-<td align="left">Live DJ streaming using either Icecast 2 or RMTP.</td>
-<td align="left">Jane uses <a href="https://rogueamoeba.com/audiohijack/">Audio HiJack</a> from her laptop to broadcast a live two hour show Wednesday at 6:00pm.</td>
-<td align="center"></td>
+<td align="right">Availability:</td>
+<td align="left">Pre-recorded broadcasts are <em>always available</em> in Crazy Arms to users with the <em>Program and schedule pre-recorded broadcasts</em> permission.</td>
 </tr>
 <tr>
-<td align="right">3</td>
-<td align="left">Zoom Room</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
-<td align="left">Live streaming using a Zoom room.</td>
-<td align="left">John starts a Zoom room, enters the room link into Crazy Arms web interface and starts a one hour broadcast at 10:00am on Saturday.</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
-</tr>
-<tr>
-<td align="right">4</td>
-<td align="left">AutoDJ</td>
-<td align="center"></td>
-<td align="left">Audio uploaded into the admin site that plays at random.</td>
-<td align="left">Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during the above shows.</td>
-<td align="center"><span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
-</tr>
-<tr>
-<td align="right">5</td>
-<td align="left">Failsafe Audio</td>
-<td align="center"></td>
-<td align="left">Audio that plays when nothing else is available. (You'll likely only to hear this if the AutoDJ is disabled.)</td>
-<td align="left">Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are annoyed!</td>
-<td align="center"></td>
+<td align="right">Example:</td>
+<td align="left">Two hour show recorded to an mp3 called <code>friday_night_mix.mp3</code>. This file is uploaded into the web UI by Alison Administrator on Monday, where she then schedules it to air Tuesday from 9:00pm to 11:00pm.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="customization">Customization<a class="headerlink" href="#customization" title="Permanent link">¶</a></h3>
-<p>Behind the scenes, the Harbor is a highly customizable script, implemented in
-<a href="https://www.liquidsoap.info/">Liquidsoap</a>. Technical users can add additional
-sources or program the Harbor to do all sorts of novel things. This level of
-customization, while for advanced used, is an important feature of Crazy Arms.
-Ever station is and its use case are different, so there may be no one size fits
-all solution for everytone.</p>
+</div>
+</div>
+<input id="__tabbed_1_2" name="__tabbed_1" type="radio"><label for="__tabbed_1_2">Live DJ</label><div class="tabbed-content">
+<div class="admonition important">
+<p class="admonition-title">Source Details</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">Priority:</td>
+<td align="left">2</td>
+</tr>
+<tr>
+<td align="right">Silence Detection:</td>
+<td align="left">Enabled <span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">Description:</td>
+<td align="left">Live DJ streaming using either Icecast 2 or RMTP.</td>
+</tr>
+<tr>
+<td align="right">Availability:</td>
+<td align="left">The ability to live DJ is <em>always available</em> to users provided they are <a href="admin-guide/permissions/#harbor-authorization">authorized on the harbor</a>.</td>
+</tr>
+<tr>
+<td align="right">Example:</td>
+<td align="left">Diana Disk Jockey uses <a href="https://rogueamoeba.com/audiohijack/">Audio HiJack</a> from her Macbook to broadcast a live show with USB microphone and iTunes on Wednesday from 6:00pm to 8:00pm.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<input id="__tabbed_1_3" name="__tabbed_1" type="radio"><label for="__tabbed_1_3">Zoom Room</label><div class="tabbed-content">
+<div class="admonition important">
+<p class="admonition-title">Source Details</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">Priority:</td>
+<td align="left">3</td>
+</tr>
+<tr>
+<td align="right">Silence Detection:</td>
+<td align="left">Enabled <span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">Description:</td>
+<td align="left">Live streaming using a Zoom room.</td>
+</tr>
+<tr>
+<td align="right">Availability:</td>
+<td align="left">The ability to use a Zoom room is <em>only available</em> if it is enabled for your installation (<a href="admin-guide/configuration/#the-environment-file-env-static-settings"><code>ZOOM_ENABLED=1</code> in your <code>.env</code> file</a>). Furthermore it is only available to users provided they are <a href="admin-guide/permissions/#harbor-authorization">authorized on the harbor</a>.</td>
+</tr>
+<tr>
+<td align="right">Example:</td>
+<td align="left">Video Conference Charlie starts a <a href="https://zoom.us">Zoom room</a>, enters the room link into Crazy Arms web interface and click start for one hour broadcast at 10:00am on Thursday.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<input id="__tabbed_1_4" name="__tabbed_1" type="radio"><label for="__tabbed_1_4">AutoDJ</label><div class="tabbed-content">
+<div class="admonition important">
+<p class="admonition-title">Source Details</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">Priority:</td>
+<td align="left">4</td>
+</tr>
+<tr>
+<td align="right">Silence Detection:</td>
+<td align="left">Disabled <span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">Description:</td>
+<td align="left">Audio uploaded into the admin site that plays at random. <a href="admin-guide/autodj/">More information here</a>.</td>
+</tr>
+<tr>
+<td align="right">Availability:</td>
+<td align="left">The autodj is <em>available</em> if the <a href="admin-guide/configuration/#autodj-configuration">station configuration <code>AUTODJ_ENABLED</code> is set to <code>True</code></a>, which is the default.</td>
+</tr>
+<tr>
+<td align="right">Example:</td>
+<td align="left">Steel Guitar Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during for the shows with higher priority scheduled on Tuesday, Wednesday and Thursday.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<input id="__tabbed_1_5" name="__tabbed_1" type="radio"><label for="__tabbed_1_5">Failsafe</label><div class="tabbed-content">
+<div class="admonition important">
+<p class="admonition-title">Source Details</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">Priority:</td>
+<td align="left">5 (Lowest, always available)</td>
+</tr>
+<tr>
+<td align="right">Silence Detection:</td>
+<td align="left">Disabled <span class="twemoji"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></span></td>
+</tr>
+<tr>
+<td align="right">Description:</td>
+<td align="left">Audio that plays when nothing else is available. (You’ll likely only to hear this if the AutoDJ is disabled.)</td>
+</tr>
+<tr>
+<td align="right">Availability:</td>
+<td align="left">The failsafe is <em>always on.</em> That’s kind of the point, right?</td>
+</tr>
+<tr>
+<td align="right">Example:</td>
+<td align="left">Station Manager Mike Bob disabled the AutoDJ for the radio station. When no one is streaming a live show, the failsafe track plays on repeat. Listeners are probably annoyed! For shame, Mike!</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</input></input></input></input></input></div>
+<h3 id="customization-settings">Customization &amp; Settings<a class="headerlink" href="#customization-settings" title="Permanent link">¶</a></h3>
+<p>The Harbor is customizable. There are several settings you can choose from and
+technical users can add additional sources or program the Harbor to do all sorts
+of novel things. This level of customization, while for advanced users, is an
+important feature of Crazy Arms. Every station is different some may have
+nonstandard cases, so there may be no one size fits all
+solution for everyone.</p>
+<p>If you’re an administrator, find out how to customize the Harbor by
+<a href="admin-guide/configuration/">reading more here</a>.</p>
 <h2 id="features-at-a-glance">Features At a Glance<a class="headerlink" href="#features-at-a-glance" title="Permanent link">¶</a></h2>
 <dl>
 <dt>Priority-based Streaming</dt>
@@ -561,9 +708,9 @@ web front-end can integrate with that, rather than a complex, custom API.</p>
 <dd>A major use case is taking long-format audio files (ie two hours) and scheduling
 them to play at specific times, superseding the AutoDJ.</dd>
 <dt>Broadcasting for non-technical users with <a href="https://zoom.us/">Zoom</a></dt>
-<dd>This is implemented with Zoom for Linux using a Docker container. A "runner"
-bash script does its best to connect to a user's Zoom room and listen in.
-It's inherently a bit brittle, but can be troubleshooted somewhat easily in
+<dd>This is implemented with Zoom for Linux using a Docker container. A “runner”
+bash script does its best to connect to a user’s Zoom room and listen in.
+It’s inherently a bit brittle, but can be troubleshooted somewhat easily in
 a web browser running <a href="https://novnc.com/info.html">noVNC</a> by an admin.</dd>
 <dt><em>Idiot-Tolerant™</em> DJing</dt>
 <dd>If a live DJ or Zoom room is broadcasting silence, Crazy Arms picks another
@@ -573,7 +720,7 @@ source to stream from.</dd>
 <a href="https://docs.docker.com/compose/">docker-compose</a>.</dd>
 <dt>Useful and informative station administration and status tools.</dt>
 <dd>
-<p>Leveraging <a href="https://docs.djangoproject.com/en/3.1/">Django</a>'s admin
+<p>Leveraging <a href="https://docs.djangoproject.com/en/3.1/">Django</a>‘s admin
 interface much of Crazy Arms can be managed by administrators (or users with
 the necessary permissions).</p>
 <p>A status page is also provided that uses
@@ -591,7 +738,7 @@ tool and supports literally
 <a href="https://github.com/blackjack4494/yt-dlc/blob/master/docs/supportedsites.md"><em>thousands of sites</em></a>!</p>
 </dd>
 <dt>An AutoDJ that plays blocks of advertisements and station IDs (stop sets)</dt>
-<dd>This feature can optionally be enabled in the <em>"Server Settings &gt; Configuration"</em>
+<dd>This feature can optionally be enabled in the <em>“Server Settings &gt; Configuration”</em>
 section.</dd>
 <dt>Fine-grained user permission structure.</dt>
 <dd>If a user is <em>not</em> an administrator, there are several permission groups to
@@ -604,7 +751,7 @@ at the wrong time?</dd>
 <dd>At your own risk, you can modify <a href="https://www.liquidsoap.info/">Liquidsoap</a>
 Harbor scripts. This gives pretty high flexibility for various use cases.</dd>
 <dt>RTMP Support (Experimental)</dt>
-<dd>There's experimental support for RTMP, so anyone who's familiar with tools
+<dd>There’s experimental support for RTMP, so anyone who’s familiar with tools
 like <a href="https://obsproject.com/">Open Source Broadcaster (OBS)</a> can stream to
 the harbor. Of course, video is discarded.</dd>
 </dl>
@@ -614,13 +761,13 @@ the harbor. Of course, video is discarded.</dd>
 <dt>Front-end Not Included</dt>
 <dd>Crazy Arms is designed to be a backend for your radio stream only. A user
 interface that includes calendars, a fancy stream player, and metadata
-isn't included.</dd>
+isn’t included.</dd>
 <dt>Admin Site Look and Feel</dt>
-<dd>The admin site for Crazy Arms has a fairly inflexible look and feel. It's
+<dd>The admin site for Crazy Arms has a fairly inflexible look and feel. It’s
 not necessarily a beautiful, easy to use interface but instead meant for
 somewhat technical users. This is by design and was chosen for ease of
 programming. The technical reason for why is that we chose to build it on
-top of <a href="https://docs.djangoproject.com/en/3.1/ref/contrib/admin/">Django's admin site</a>
+top of <a href="https://docs.djangoproject.com/en/3.1/ref/contrib/admin/">Django’s admin site</a>
 module.</dd>
 </dl>
 <div class="footnote">

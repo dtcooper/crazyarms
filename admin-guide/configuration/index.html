@@ -106,7 +106,7 @@
       </a>
 </li>
 <li class="md-tabs__item">
-<a class="md-tabs__link md-tabs__link--active" href="../autodj/">
+<a class="md-tabs__link md-tabs__link--active" href="./">
         Admin's Guide
       </a>
 </li>
@@ -121,8 +121,8 @@
     </a>
 </li>
 <li class="md-tabs__item">
-<a class="md-tabs__link" href="../../about/license/">
-        About
+<a class="md-tabs__link" href="../../about/support/">
+        About &amp; Support
       </a>
 </li>
 </ul>
@@ -223,15 +223,91 @@
         Admin's Guide
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        Configuration
+        <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+      Configuration
+    </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#station-settings-dynamic-settings">
+    Station Settings (Dynamic Settings)
+  </a>
+<nav aria-label="Station Settings (Dynamic Settings)" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#general-options">
+    General Options
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#autodj-configuration">
+    AutoDJ Configuration
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#harbor-configuration">
+    Harbor Configuration
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#audio-assets-configuration">
+    Audio Assets Configuration
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#google-calendar-based-authentication">
+    Google Calendar Based Authentication
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#zoom-settings">
+    Zoom Settings
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#local-icecast-server-settings">
+    Local Icecast Server Settings
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#the-environment-file-env-static-settings">
+    The Environment File -- .env (Static Settings)
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#liquidsoap-source-advanced">
+    Liquidsoap Source (Advanced)
+  </a>
+</li>
+</ul>
+</nav>
+</li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="../autodj/">
       AutoDJ
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<a class="md-nav__link md-nav__link--active" href="./">
-      Configuration
+<li class="md-nav__item">
+<a class="md-nav__link" href="../permissions/">
+      User Permissions
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../google-calendar/">
+      Google Calendar Scheduling
     </a>
 </li>
 </ul>
@@ -250,15 +326,20 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" id="nav-6" type="checkbox"/>
 <label class="md-nav__link" for="nav-6">
-      About
+      About &amp; Support
       <span class="md-nav__icon md-icon"></span>
 </label>
-<nav aria-label="About" class="md-nav" data-md-level="1">
+<nav aria-label="About &amp; Support" class="md-nav" data-md-level="1">
 <label class="md-nav__title" for="nav-6">
 <span class="md-nav__icon md-icon"></span>
-        About
+        About &amp; Support
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../about/support/">
+      Issues &amp; Support
+    </a>
+</li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="../../about/license/">
       License
@@ -285,6 +366,213 @@
 <div class="md-content">
 <article class="md-content__inner md-typeset">
 <h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">¶</a></h1>
+<p>There are three major ways to configure Crazy Arms,</p>
+<ol>
+<li><a href="#station-settings-dynamic-settings">Station Settings in the Admin Site</a></li>
+<li><a href="#the-environment-file-env-static-settings">The startup environment file (<code>.env</code>)</a></li>
+<li><a href="#liquidsoap-source-advanced">The Harbor source code, using Liquidsoap</a></li>
+</ol>
+<h2 id="station-settings-dynamic-settings">Station Settings (Dynamic Settings)<a class="headerlink" href="#station-settings-dynamic-settings" title="Permanent link">¶</a></h2>
+<p>In the admin site, the following configuration options are available, and are
+<em>dynamically configured,</em> which is to say they can be changed at any time without
+having to restart (and rebuild) the Crazy Arms server. Anyone with administrator
+privileges can edit these in the web app.</p>
+<div class="admonition warning">
+<p class="admonition-title">Some Settings May Not Be Available</p>
+<p>If Zoom or local Icecast server is disabled in the <code>.env</code> file, those
+sections will not be available. See
+<a href="#the-environment-file-env-static-settings">more information on the <code>.env</code> file below</a>.</p>
+</div>
+<p>Below are a list of configuration options, organized by section.</p>
+<h3 id="general-options">General Options<a class="headerlink" href="#general-options" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<dl>
+<dt><code>STATION_NAME</code> — <strong>Type: String (required)</strong></dt>
+<dd>The name of your radio station.</dd>
+<dt><code>PLAYOUT_LOG_PURGE_DAYS</code> — <strong>Type: Integer (non-negative)</strong></dt>
+<dd>The number of days to keep playout log entries after which they’re purged. Set to 0 to keep playout log entries forever.</dd>
+</dl>
+</div>
+<h3 id="autodj-configuration">AutoDJ Configuration<a class="headerlink" href="#autodj-configuration" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<dl>
+<dt><code>AUTODJ_ENABLED</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Whether or not to run an AutoDJ on the harbor.</dd>
+<dt><code>AUTODJ_REQUESTS</code> — <strong>Type: Choice of: Disabled (nobody), Users, Users with “Program the AutoDJ” permissions, Superusers</strong></dt>
+<dd>AutoDJ requests enabled for the following users.</dd>
+<dt><code>AUTODJ_REQUESTS_NUM</code> — <strong>Type: Integer (non-zero)</strong></dt>
+<dd>The maximum number of pending AutoDJ requests (if enabled)</dd>
+<dt><code>AUTODJ_ANTI_REPEAT_ENABLED</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Whether or not the AutoDJ should attempt its anti-repeat algorithm. Note if you have too few tracks, this won’t work.</dd>
+<dt><code>AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT</code> — <strong>Type: Integer (non-negative)</strong></dt>
+<dd>Number of tracks to avoid to avoid repeating (if possible). Set to 0 to disable.</dd>
+<dt><code>AUTODJ_ANTI_REPEAT_NUM_TRACKS_NO_REPEAT_ARTIST</code> — <strong>Type: Integer (non-negative)</strong></dt>
+<dd>Number of tracks to avoid playing the same artist (if possible). Set to 0 to disable.</dd>
+<dt><code>AUTODJ_PLAYLISTS_ENABLED</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Whether or not the AutoDJ should use playlists</dd>
+<dt><code>AUTODJ_STOPSETS_ENABLED</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Whether or not the AutoDJ plays stop sets (for ADs, PSAs, Station IDs, etc)</dd>
+<dt><code>AUTODJ_STOPSETS_ONCE_PER_MINUTES</code> — <strong>Type: Integer (non-negative)</strong></dt>
+<dd>How often a stop set should <em>approximately</em> be played (in minutes)</dd>
+</dl>
+</div>
+<h3 id="harbor-configuration">Harbor Configuration<a class="headerlink" href="#harbor-configuration" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<dl>
+<dt><code>HARBOR_COMPRESSION_NORMALIZATION</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Enable compression and normalization on harbor stream.</dd>
+<dt><code>HARBOR_TRANSITION_WITH_SWOOSH</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Transition between harbor sources with a ~1 second swoosh effect.</dd>
+<dt><code>HARBOR_SWOOSH_AUDIO_FILE</code> — <strong>Type: File</strong></dt>
+<dd>Audio file for the swoosh (if enabled). Sound be short, ie under 3-4 seconds.</dd>
+<dt><code>HARBOR_TRANSITION_SECONDS</code> — <strong>Type: Decimal (non-negative)</strong></dt>
+<dd>Fadeout time in seconds when transitioning between harbor sources. Set to 0 for no fadeout.</dd>
+<dt><code>HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE</code> — <strong>Type: Integer (non-zero)</strong></dt>
+<dd>The maximum number of seconds of silence on a live source (eg. Zoom or live DJs) until it will be considered inactive, ie until we would treat it as if it were offline.</dd>
+<dt><code>HARBOR_FAILSAFE_AUDIO_FILE</code> — <strong>Type: File</strong></dt>
+<dd>Failsafe audio file that the harbor should play if there’s nothing else to stream.</dd>
+<dt><code>UPSTREAM_FAILSAFE_AUDIO_FILE</code> — <strong>Type: File</strong></dt>
+<dd>Failsafe audio file that should be broadcast to upstream servers if we can’t connect to the harbor, ie the harbor failed to start.</dd>
+</dl>
+</div>
+<h3 id="audio-assets-configuration">Audio Assets Configuration<a class="headerlink" href="#audio-assets-configuration" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<dl>
+<dt><code>ASSET_ENCODING</code> — <strong>Type: Choice of: MP3, Ogg Vorbis, FLAC</strong></dt>
+<dd>Encoding of downloaded external assets and non-standard input files.</dd>
+<dt><code>ASSET_BITRATE</code> — <strong>Type: Choice of: 64kbit, 128kbit, 192kbit, 256kbit, 320kbit</strong></dt>
+<dd>Bitrate (quality) of downloaded external and non-standard audio files. (Unused for FLAC.)</dd>
+<dt><code>ASSET_DEDUPING</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Enable duplicate detection for audio assets based on metadata and audio fingerprint.</dd>
+</dl>
+</div>
+<h3 id="google-calendar-based-authentication">Google Calendar Based Authentication<a class="headerlink" href="#google-calendar-based-authentication" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<dl>
+<dt><code>GOOGLE_CALENDAR_ENABLED</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Enabled Google Calendar based authentication for DJs.</dd>
+<dt><code>GOOGLE_CALENDAR_ID</code> — <strong>Type: String</strong></dt>
+<dd>Google Calendar ID.</dd>
+<dt><code>GOOGLE_CALENDAR_CREDENTIALS_JSON</code> — <strong>Type: String</strong></dt>
+<dd>Past the contents of your Google Service JSON Account Key here (a <code>credentials.json</code> file).For more info from Google about this please <a href="https://cloud.google.com/docs/authentication/getting-started" target="_blank">click here</a>.</dd>
+</dl>
+</div>
+<h3 id="zoom-settings">Zoom Settings<a class="headerlink" href="#zoom-settings" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<dl>
+<dt><code>ZOOM_MAX_SHOW_LENTH_MINUTES</code> — <strong>Type: Integer (number of minutes)</strong></dt>
+<dd>Maximum show length (in minutes) of an <em>unscheduled</em> Zoom broadcast.</dd>
+<dt><code>ZOOM_DEFAULT_SHOW_LENTH_MINUTES</code> — <strong>Type: Integer (number of minutes)</strong></dt>
+<dd>Default show length (in minutes) of an <em>unscheduled</em> Zoom broadcast. Note shows scheduled through Google Calendar will default to the length of the calendar event (or the maximum show length above, whichever is shorter).</dd>
+</dl>
+</div>
+<h3 id="local-icecast-server-settings">Local Icecast Server Settings<a class="headerlink" href="#local-icecast-server-settings" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<dl>
+<dt><code>ICECAST_LOCATION</code> — <strong>Type: String</strong></dt>
+<dd>Location setting for the Icecast server.</dd>
+<dt><code>ICECAST_ADMIN_EMAIL</code> — <strong>Type: Email Address</strong></dt>
+<dd>The admin email setting for the Icecast server.</dd>
+<dt><code>ICECAST_ADMIN_PASSWORD</code> — <strong>Type: String (required)</strong></dt>
+<dd>Admin password for the Icecast server.</dd>
+<dt><code>ICECAST_SOURCE_PASSWORD</code> — <strong>Type: String (required)</strong></dt>
+<dd>Source password for the Icecast server.</dd>
+<dt><code>ICECAST_RELAY_PASSWORD</code> — <strong>Type: String (required)</strong></dt>
+<dd>Relay password for the Icecast server.</dd>
+<dt><code>ICECAST_MAX_CLIENTS</code> — <strong>Type: Integer (non-negative)</strong></dt>
+<dd>Max connected clients allowed the Iceacst server (0 for unlimited).</dd>
+<dt><code>ICECAST_MAX_SOURCES</code> — <strong>Type: Integer (non-negative)</strong></dt>
+<dd>Max sources allowed to connect to the Icecast server (0 for unlimited).</dd>
+</dl>
+</div>
+<h2 id="the-environment-file-env-static-settings">The Environment File – <code>.env</code> (Static Settings)<a class="headerlink" href="#the-environment-file-env-static-settings" title="Permanent link">¶</a></h2>
+<p>When Crazy Arms starts for the first time with <code>./compose.sh</code>, you’ll get asked
+a series of simple questions. In your root directory, all that’s happening is
+the file <code>.default.env</code> is being modified and copied to <code>.env</code>.</p>
+<div class="admonition danger">
+<p class="admonition-title">Advanced Users Only</p>
+<p>Editing the <code>.env</code> file is meant to be done once at installation (or rarely),
+and is intended for <em>systems administrators</em> only, ie the nerds who set up
+Crazy Arms for your station. If your just a regular admin user, you’ll
+probably be more interested in the <a href="#station-settings-dynamic-settings">station settings</a>
+above.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Which Services Start</p>
+<p>If you edit <code>ZOOM_ENABLED</code>, <code>ICECAST_ENABLED</code>, <code>EMAIL_ENABLED</code>,
+<code>HARBOR_TELNET_WEB_ENABLED</code>, <code>RTMP_ENABLED</code> you actually are controlling
+which services (or Docker containers) Crazy Arms starts up. This is the
+reason why these settings are <em>static,</em> since the list of containers
+we choose to run is determined at start time.</p>
+</div>
+<p>Below is a copy of the <code>.default.env</code> file that shipped with Crazy Arms which
+does a decent enough job of explaining what each option does.</p>
+<div class="highlight"><pre><span></span><code># .default.env -- The default configuration for Crazy Arms
+#
+# Notes:
+#  * The ./compose.sh script will copy this and fill out some values for you
+#    on first run.
+#  * Boolean values must be 0 or 1
+#  * SECRET_KEY _must_ be set (./compose.sh will set it for you)
+#
+
+# Whether to run in DEBUG mode (Do _NOT_ set this to 1 on production)
+DEBUG=0
+
+# Django secret key -- MUST be set, ./compose.sh will generate one for you
+#  - Valid characters: Letter, numbers and any of: ! @ # % ^ &amp; * ( - _ = + )
+SECRET_KEY=
+
+# Default timezone for server (note: users can set their own TZ in the web UI)
+TIMEZONE=US/Pacific
+
+# Domain name used for the web app, ie if it's at http://radio.crazyarms.xyz/,
+# enter radio.crazyarm.xyz.
+#
+# Note: This to match what users type into their web browser or the web app will
+#       refuse connections.
+DOMAIN_NAME=localhost
+
+# Allow DJs to broadcast via a Zoom room
+ZOOM_ENABLED=0
+
+# Whether or not to run a local Icecast server (kh fork)
+ICECAST_ENABLED=1
+
+# Use letsencrypt to enable HTTPS. The DNS record for DOMAIN_NAME must resolve
+# to the IP address of your server.
+HTTPS_ENABLED=0
+# letencrypt requires an email address if you use it
+HTTPS_CERTBOT_EMAIL=
+
+# Enable email notifications by enabling and filling these out
+EMAIL_ENABLED=0
+EMAIL_SMTP_SERVER=
+EMAIL_SMTP_PORT=
+EMAIL_SMTP_USERNAME=
+EMAIL_SMTP_PASSWORD=
+
+# Harbor Telnet Access over Web (experimental, so disabled by default)
+HARBOR_TELNET_WEB_ENABLED=0
+
+# RTMP streaming (experimental, disabled by default)
+RTMP_ENABLED=0
+
+# Custom port overrides, set these to whatever you like. SFTP could be set to 22
+# if you aren't running ssh on your server.
+#HARBOR_PORT=8001
+#HTTP_PORT=80
+#HTTPS_PORT=443
+#ICECAST_PORT=8000
+#SFTP_PORT=2022
+#RTMP_PORT=1935
+</code></pre></div>
+<h2 id="liquidsoap-source-advanced">Liquidsoap Source (Advanced)<a class="headerlink" href="#liquidsoap-source-advanced" title="Permanent link">¶</a></h2>
+<p>TODO</p>
+<ul>
+<li><a href="https://www.liquidsoap.info/">Liquidsoap</a></li>
+<li>It’s complicated but lots of fun to use.</li>
+</ul>
 </article>
 </div>
 </div>
@@ -292,7 +580,7 @@
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../autodj/" rel="prev">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../../users-guide/dj/rtmp/" rel="prev">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -301,17 +589,17 @@
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                AutoDJ
+                RTMP
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../../server-setup/" rel="next">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../autodj/" rel="next">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Server Setup
+                AutoDJ
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">
