@@ -6,7 +6,6 @@
     <caption>Harbor Live DJ Access (Icecast 2)</caption>
     <tr><th width="30%">Server Address (Hostname):</th><td width="70%"><code>{{ host }}</code></td></tr>
     <tr><th>Type:</th><td>Icecast 2 (<b><u>not</u></b> SHOUTCast, sometimes the "2" is omitted)</td></tr>
-    </tr>
     <tr><th>Port:</th><td><code>{{ settings.HARBOR_PORT }}</code></td></tr>
     <tr><th>Mountpoint:</th><td><code>stream</code></td></tr>
     <tr><th>Username:</th><td><code>{{ user.username }}</code></td></tr>
@@ -39,6 +38,20 @@
           <small><code>{{ user.stream_key }}</code></small><br>
           (Generate a new on on your <a href="{% url 'profile' %}">Profile</a> page)
         </td>
+      </tr>
+    </table>
+  {% endif %}
+
+  {% if user.get_sftp_allowable_models %}
+    <table class="first-td-right">
+      <caption>SFTP Audio Asset Upload</caption>
+      <tr><th width="30%">Server Address (Hostname):</th><td width="70%"><code>{{ host }}</code></td></tr>
+      <tr><th>Type:</th><td>SFTP or SSH (sometimes called SCP or SSH2, <b><u>not</u></b> FTP or FTPS)</td></tr>
+      <tr><th>Port:</th><td><code>{{ settings.SFTP_PORT }}</code></td></tr>
+      <tr><th>Username:</th><td><code>{{ user.username }}</code></td></tr>
+      <tr>
+        <th>Password:</th>
+        <td><em><u class="orange"><code>[your-password]</code></u></em> (replace with your password, don't include square brackets)</td>
       </tr>
     </table>
   {% endif %}

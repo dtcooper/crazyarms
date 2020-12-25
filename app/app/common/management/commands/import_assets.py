@@ -113,9 +113,9 @@ class Command(BaseCommand):
             asset.file.save(f'imported/{asset.file_basename}', File(open(path, 'rb')), save=False)
 
             try:
-                asset.full_clean()
+                asset.clean()
             except ValidationError as e:
-                print(f'... skipping, validation error: {e.message}')
+                print(f'... skipping, validation error: {e}')
             else:
                 asset.save()
                 if playlist:

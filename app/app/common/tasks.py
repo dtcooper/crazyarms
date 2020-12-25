@@ -113,7 +113,7 @@ def asset_download_external_url(asset, url, title='', task=None):
                 asset.file_basename = os.path.basename(log_line)
                 asset.file.save(f'external/{asset.file_basename}', File(open(log_line, 'rb')), save=False)
                 asset.title = title
-                asset.full_clean()
+                asset.clean()
                 asset.save()
                 logger.info(f'youtube-dl: {url} successfully downloaded to {log_line}')
 

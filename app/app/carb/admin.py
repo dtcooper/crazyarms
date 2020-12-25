@@ -18,7 +18,7 @@ class AdminBaseContextMixin:
 
 class CARBAdminSite(admin.AdminSite):
     AdminBaseContextMixin = AdminBaseContextMixin
-    index_title = 'Station administration'
+    index_title = ''
     empty_value_display = mark_safe('<em>none</em>')
     site_url = None
     nginx_proxy_views = (('View server logs', '/logs/', 'common.view_logs'),)

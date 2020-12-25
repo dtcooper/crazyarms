@@ -188,6 +188,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, F
 
     @cached_property
     def zoom_is_running_cached(self):
+        # Slow, so we cache it
         return self.service.is_zoom_running()
 
     def post(self, request):

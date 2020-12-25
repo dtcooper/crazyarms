@@ -179,6 +179,21 @@ class User(DirtyFieldsMixin, AbstractUser):
         else:
             return False
 
+    def get_sftp_allowable_models(self):
+        # Avoid circular imports
+        from autodj.models import AudioAsset, RotatorAsset
+        from broadcast.models import BroadcastAsset
+
+        perms = []
+        if config.AUTODJ_ENABLED and self.has_perm('autodj.change_audioasset'):
+            perms.append(AudioAsset)
+            if config.AUTODJ_STOPSETS_ENABLED:
+                perms.append(RotatorAsset)
+        if self.has_perm('broadcast.change_broadcast'):
+            perms.append(BroadcastAsset)
+
+        return perms
+
     def currently_harbor_authorized(self, now=None, should_log=True):
         auth_log = f'harbor_auth = {self.get_harbor_auth_display()}'
         ban_seconds = cache.ttl(f'{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}')

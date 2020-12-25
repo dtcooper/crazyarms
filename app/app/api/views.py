@@ -142,19 +142,18 @@ class SFTPAuthView(APIView):
                         break
 
         if user:
-            dir_perms = []
-            permissions = {'/': self.RESTRICTED_DIR_PERMS}
-            if config.AUTODJ_ENABLED and user.has_perm('autodj.change_audioasset'):
-                dir_perms.append(self.SFTP_ASSET_CLASS_PATHS[AudioAsset])
-                permissions = {'/': self.ALLOWED_DIR_PERMS}
-                if config.AUTODJ_STOPSETS_ENABLED:
-                    dir_perms.append(self.SFTP_ASSET_CLASS_PATHS[RotatorAsset])
-            if user.has_perm('broadcast.change_broadcast'):
-                dir_perms.append(self.SFTP_ASSET_CLASS_PATHS[BroadcastAsset])
+            allowed = user.get_sftp_allowable_models()
 
-            if dir_perms:
-                logger.info(f'sftp auth requested by {user}: {auth_type} accepted (directory perms: {dir_perms})')
-                permissions.update({f'/{perm}/': self.ALLOWED_DIR_PERMS for perm in dir_perms})
+            if allowed:
+                permissions = {'/': self.RESTRICTED_DIR_PERMS}
+                if AudioAsset in allowed:
+                    permissions = {'/': self.ALLOWED_DIR_PERMS}
+                else:
+                    permissions = {'/': self.RESTRICTED_DIR_PERMS}
+
+                permissions.update({f'/{self.SFTP_ASSET_CLASS_PATHS[m]}/': self.ALLOWED_DIR_PERMS for m in allowed})
+                logger.info(f'sftp auth requested by {user}: {auth_type} accepted (uploads allowed: '
+                            f'{[m._meta.verbose_name for m in allowed]})')
                 return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'quota_size': 0}
             else:
                 logger.info(f'sftp auth requested by {user}: denied ({auth_type} allowed but no permissions)')

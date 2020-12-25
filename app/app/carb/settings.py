@@ -22,6 +22,7 @@ ICECAST_ENABLED = env.bool('ICECAST_ENABLED', default=False)
 ICECAST_PORT = env.int('ICECAST_PORT', default=8000)
 RTMP_ENABLED = env.bool('RTMP_ENABLED', default=False)
 RTMP_PORT = env.int('RTMP_PORT', default=1935)
+SFTP_PORT = env.int('SFTP_PORT', default=2022)
 TIME_ZONE = env('TIMEZONE', default='US/Pacific')
 ZOOM_ENABLED = env.bool('ZOOM_ENABLED', default=False)
 
