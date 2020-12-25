@@ -1,3 +1,13 @@
+:root {
+    /* From https://materializecss.com/color.html */
+    --nc-lk-1: #2196f3; /* blue */
+    --nc-lk-2: #26c6da; /* cyan lighten-1 */
+    --mt-orange: #ff9800;
+    --mt-orange-darken-2: #f57c00;
+    --mt-red: #f44336;
+    --mt-green: #4caf50;
+}
+
 body {
   max-width: 1000px;
   padding: 0.5rem;
@@ -19,18 +29,17 @@ input[type="button"]:enabled:hover {
   filter: brightness(80%);
 }
 
-button[type=reset], .bg-orangered { background-color: orangered; }
 input[type=text], input[type=password], input[type=email], textarea { width: 100%; }
 
 .hidden { display: none; }
 
-.warning, .orange { color: darkorange; }
-.bg-orange { background-color: orange; }
-.error, .red, .errorlist { color: red; }
-.bg-red { background-color: red; }
+.warning, .orange { color: var(--mt-orange-darken-2); }
+.bg-orange { background-color: var(--mt-orange); }
+.error, .red, .errorlist { color: var(--mt-red); }
+button[type=reset], .bg-red { background-color: var(--mt-red); }
 .error, .bold { font-weight: bold; }
-.success, .green { color: #33e980; }
-.bg-green { background-color: forestgreen; }
+.success, .green { color: var(--mt-green); }
+.bg-green { background-color: var(--mt-green); }
 
 .center-text { text-align: center; }
 .right-text,
@@ -46,13 +55,12 @@ table caption { text-decoration: underline; }
   white-space: normal;
 }
 
-td, th { border: 1px solid #666666; }
 th { text-align: center; }
 
 .current-page {
   cursor: default;
   text-decoration: none;
-  color: #aaaaaa;
+  color: #9e9e9e;
 }
 .current-page:hover { text-decoration: underline; }
 

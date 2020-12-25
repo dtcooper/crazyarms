@@ -174,7 +174,7 @@ class AudioAssetAdmin(AudioAssetAdminBase, AutoDJModelAdmin):
                     audio_assets.append(asset)
 
                     try:
-                        asset.clean()
+                        asset.full_clean()
                     except forms.ValidationError as validation_error:
                         for error in validation_error.messages:
                             form.add_error('__all__', error)

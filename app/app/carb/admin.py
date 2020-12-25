@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.template.response import TemplateResponse
 from django.urls import path, resolve, reverse
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.views.generic import View
 
@@ -28,7 +29,7 @@ class CARBAdminSite(admin.AdminSite):
 
     @property
     def site_title(self):
-        return f'{config.STATION_NAME} admin'
+        return format_html('{} &mdash; Station Admin', config.STATION_NAME)
     site_header = site_title
 
     def __init__(self, *args, **kwargs):

@@ -113,7 +113,7 @@ class Command(BaseCommand):
             asset.file.save(f'imported/{asset.file_basename}', File(open(path, 'rb')), save=False)
 
             try:
-                asset.clean()
+                asset.full_clean()
             except ValidationError as e:
                 print(f'... skipping, validation error: {e.message}')
             else:

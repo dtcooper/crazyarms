@@ -85,7 +85,7 @@ _that is active_ will be what the robot chooses to play. We call this concept
     lowest priority. It just acts like it. Enter, the **failsafe.** This
     is a track that plays on simple repeat. The preloaded track is ridiculously
     annoying hold music but can be changed using the Station Configuration
-    module in the admin site.
+    module in the station admin site.
 
 [^1]:
     Crazy Arms tries very hard to reject invalid audio files, but it is
@@ -159,7 +159,7 @@ like.
         | -: | :- |
         | Priority: | 1 (highest)
         | Silence Detection: | Disabled :material-close:
-        | Description: | Audio uploaded into the admin site, then scheduled for airplay at a specific time.
+        | Description: | Audio uploaded into the station admin site, then scheduled for airplay at a specific time.
         | Availability: | Pre-recorded broadcasts are _always available_ in Crazy Arms to users with the _Program and schedule pre-recorded broadcasts_ permission.
         | Example: | Two hour show recorded to an mp3 called `friday_night_mix.mp3`. This file is uploaded into the web UI by Alison Administrator on Monday, where she then schedules it to air Tuesday from 9:00pm to 11:00pm.
 
@@ -189,9 +189,9 @@ like.
         | -: | :- |
         | Priority: | 4
         | Silence Detection: | Disabled :material-close:
-        | Description: | Audio uploaded into the admin site that plays at random. [More information here](admin-guide/autodj.md).
+        | Description: | Audio uploaded into the station admin site that plays at random. [More information here](admin-guide/autodj.md).
         | Availability: | The autodj is _available_ if the [station configuration `AUTODJ_ENABLED` is set to `True`](admin-guide/configuration/#autodj-configuration), which is the default.
-        | Example: | Steel Guitar Sally uploads the entire Ray Price catalog to the AutoDJ through the admin site so music from that plays except during for the shows with higher priority scheduled on Tuesday, Wednesday and Thursday.
+        | Example: | Steel Guitar Sally uploads the entire Ray Price catalog to the AutoDJ through the station admin site so music from that plays except during for the shows with higher priority scheduled on Tuesday, Wednesday and Thursday.
 
 === "Failsafe"
     !!! important "Source Details"
@@ -300,10 +300,10 @@ Front-end Not Included
     interface that includes calendars, a fancy stream player, and metadata
     isn't included.
 
-Admin Site Look and Feel
-:   The admin site for Crazy Arms has a fairly inflexible look and feel. It's
+station admin site Look and Feel
+:   The station admin site for Crazy Arms has a fairly inflexible look and feel. It's
     not necessarily a beautiful, easy to use interface but instead meant for
     somewhat technical users. This is by design and was chosen for ease of
     programming. The technical reason for why is that we chose to build it on
-    top of [Django's admin site](https://docs.djangoproject.com/en/3.1/ref/contrib/admin/)
+    top of [Django's station admin site](https://docs.djangoproject.com/en/3.1/ref/contrib/admin/)
     module.

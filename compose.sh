@@ -167,7 +167,6 @@ if [ "$FIRST_RUN" ]; then
     echo 'Welcome to Crazy Arms Radio Backend (CARB). Before we get started, '
     echo "you'll have to answer a few questions to configure its services."
     echo
-    .env set SECRET_KEY="'$(LC_CTYPE=C tr -dc 'a-z0-9!@#%^&*(-_=+)' < /dev/urandom | head -c50)'"
 
     get_str 'Domain name' DOMAIN_NAME 'localhost'
     get_str 'Timezone' TIMEZONE 'US/Pacific'
@@ -204,7 +203,10 @@ if [ "$#" = 0 ]; then
     exit 0
 fi
 
-source .env
+if [ -z "$SECRET_KEY" ]; then
+    .env set SECRET_KEY="'$(LC_CTYPE=C tr -dc 'a-z0-9!@#%^&*(-_=+)' < /dev/urandom | head -c50)'"
+    source .env
+fi
 
 COMPOSE_ARGS='--env-file .env --project-directory .'
 ALL_SERVICES=

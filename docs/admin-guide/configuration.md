@@ -2,13 +2,13 @@
 
 There are three major ways to configure Crazy Arms,
 
-1. [Station Settings in the Admin Site](#station-settings-dynamic-settings)
+1. [Station Settings in the station admin site](#station-settings-dynamic-settings)
 2. [The startup environment file (`.env`)](#the-environment-file-env-static-settings)
 3. [The Harbor source code, using Liquidsoap](#liquidsoap-source-advanced)
 
 ## Station Settings (Dynamic Settings)
 
-In the admin site, the following configuration options are available, and are
+In the station admin site, the following configuration options are available, and are
 _dynamically configured,_ which is to say they can be changed at any time without
 having to restart (and rebuild) the Crazy Arms server. Anyone with administrator
 privileges can edit these in the web app.

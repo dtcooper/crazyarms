@@ -11,12 +11,12 @@ a software engineer :scientist: at [Eventbrite](https://www.eventbrite.com/) :ti
 and [Autodesk](https://www.autodesk.com/) :triangular_ruler:.
 
 He's staff and on-air talent at [BMIR 94.5 FM](https://en.wikipedia.org/wiki/BMIR)
-(Burning Man Information Radio) :fire::man_singer: had stories done on [KALW 91.7 FM](https://www.kalw.org/),
-and been on a number of stations and shows in the San Francisco Bay Area
-:bridge_at_night:. He
-runs an _entirely inappropriate_ :underage: weekly, wacky :clown_face: call-in
-:telephone: radio show at a coffee shop :coffee: window :window: in San Francisco
-described below.
+(Burning Man Information Radio) :fire::man_singer:, has been on
+[KALW 91.7 FM](https://www.kalw.org/) (an [NPR](https://www.npr.org/) affiliate)
+and a number of stations and programs in the San Francisco Bay Area :bridge_at_night:.
+He runs an _entirely inappropriate_ :underage: weekly, wacky
+:clown_face: call-in :telephone: radio show at a coffee shop :coffee:
+window in San Francisco described below.
 
 ![David Cooper](../img/david.jpg){: style="min-width: 350px; width:30%"}
 ![This Is Going Well, I think with David Cooper](../img/tigwit.jpg){: style="min-width: 350px; width:30%"}
@@ -35,7 +35,7 @@ David has deployed Crazy Arms to the following online stations,
 * [Shouting Fire](https://shoutingfire.com)
 * [KTLC The Lost Church Radio](https://www.thelostchurch.com)
 * [820hz](https://820hz.fm)
-* [BMIR 94.5](https://bmir.org) for their 2020 online-only broadcast
+* [BMIR 94.5 FM](https://bmir.org) for their 2020 online-only broadcast
 
 
 ## Donations
@@ -52,4 +52,4 @@ donate against your better judgment, David's Bitcoin address is as follows,
 
 ## Final Note
 
-_...remember kids, have fun!_
+_...and remember kids, have fun!_

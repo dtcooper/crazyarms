@@ -38,7 +38,7 @@ def process_sftp_upload(sftp_path):
                 asset.file.save(f'uploads/{asset.file_basename}', File(open(sftp_path, 'rb')), save=False)
 
                 try:
-                    asset.clean()
+                    asset.full_clean()
                 except ValidationError as e:
                     logger.warning(f'sftp upload skipped {type_name} {sftp_path}: validation error: {e.message}')
                 else:

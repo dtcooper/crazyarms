@@ -13,7 +13,7 @@ set('scheduler.generic_queues', 4)
 API_HEADERS = [('X-CARB-Secret-Key', getenv('SECRET_KEY'))]
 API_PREFIX = 'http://app:8000/api/'
 BUFFER = 5.
-FAILSAFE_SOURCE_NAME = 'Failsafe Audio'
+FAILSAFE_SOURCE_NAME = 'Failsafe'
 LIVE_DJ_KICKOFF_INTERVAL = 5.
 HARBOR_PORT = 8001
 MAX = 10.

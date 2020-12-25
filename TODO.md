@@ -83,3 +83,8 @@
     Remove `@admin.site.register_view()`, associated code, and simplify admin links.
     Rename _"Miscellaneous Configuration"_ to _"Additional Modules"._ Rethink how admin nav links are generated.
 - [ ] Radio buttons for ban times
+
+## Down the line
+
+- [ ] Stop using Django admin, instead roll everything on our own.
+    [Halfmoon](https://gethalfmoon.com) looks pretty slick.

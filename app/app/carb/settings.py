@@ -209,7 +209,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
         'choices': (('64K', '64kbit'), ('128K', '128kbit'), ('192K', '192kbit'), ('256K', '256kbit'),
                     ('320K', '320kbit')),
     }],
-    'autodj_requests': ['django.forms.fields.ChoiceField', {
+    'autodj_requests_choices': ['django.forms.fields.ChoiceField', {
         'widget': 'django.forms.Select',
         # Careful: referred to by code text in autodj/models.py and webui/views.py
         'choices': (('disabled', 'Disabled (nobody)'), ('user', 'Users'),
@@ -245,7 +245,7 @@ CONSTANCE_CONFIG = OrderedDict((
     ('UPSTREAM_FAILSAFE_AUDIO_FILE', (False, 'Failsafe audio file that should be broadcast to upstream servers if we '
                                       "can't connect to the harbor, ie the harbor failed to start.", 'clearable_file')),
     ('AUTODJ_ENABLED', (True, 'Whether or not to run an AutoDJ on the harbor.')),
-    ('AUTODJ_REQUESTS', ('disabled', 'AutoDJ requests enabled for the following users.', 'autodj_requests')),
+    ('AUTODJ_REQUESTS', ('disabled', 'AutoDJ requests enabled for the following users.', 'autodj_requests_choices')),
     ('AUTODJ_REQUESTS_NUM', (5, 'The maximum number of pending AutoDJ requests (if enabled)', 'nonzero_positive_int')),
     ('AUTODJ_STOPSETS_ENABLED', (False, 'Whether or not the AutoDJ plays stop sets (for ADs, PSAs, Station IDs, etc)')),
     ('AUTODJ_STOPSETS_ONCE_PER_MINUTES', (20, mark_safe(
@@ -267,7 +267,7 @@ CONSTANCE_CONFIG = OrderedDict((
     ('GOOGLE_CALENDAR_ID', ('example@gmail.com', 'Google Calendar ID.', 'char')),
     ('GOOGLE_CALENDAR_CREDENTIALS_JSON', (
         '', mark_safe('Past the contents of your Google Service JSON Account Key here (a <code>credentials.json</code> '
-                      'file).<br>For more info from Google about this please <a href="https://cloud.google.com/docs'
+                      'file).For more info from Google about this please <a href="https://cloud.google.com/docs'
                       '/authentication/getting-started" target="_blank">click here</a>.'))),
 ))
 
@@ -312,7 +312,7 @@ if ICECAST_ENABLED:
                                  'positive_int')),
     )))
     CONSTANCE_CONFIG_FIELDSETS.update(OrderedDict((
-        ('Icecast Settings', ('ICECAST_LOCATION', 'ICECAST_ADMIN_EMAIL', 'ICECAST_ADMIN_PASSWORD',
-                              'ICECAST_SOURCE_PASSWORD', 'ICECAST_RELAY_PASSWORD', 'ICECAST_MAX_CLIENTS',
-                              'ICECAST_MAX_SOURCES')),
+        ('Local Icecast Server Settings', ('ICECAST_LOCATION', 'ICECAST_ADMIN_EMAIL', 'ICECAST_ADMIN_PASSWORD',
+                                           'ICECAST_SOURCE_PASSWORD', 'ICECAST_RELAY_PASSWORD', 'ICECAST_MAX_CLIENTS',
+                                           'ICECAST_MAX_SOURCES')),
     )))
