@@ -66,7 +66,7 @@
     and icecast (icecast + notify) containers
 - [x] investigate whether asset models should use `clean()` or `full_clean()`?
     (Does it only matter with unique indexes?)
-- [ ] "There were errors on this page" message for forms with errors at top of page. Possible mixin
+- [x] "There were errors on this page" message for forms with errors at top of page. Possible mixin
     that adds a message when `form_invalid(...)`
 - [ ] Don't organize assets by folder prefixes that say where they came from like `upload/`, `external/`, etc
     instead organize by `<artist-normalized-and-non-empty>/<album-normalized-and-non-empty>/`

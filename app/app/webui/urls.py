@@ -1,4 +1,5 @@
 from django.contrib.auth import views as auth_views
+from django.conf import settings
 from django.urls import path, re_path
 
 from . import views
@@ -24,3 +25,10 @@ urlpatterns = [
     path('zoom/', views.ZoomView.as_view(), name='zoom'),
     re_path('^(?P<module>logs|websockify|telnet|sse)', views.nginx_protected, name='nginx_protected'),
 ]
+
+if settings.EMAIL_ENABLED:
+    urlpatterns += [
+        path('password-reset/', views.PasswordResetView.as_view(), name='admin_password_reset'),
+        path('password-reset/<uidb64>/<token>/',
+             views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    ]

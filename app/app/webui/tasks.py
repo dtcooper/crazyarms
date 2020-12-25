@@ -11,7 +11,7 @@ from services.services import ZoomService
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-@djhuey.db_task()
+@djhuey.db_task(priority=5)
 def stop_zoom_broadcast():
     logger.info('Stopping Zoom broadcast')
 

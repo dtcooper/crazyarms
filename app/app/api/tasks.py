@@ -23,7 +23,7 @@ SFTP_PATH_RE = re.compile(fr'^{re.escape(settings.SFTP_UPLOADS_ROOT)}(?P<user_id
                           fr'(?:(?P<asset_type>{"|".join(re.escape(p) for p in SFTP_PATH_ASSET_CLASSES.keys())})/)?.+$')
 
 
-@djhuey.task()
+@djhuey.task(priority=1)
 def process_sftp_upload(sftp_path):
     logger.info(f'processing sftp upload: {sftp_path}')
 

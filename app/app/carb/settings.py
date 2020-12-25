@@ -30,14 +30,12 @@ ALLOWED_HOSTS = ['app', 'localhost', '127.0.0.1', DOMAIN_NAME]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
-    # Django
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Admin (with CSS variables!)
-    'variable_admin',
+    # Custom admin site
     'carb.apps.CARBAdminConfig',
 
     # Third-party

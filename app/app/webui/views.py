@@ -45,7 +45,6 @@ logger = logging.getLogger(f'carb.{__name__}')
 class FormErrorMessageMixin:
     error_message = 'There was a problem submitting the form. Please correct any errors below.'
 
-    # TODO add to all formviews, even ones outside of this module (move views in in carb/urls.py to here)
     def form_invalid(self, form):
         messages.error(self.request, self.error_message)
         return super().form_invalid(form)
@@ -419,6 +418,32 @@ class PlayoutLogView(LoginRequiredMixin, ListView):
     template_name = 'webui/playout_log.html'
     queryset = PlayoutLogEntry.objects.order_by('-created')[:MAX_ENTRIES]
     extra_context = {'title': 'Playout Log', 'MAX_ENTRIES': MAX_ENTRIES}
+
+
+class PasswordResetView(SuccessMessageMixin, auth_views.PasswordResetView):
+    success_message = ('A password reset email has been sent to %(email)s. If an account exists with that email '
+                       "address, you should should receive it shortly. If you don’t receive an email, make sure you've"
+                       'entered your address correctly, and check your spam folder.')
+    success_url = reverse_lazy('login')
+    template_name = 'webui/form.html'
+    title = 'Reset Your Password'
+    extra_context = {
+        'submit_text': 'Send Password Reset Email',
+        'form_description': "Enter your email address below, and we’ll email instructions you for setting a new one."}
+
+    @property
+    def extra_email_context(self):
+        return {'domain': settings.DOMAIN_NAME, 'site_name': config.STATION_NAME}
+
+
+class PasswordResetConfirmView(SuccessMessageMixin, FormErrorMessageMixin, auth_views.PasswordResetConfirmView):
+    post_reset_login = True
+    success_url = reverse_lazy('status')
+    success_message = 'Your password has been successfully reset and you have been logged in.'
+    template_name = 'webui/form.html'
+    title = 'Enter Your New Password'
+    extra_context = {'submit_text': 'Reset Password',
+                     'form_description': 'Please select a new password. Enter it twice for confirmation.'}
 
 
 @csrf_exempt

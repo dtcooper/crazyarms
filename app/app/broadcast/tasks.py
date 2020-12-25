@@ -10,7 +10,7 @@ from .models import Broadcast
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-@djhuey.db_task(context=True, retries=10, retry_delay=2)
+@djhuey.db_task(priority=5, context=True, retries=10, retry_delay=2)
 def play_broadcast(broadcast, task=None):
     try:
         harbor.prerecord__push(f'file://{broadcast.asset.file.path}')

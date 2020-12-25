@@ -15,9 +15,7 @@
 </head>
 <body{% if settings.DEBUG %} class="show-debug-warning"{% endif %}>
   {% if settings.DEBUG %}
-    <div id="debug-warning">
-      <strong>Warning: running in DEBUG mode. This should not be done in a production environment.</strong>
-    </div>
+    <div id="debug-warning">Warning: running in <strong>DEBUG</strong> mode.</div>
   {% endif %}
   {% block header %}
     <header>

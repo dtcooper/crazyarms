@@ -60,7 +60,7 @@ def install_youtube_dl():
         logger.info('youtube-dl up to date!')
 
 
-@djhuey.periodic_task(once_at_startup(local_daily_task(hour=4)))
+@djhuey.periodic_task(priority=2, validate_datetime=once_at_startup(local_daily_task(hour=4)))
 def youtube_dl_daily_update():
     install_youtube_dl()
 
@@ -76,7 +76,7 @@ def mark_asset_failed(asset, title):
     asset.save()
 
 
-@djhuey.db_task(context=True, retries=3, retry_delay=5)
+@djhuey.db_task(priority=1, context=True, retries=3, retry_delay=5)
 def asset_download_external_url(asset, url, title='', task=None):
     asset.refresh_from_db()
     asset.status = asset.Status.PROCESSING
@@ -150,7 +150,7 @@ def asset_download_external_url(asset, url, title='', task=None):
         raise
 
 
-@djhuey.db_task(context=True, retries=3, retry_delay=5)
+@djhuey.db_task(priority=1, context=True, retries=3, retry_delay=5)
 def asset_convert_to_acceptable_format(asset, task=None):
     asset.refresh_from_db()
     asset.status = asset.Status.PROCESSING

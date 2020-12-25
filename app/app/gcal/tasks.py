@@ -17,7 +17,7 @@ from .models import GoogleCalendarShowTimes
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-@djhuey.db_periodic_task(once_at_startup(crontab(minute='*/5')))
+@djhuey.db_periodic_task(priority=2, validate_datetime=once_at_startup(crontab(minute='*/5')))
 @djhuey.lock_task('sync-google-calendar-api-lock')
 def sync_google_calendar_api():
     if config.GOOGLE_CALENDAR_ENABLED:

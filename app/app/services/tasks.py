@@ -14,7 +14,7 @@ from .models import PlayoutLogEntry
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-@djhuey.periodic_task(local_daily_task(hour=3, minute=30))  # daily @ 3:30am local time
+@djhuey.periodic_task(priority=1, validate_datetime=local_daily_task(hour=3, minute=30))  # daily @ 3:30am local time
 def purge_playout_log_entries():
     if config.PLAYOUT_LOG_PURGE_DAYS > 0:
         purge_less_than_datetime = timezone.now() - datetime.timedelta(days=config.PLAYOUT_LOG_PURGE_DAYS)
