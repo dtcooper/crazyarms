@@ -38,14 +38,14 @@
     {% if user.upcoming_show_times %}
       Your upcoming show: <strong class="green">{{ user.upcoming_show_times|first|first }}
         to {{ user.upcoming_show_times|first|last }} ({{ user.timezone }})</strong>
-      {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
+      {% if user.gcal_entry_grace_minutes > 0 or user.gcal_exit_grace_minutes > 0 %}
         <br>
-          {% if user.google_calender_entry_grace_minutes > 0 %}
-            You can start your show up to {{ user.google_calender_entry_grace_minutes }} minute{{ user.google_calender_entry_grace_minutes|pluralize }} early
+          {% if user.gcal_entry_grace_minutes > 0 %}
+            You can start your show up to {{ user.gcal_entry_grace_minutes }} minute{{ user.gcal_entry_grace_minutes|pluralize }} early
           {% endif %}
-          {% if user.google_calender_exit_grace_minutes > 0 %}
-            {% if user.google_calender_entry_grace_minutes > 0 %}and{% else %}You can{% endif %}
-            keep broadcasting up to {{ user.google_calender_exit_grace_minutes }} minute{{ user.google_calender_exit_grace_minutes|pluralize }} afterwards.
+          {% if user.gcal_exit_grace_minutes > 0 %}
+            {% if user.gcal_entry_grace_minutes > 0 %}and{% else %}You can{% endif %}
+            keep broadcasting up to {{ user.gcal_exit_grace_minutes }} minute{{ user.gcal_exit_grace_minutes|pluralize }} afterwards.
           {% endif %}
       {% endif %}
       {% if not currently_authorized and user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}

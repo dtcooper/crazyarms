@@ -2,12 +2,14 @@ import logging
 
 from django import forms
 from django.conf import settings
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.utils.safestring import mark_safe
 
-from constance import admin as constance_admin, config
+from constance import config
+from constance.admin import ConstanceForm
 
 from services import init_services
-from gcal.tasks import sync_google_calendar_api
+from gcal.tasks import sync_gcal_api
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -49,7 +51,7 @@ class AudioAssetCreateFormBase(forms.ModelForm):
         return asset
 
 
-class ConstanceForm(constance_admin.ConstanceForm):
+class ProcessConfigChangesConstanceForm(ConstanceForm):
     def save(self):
         pre_save = {name: getattr(config, name) for name in settings.CONSTANCE_CONFIG}
         super().save()
@@ -62,7 +64,7 @@ class ConstanceForm(constance_admin.ConstanceForm):
         # TODO if we move this in ConstanceAdmin's save_model(), we can send messages to the request
         if any(change.startswith('GOOGLE_CALENDAR_') for change in changes):
             logger.info("Got GOOGLE_CALENDAR_* config change. Re-sync'ing")
-            sync_google_calendar_api()
+            sync_gcal_api()
         if any(change.startswith('ICECAST_') for change in changes):
             logger.info('Got ICECAST_* config change. Restarting icecast.')
             init_services(services='icecast')
@@ -78,3 +80,17 @@ class ConstanceForm(constance_admin.ConstanceForm):
         if any(change.startswith('UPSTREAM_') for change in changes):
             logger.info('Got UPSTREAM_* config change. Restarting upstreams.')
             init_services(services='upstream', restart_services=True)
+
+
+class EmailUserCreationForm(UserCreationForm):
+    send_email = forms.BooleanField(label='Send welcome email to new user', required=False,
+                                    help_text='Check this box to send the user an email notifying them of their new '
+                                              'account, allowing them to set their password. The link will be good '
+                                              'for 14 days.')
+
+
+class EmailUserChangeForm(UserChangeForm):
+    send_email = forms.BooleanField(label='Send password change email to user', required=False,
+                                    help_text='Check this box and save the form to send the user an email, allowing '
+                                              'them to change the password for their account. The link will be good '
+                                              'for 14 days.')

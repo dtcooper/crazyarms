@@ -14,6 +14,7 @@ urlpatterns = [
         redirect_authenticated_user=True, template_name='webui/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('info/', views.InfoView.as_view(), name='info'),
+    path('password-set/<token>/', views.SetPasswordView.as_view(), name='password_set'),
     path('playout-log/', views.PlayoutLogView.as_view(), name='playout_log'),
     path('profile/', views.UserProfileView.as_view(), name='profile'),
     path('profile/email/<token>/', views.UserProfileEmailUpdateView.as_view(), name='profile_email_update'),

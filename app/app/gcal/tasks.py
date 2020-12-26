@@ -11,7 +11,7 @@ from huey.contrib import djhuey
 from carb import constants
 from common.tasks import once_at_startup
 
-from .models import GoogleCalendarShowTimes
+from .models import GCalShowTimes
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -19,11 +19,11 @@ logger = logging.getLogger(f'carb.{__name__}')
 
 @djhuey.db_periodic_task(priority=2, validate_datetime=once_at_startup(crontab(minute='*/5')))
 @djhuey.lock_task('sync-google-calendar-api-lock')
-def sync_google_calendar_api():
+def sync_gcal_api():
     if config.GOOGLE_CALENDAR_ENABLED:
         logger.info('Synchronizing with Google Calendar API')
         try:
-            GoogleCalendarShowTimes.sync_api()
+            GCalShowTimes.sync_api()
         except Exception:
             cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC,
                       "Failed, please check your settings and try again.", timeout=None)

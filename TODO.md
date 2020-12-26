@@ -58,7 +58,7 @@
 - [ ] User emails
     - [x] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
     - [ ] Do we really need a postfix container? Can't we just configure Django to send email directly?
-    - [ ] Create user flow that sends user an email (and possibly they fill out their details)
+    - [x] Create user flow that sends user an email (and possibly they fill out their details)
     - [ ] Consistent "From: " emails
 - [x] rtmp streaming using nginx-rtmp
 - [ ] huey logs seem to print twice / django logging seems overly verbose (maybe just in gunicorn?)

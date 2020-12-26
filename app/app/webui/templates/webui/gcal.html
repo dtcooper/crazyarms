@@ -12,17 +12,17 @@
       <em>Note: you are <strong class="green"><u>ALWAYS</u> authorized</strong> to broadcast on the harbor.</em>
     {% else %} {# user.HarborAuth.GOOGLE_CALENDAR #}
       You are only authorized to broadcast during your scheduled times.
-      {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
+      {% if user.gcal_entry_grace_minutes > 0 or user.gcal_exit_grace_minutes > 0 %}
         Your login grace period:
         <ul>
-          {% if user.google_calender_entry_grace_minutes > 0 %}
+          {% if user.gcal_entry_grace_minutes > 0 %}
             <li>You can <em>start</em> broadcasting up to
-              <strong><u>{{ user.google_calender_entry_grace_minutes }} minute{{ user.google_calender_entry_grace_minutes|pluralize }}
+              <strong><u>{{ user.gcal_entry_grace_minutes }} minute{{ user.gcal_entry_grace_minutes|pluralize }}
                 <em>before</em> your scheduled time</u></strong>.</li>
           {% endif %}
-          {% if user.google_calender_exit_grace_minutes > 0 %}
+          {% if user.gcal_exit_grace_minutes > 0 %}
             <li>You can <em>keep</em> broadcasting up to
-                <strong><u>{{ user.google_calender_exit_grace_minutes }} minute{{ user.google_calender_exit_grace_minutes|pluralize }}
+                <strong><u>{{ user.gcal_exit_grace_minutes }} minute{{ user.gcal_exit_grace_minutes|pluralize }}
                   <em>after</em> your scheduled time</u></strong>.</li>
           {% endif %}
         </ul>
@@ -41,7 +41,7 @@
     <caption>
       My Upcoming Scheduled Shows
       {% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
-        {% if user.google_calender_entry_grace_minutes > 0 or user.google_calender_exit_grace_minutes > 0 %}
+        {% if user.gcal_entry_grace_minutes > 0 or user.gcal_exit_grace_minutes > 0 %}
           <em>(Not Including Grace Period)</em>
         {% endif %}
       {% endif %}

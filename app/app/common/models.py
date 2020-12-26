@@ -5,7 +5,7 @@ import json
 import logging
 import math
 import os
-import random
+import secrets
 import string
 import subprocess
 import uuid
@@ -58,7 +58,7 @@ class TimestampedModel(models.Model):
 
 def generate_random_string(length):
     # Needs to be non-urlencodable (just alphanum characters) for nginx-rtmp to work without escaping hell
-    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
+    return ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length))
 
 
 def filter_inactive_group_queryset(queryset):
@@ -94,10 +94,10 @@ class User(DirtyFieldsMixin, AbstractUser):
                                                                                     'SFTP and SCP (one per line).')
     stream_key = models.CharField('RTMP stream key', max_length=STREAM_KEY_LENGTH, unique=True,
                                   help_text='Users can reset this by editing their Profile.')
-    google_calender_entry_grace_minutes = models.PositiveIntegerField(
+    gcal_entry_grace_minutes = models.PositiveIntegerField(
         'harbor entry grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>before</strong> a scheduled show that the user is allowed to enter the harbor.'))
-    google_calender_exit_grace_minutes = models.PositiveIntegerField(
+    gcal_exit_grace_minutes = models.PositiveIntegerField(
         'harbor exit grace period (minutes)', default=0, help_text=mark_safe(
             'The minutes <strong>after</strong> a scheduled show that the user is kicked off the harbor.'))
     groups = models.ManyToManyField(
@@ -132,8 +132,8 @@ class User(DirtyFieldsMixin, AbstractUser):
     def harbor_auth_pretty(self):
         if self.harbor_auth == User.HarborAuth.GOOGLE_CALENDAR:
             if config.GOOGLE_CALENDAR_ENABLED:
-                return (f'{self.get_harbor_auth_display()} ({self.google_calender_entry_grace_minutes} mins early '
-                        f'entry, {self.google_calender_exit_grace_minutes} mins late exit)')
+                return (f'{self.get_harbor_auth_display()} ({self.gcal_entry_grace_minutes} mins early entry, '
+                        f'{self.gcal_exit_grace_minutes} mins late exit)')
             else:
                 return User.HarborAuth.ALWAYS.label
         else:
@@ -151,8 +151,8 @@ class User(DirtyFieldsMixin, AbstractUser):
     @cached_property
     def upcoming_show_times(self):
         now = timezone.now()
-        entry_grace = datetime.timedelta(minutes=self.google_calender_entry_grace_minutes)
-        exit_grace = datetime.timedelta(minutes=self.google_calender_exit_grace_minutes)
+        entry_grace = datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
+        exit_grace = datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
 
         upcoming_show_times = []
         for show_time in self.show_times:
@@ -215,8 +215,8 @@ class User(DirtyFieldsMixin, AbstractUser):
                 if self.show_times:
                     if now is None:
                         now = timezone.now()
-                    entry_grace = datetime.timedelta(minutes=self.google_calender_entry_grace_minutes)
-                    exit_grace = datetime.timedelta(minutes=self.google_calender_exit_grace_minutes)
+                    entry_grace = datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
+                    exit_grace = datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
                     for show_time in self.show_times:
                         lower, upper = show_time
                         if (lower - entry_grace) <= now <= (upper + exit_grace):

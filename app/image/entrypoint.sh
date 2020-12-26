@@ -20,6 +20,8 @@ if [ "$#" = 0 ]; then
             exec $CMD
         fi
     else
+        echo "Starting up Crazy Arms Radio Backend version $CARB_VERSION"
+
         wait-for-it -t 0 db:5432
         ./manage.py migrate
         ./manage.py init_services

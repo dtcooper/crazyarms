@@ -148,28 +148,25 @@ class UserProfileForm(forms.ModelForm):
         if not self.instance.is_superuser:
             # Make sure these fields are only editable by superusers
             for field_name in (
-                'username', 'email', 'harbor_auth', 'google_calender_entry_grace_minutes',
-                'google_calender_exit_grace_minutes'
+                'username', 'email', 'harbor_auth', 'gcal_entry_grace_minutes', 'gcal_exit_grace_minutes'
             ):
                 field = self.fields[field_name]
                 field.disabled = True
-                field.help_text += " (Read-only. Ask an administrator to update this for you.)"
+                field.help_text += " (Read-only. You'll need an administrator to update this for you.)"
 
-        self.fields['timezone'].help_text = f'Currently {date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")}'
+        self.fields['timezone'].help_text = f'(Currently {date_format(timezone.localtime(), "SHORT_DATETIME_FORMAT")})'
 
-        remove_grace_fields = False
-        if config.GOOGLE_CALENDAR_ENABLED:
-            remove_grace_fields = self.instance.harbor_auth != User.HarborAuth.GOOGLE_CALENDAR
-        else:
+        remove_grace_fields = self.instance.harbor_auth != User.HarborAuth.GOOGLE_CALENDAR
+        if not config.GOOGLE_CALENDAR_ENABLED:
             self.fields['harbor_auth'].choices = list(filter(
                 lambda c: c[0] != User.HarborAuth.GOOGLE_CALENDAR, User.HarborAuth.choices))
             remove_grace_fields = True
 
         if remove_grace_fields:
-            del self.fields['google_calender_entry_grace_minutes']
-            del self.fields['google_calender_exit_grace_minutes']
+            del self.fields['gcal_entry_grace_minutes']
+            del self.fields['gcal_exit_grace_minutes']
 
-        if not config.AUTODJ_ENABLED or not self.instance.has_perm('autodj.change_audioasset'):
+        if not self.instance.get_sftp_allowable_models():
             del self.fields['authorized_keys']
 
         if settings.EMAIL_ENABLED and not self.instance.is_superuser:
@@ -179,8 +176,7 @@ class UserProfileForm(forms.ModelForm):
                 max_length=User._meta.get_field('email').max_length)
 
         self.order_fields(('username', 'email', 'new_email', 'timezone', 'first_name', 'last_name', 'harbor_auth',
-                           'google_calender_entry_grace_minutes', 'google_calender_exit_grace_minutes',
-                           'authorized_keys'))
+                           'gcal_entry_grace_minutes', 'gcal_exit_grace_minutes', 'authorized_keys'))
 
     def clean_update_email(self):
         email = self.cleaned_data['update_email']
@@ -193,7 +189,7 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth',
-                  'google_calender_entry_grace_minutes', 'google_calender_exit_grace_minutes', 'authorized_keys')
+                  'gcal_entry_grace_minutes', 'gcal_exit_grace_minutes', 'authorized_keys')
 
 
 class ZoomForm(forms.Form):
@@ -230,7 +226,7 @@ class ZoomForm(forms.Form):
             grace = authorization_time_bound
             self.values['grace'] = self.values['max'] = math.ceil((grace - now).total_seconds())
 
-            default = authorization_time_bound - datetime.timedelta(minutes=user.google_calender_exit_grace_minutes)
+            default = authorization_time_bound - datetime.timedelta(minutes=user.gcal_exit_grace_minutes)
             if default > now:
                 choices.append(
                     ('default', f'Until {date_format(timezone.localtime(default), "SHORT_DATETIME_FORMAT")} (current '
@@ -240,7 +236,7 @@ class ZoomForm(forms.Form):
                 initial = 'grace'
 
             choices.append(('grace', f'Until {date_format(timezone.localtime(grace), "SHORT_DATETIME_FORMAT")} '
-                                     f'(current scheduled show, including {user.google_calender_exit_grace_minutes} '
+                                     f'(current scheduled show, including {user.gcal_exit_grace_minutes} '
                                      'minute grace period)'))
         else:
             self.values['default'] = 60 * min(config.ZOOM_MAX_SHOW_LENTH_MINUTES,

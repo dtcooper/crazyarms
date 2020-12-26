@@ -74,7 +74,7 @@
   </blockquote>
 
   <main>
-    {% block content %}{% endblock %}
+    {% block content %}{% if simple_content %}<p>{{ simple_content }}</p>{% endif %}{% endblock %}
   </main>
 
   <hr>
@@ -84,7 +84,7 @@
       <small>
         {% now 'Y' as year %}
         <a href="https://github.com/dtcooper/carb" target="_blank">Crazy Arms Radio Backend</a>
-        &copy; 2020{% if year > '2020' %}-{{ year }}{% endif %} David Cooper
+        version {{ carb_version }} &copy; 2020{% if year > '2020' %}-{{ year }}{% endif %} David Cooper
       </small>
     </p>
   </footer>

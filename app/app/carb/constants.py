@@ -8,4 +8,5 @@ CACHE_KEY_GCAL_LAST_SYNC = 'gcal:last-sync'
 CACHE_KEY_HARBOR_BAN_PREFIX = 'harbor:ban:'  # + user.id
 CACHE_KEY_HARBOR_CONFIG_CONTEXT = 'harbor:config-context'
 CACHE_KEY_YTDL_UP2DATE = 'youtube-dl:up2date'
+CACHE_KEY_SET_PASSWORD_PREFIX = 'user:set-password:'
 REDIS_KEY_ROOM_INFO = 'zoom-runner:room-info'

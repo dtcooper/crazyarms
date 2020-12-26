@@ -26,7 +26,7 @@ class DatetimeRangeListJSONDecoder(json.JSONDecoder):
         return [(parse(lower), parse(upper)) for lower, upper in super().decode(obj)]
 
 
-class GoogleCalendarShowTimes(TimestampedModel):
+class GCalShowTimes(TimestampedModel):
     SYNC_RANGE_DAYS_MIN = datetime.timedelta(days=60)
     SYNC_RANGE_DAYS_MAX = datetime.timedelta(days=120)
 

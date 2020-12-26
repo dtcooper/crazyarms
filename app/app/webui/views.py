@@ -2,6 +2,7 @@ import datetime
 from io import StringIO
 import json
 import logging
+import secrets
 import shlex
 
 from dotenv import dotenv_values
@@ -10,13 +11,14 @@ from huey.exceptions import TaskLockedException
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, views as auth_views
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core import signing
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -30,7 +32,8 @@ from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
 from carb import constants
-from common.models import filter_inactive_group_queryset, generate_random_string, User
+from common.admin import send_set_password_email
+from common.models import filter_inactive_group_queryset, User
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
@@ -268,7 +271,8 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageM
     def form_valid(self, form):
         email = form.cleaned_data.get('update_email')
         if email:
-            session_token = self.request.session['update_email_token'] = generate_random_string(12)
+            # Token doesn't need to be log, not used for signing, just in the user session
+            session_token = self.request.session['update_email_token'] = secrets.token_urlsafe(12)
             token = signing.dumps([self.request.user.id, session_token, email], salt='update:email', compress=True)
             url = self.request.build_absolute_uri(reverse('profile_email_update', kwargs={'token': token}))
 
@@ -276,7 +280,7 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageM
                                            'update, please open it and follow the verification link.')
 
             # TODO: From (not just from this, but also from password reset)
-            send_mail(from_email=None, recipient_list=[email], subject='Verify New Email Address',
+            send_mail(from_email=None, recipient_list=[email], subject=f'Verify Email Address on {config.STATION_NAME}',
                       message=f'Please go to the following URL to verify your email address update: {url}')
 
         return super().form_valid(form)
@@ -319,6 +323,64 @@ class UserProfileEmailUpdateView(LoginRequiredMixin, View):
             messages.error(request, 'The link you provided to change your password was invalid. Please try again.')
 
         return redirect('profile')
+
+
+class SetPasswordView(SuccessMessageMixin, FormErrorMessageMixin, FormView):
+    form_class = SetPasswordForm
+    success_url = reverse_lazy('status')
+    success_message = "Your password was set and you've been logged in."
+    template_name = 'webui/password_set.html'
+
+    def dispatch(self, request, token, *args, **kwargs):
+        try:
+            user_id, self.newly_created, self.cache_token = signing.loads(token, salt='set:password')
+        except signing.BadSignature:
+            return redirect('status')
+
+        if not cache.get(f'{constants.CACHE_KEY_SET_PASSWORD_PREFIX}{self.cache_token}:valid'):
+            messages.error(request, 'The link you provided is no longer valid.')
+            return redirect('status')
+
+        try:
+            self.user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return redirect('status')
+
+        self.cache_token_usable = cache.get(f'{constants.CACHE_KEY_SET_PASSWORD_PREFIX}{self.cache_token}:usable')
+        return super().dispatch(request, token=token, *args, **kwargs)
+
+    def get_title(self):
+        return f'{"New Account" if self.newly_created else "Set"} Password'
+
+    def get(self, request, token, *args, **kwargs):
+        if not self.cache_token_usable:
+            messages.warning(self.request, 'The link you followed is invalid. Please click the button below to resend '
+                                           'an email to the address on file.')
+        return super().get(request, token, *args, **kwargs)
+
+    def post(self, request, token, *args, **kwargs):
+        if self.cache_token_usable:
+            return super().post(request, *args, **kwargs)
+        elif request.POST.get('send_new_email'):
+            send_set_password_email(request, self.user, newly_created=self.newly_created)
+            return render(request, 'webui/base.html', {
+                'title': self.get_title(), 'simple_content': 'An email has been sent to the address on file.'})
+        else:
+            return redirect('password_set', token=token)
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(), 'newly_created': self.newly_created,
+                'title': self.get_title(), 'cache_token_usable': self.cache_token_usable}
+
+    def get_form_kwargs(self):
+        return {'user': self.user, **super().get_form_kwargs()}
+
+    def form_valid(self, form):
+        form.save()
+        cache.delete(f'{constants.CACHE_KEY_SET_PASSWORD_PREFIX}{self.cache_token}:usable')
+        cache.delete(f'{constants.CACHE_KEY_SET_PASSWORD_PREFIX}{self.cache_token}:valid')
+        login(self.request, self.user)
+        return super().form_valid(form)
 
 
 class GCalView(LoginRequiredMixin, TemplateView):
@@ -433,7 +495,7 @@ class PasswordResetView(SuccessMessageMixin, auth_views.PasswordResetView):
 
     @property
     def extra_email_context(self):
-        return {'domain': settings.DOMAIN_NAME, 'site_name': config.STATION_NAME}
+        return {'site_name': config.STATION_NAME}
 
 
 class PasswordResetConfirmView(SuccessMessageMixin, FormErrorMessageMixin, auth_views.PasswordResetConfirmView):

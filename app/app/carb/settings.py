@@ -188,7 +188,7 @@ SHELL_PLUS_IMPORTS = [
     'from api.tasks import process_sftp_upload',
     'from broadcast.tasks import play_broadcast',
     'from common.tasks import asset_convert_to_acceptable_format, asset_download_external_url, youtube_dl_daily_update',
-    'from gcal.tasks import sync_google_calendar_api',
+    'from gcal.tasks import sync_gcal_api',
     'from services.tasks import purge_playout_log_entries',
     'from webui.tasks import stop_zoom_broadcast',
 ]

@@ -1,5 +1,6 @@
 .coverage
 .env
+.version
 __pycache__/
 _docs/
 credentials.json

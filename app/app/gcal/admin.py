@@ -16,14 +16,14 @@ from constance import config
 
 from carb import constants
 
-from .models import GoogleCalendarShowTimes
-from .tasks import sync_google_calendar_api
+from .models import GCalShowTimes
+from .tasks import sync_gcal_api
 
 
 logger = logging.getLogger(f'carb.{__name__}')
 
 
-class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
+class GCalShowTimesAdmin(admin.ModelAdmin):
     save_on_top = True
     list_display = ('user', 'num_shows')
     fields = ('user', 'shows')
@@ -55,8 +55,8 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
         @cached_property
         def short_description(self):
             now = timezone.now()
-            show_times_range_start = date_format(now - GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MIN, 'SHORT_DATE_FORMAT')
-            show_times_range_end = date_format(now + GoogleCalendarShowTimes.SYNC_RANGE_DAYS_MAX, 'SHORT_DATE_FORMAT')
+            show_times_range_start = date_format(now - GCalShowTimes.SYNC_RANGE_DAYS_MIN, 'SHORT_DATE_FORMAT')
+            show_times_range_end = date_format(now + GCalShowTimes.SYNC_RANGE_DAYS_MAX, 'SHORT_DATE_FORMAT')
             return f'show(s) from {show_times_range_start} to {show_times_range_end}'
 
     @cached_property
@@ -69,7 +69,7 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         return [path('sync/', self.admin_site.admin_view(self.sync_view),
-                name='gcal_googlecalendarshowtimes_sync')] + super().get_urls()
+                name='gcal_gcalshowtimes_sync')] + super().get_urls()
 
     def users_list(self, obj):
         return ', '.join(obj.users.order_by('username').values_list('username', flat=True)) or None
@@ -80,12 +80,12 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
             raise PermissionDenied
 
         cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, 'currently running', timeout=None)
-        sync_google_calendar_api()
+        sync_gcal_api()
         messages.info(request,  "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")
-        return redirect('admin:gcal_googlecalendarshowtimes_changelist')
+        return redirect('admin:gcal_gcalshowtimes_changelist')
 
     def changelist_view(self, request, extra_context=None):
-        return super().changelist_view(request, {'last_sync': GoogleCalendarShowTimes.get_last_sync()})
+        return super().changelist_view(request, {'last_sync': GCalShowTimes.get_last_sync()})
 
     def has_add_permission(self, request):
         return False
@@ -100,4 +100,4 @@ class GoogleCalendarShowTimesAdmin(admin.ModelAdmin):
         return config.GOOGLE_CALENDAR_ENABLED
 
 
-admin.site.register(GoogleCalendarShowTimes, GoogleCalendarShowTimesAdmin)
+admin.site.register(GCalShowTimes, GCalShowTimesAdmin)

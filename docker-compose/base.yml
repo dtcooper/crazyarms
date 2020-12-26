@@ -37,6 +37,7 @@ services:
       - redis
       - upstream
     environment:
+      CARB_VERSION: ${CARB_VERSION:-unknown}
       TZ: ${TIMEZONE:-US/Pacific}
 
   tasks:
@@ -54,6 +55,7 @@ services:
       - db
       - redis
     environment:
+      CARB_VERSION: ${CARB_VERSION:-unknown}
       RUN_HUEY: 1
       TZ: ${TIMEZONE:-US/Pacific}
 
@@ -90,6 +92,7 @@ services:
       - services_config:/config:ro
       - ./media:/media_root:ro
     environment:
+      CARB_VERSION: ${CARB_VERSION:-unknown}
       CONTAINER_NAME: harbor
       SECRET_KEY: ${SECRET_KEY}
       TZ: ${TIMEZONE:-US/Pacific}
@@ -106,6 +109,7 @@ services:
       - services_config:/config:ro
       - ./media:/media_root:ro
     environment:
+      CARB_VERSION: ${CARB_VERSION:-unknown}
       CONTAINER_NAME: upstream
       TZ: ${TIMEZONE:-US/Pacific}
 
