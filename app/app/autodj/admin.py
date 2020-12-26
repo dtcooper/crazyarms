@@ -155,58 +155,6 @@ class AudioAssetAdmin(AudioAssetAdminBase, AutoDJModelAdmin):
                 request, 'You must select a playlist to remove audio assets from.', messages.WARNING)
     remove_playlist_action.short_description = 'Remove from playlist'
 
-    def get_urls(self):
-        return [path('upload/', self.admin_site.admin_view(self.upload_view),
-                name='autodj_audioasset_upload')] + super().get_urls()
-
-    def upload_view(self, request):
-        if not self.has_add_permission(request):
-            raise PermissionDenied
-
-        if request.method == 'POST':
-            form = AudioAssetUploadForm(request.POST, request.FILES)
-            if form.is_valid():
-                files = request.FILES.getlist('audios')
-                audio_assets = []
-
-                for file in files:
-                    asset = AudioAsset(file=file)
-                    audio_assets.append(asset)
-
-                    try:
-                        asset.clean()
-                    except forms.ValidationError as validation_error:
-                        for error in validation_error.messages:
-                            form.add_error('__all__', error)
-
-            # If no errors were added
-            if form.is_valid():
-                playlists = form.cleaned_data.get('playlists', [])
-
-                for audio_asset in audio_assets:
-                    audio_asset.uploader = request.user
-                    audio_asset.save()
-                    audio_asset.playlists.add(*playlists)
-
-                self.message_user(request, f'Uploaded {len(audio_assets)} audio assets.', messages.SUCCESS)
-
-                return redirect('admin:autodj_audioasset_changelist')
-        else:
-            form = AudioAssetUploadForm()
-
-        opts = self.model._meta
-        return TemplateResponse(request, 'admin/autodj/audioasset/upload.html', {
-            'adminform': AdminForm(form, [(None, {'fields': form.base_fields})],
-                                   self.get_prepopulated_fields(request)),
-            'app_label': opts.app_label,
-            'errors': form.errors.values(),
-            'form': form,
-            'opts': opts,
-            'save_on_top': self.save_on_top,
-            'title': 'Bulk Upload Audio Assets',
-            **self.admin_site.each_context(request),
-        })
-
 
 class RotatorAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJStopsetRelatedAdmin):
     fields = ('name', 'rotator_assets')

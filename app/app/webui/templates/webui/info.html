@@ -42,9 +42,9 @@
     </table>
   {% endif %}
 
-  {% if user.get_sftp_allowable_models %}
+  {% if has_sftp %}
     <table class="first-td-right">
-      <caption>SFTP Audio Asset Upload</caption>
+      <caption>SFTP Asset Upload</caption>
       <tr><th width="30%">Server Address (Hostname):</th><td width="70%"><code>{{ host }}</code></td></tr>
       <tr><th>Type:</th><td>SFTP or SSH (sometimes called SCP or SSH2, <b><u>not</u></b> FTP or FTPS)</td></tr>
       <tr><th>Port:</th><td><code>{{ settings.SFTP_PORT }}</code></td></tr>
@@ -53,6 +53,12 @@
         <th>Password:</th>
         <td><em><u class="orange"><code>[your-password]</code></u></em> (replace with your password, don't include square brackets)</td>
       </tr>
+      {% if has_default_playlist %}
+        <tr>
+          <th>Default playlist for uploads</th>
+          <td>{% if user.default_playlist %}{{ user.default_playlist.name }}{% else %}<em>none</em>{% endif %}</td>
+        </tr>
+      {% endif %}
     </table>
   {% endif %}
 

@@ -1,7 +1,7 @@
 (function($) {
     function showHideGoogleCalenderGracePeriods() {
         var harborAuth = $('#id_harbor_auth').val()
-        var $formRow = $('.form-row.field-google_calender_entry_grace_minutes.field-google_calender_exit_grace_minutes')
+        var $formRow = $('.form-row.field-gcal_entry_grace_minutes.field-gcal_exit_grace_minutes')
         if (harborAuth == 'g') {
             $formRow.show()
         } else {

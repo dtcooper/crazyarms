@@ -15,7 +15,7 @@
     <td>
       {% if user.is_superuser %}
         <strong class="green">All permissions. You're an administrator.</strong><br>
-        (Regular users can only edit parts of this form like timezone, first name, last name, and SSH
+        (Regular users can only edit parts of this form like timezone, first name, last name, default playlist, and SSH
         {% if settings.RTMP_ENABLED %}and RTMP{% endif %} keys. They can update their email only by verification.)
       {% else %}
         <ul>

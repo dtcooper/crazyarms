@@ -70,8 +70,9 @@
     that adds a message when `form_invalid(...)`
 - [ ] Don't organize assets by folder prefixes that say where they came from like `upload/`, `external/`, etc
     instead organize by `<artist-normalized-and-non-empty>/<album-normalized-and-non-empty>/`
-- [ ] Remove bulk upload ui now that sftp works
+- [x] Remove bulk upload ui now that sftp works
 - [ ] On status page, move server uptime with some less pertinent details like version, etc below the source list
+- [ ] first name, last name => single field (dj name or display name)
 
 ## Future Version
 

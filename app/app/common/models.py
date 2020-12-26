@@ -102,6 +102,9 @@ class User(DirtyFieldsMixin, AbstractUser):
             'The minutes <strong>after</strong> a scheduled show that the user is kicked off the harbor.'))
     groups = models.ManyToManyField(
         Group, verbose_name='permissions', blank=True, related_name='user_set', related_query_name='user')
+    default_playlist = models.ForeignKey(
+        'autodj.Playlist', verbose_name='default playlist (SFTP)', on_delete=models.SET_NULL, default=None,
+        null=True, blank=True, help_text='Optional default playlist for when you upload audio assets using SFTP.')
 
     def __init__(self, *args, **kwargs):
         if 'is_staff' in kwargs:

@@ -10,6 +10,7 @@ from huey.contrib import djhuey
 
 from autodj.models import AudioAsset, RotatorAsset
 from broadcast.models import BroadcastAsset
+from common.models import User
 
 
 logger = logging.getLogger(f'carb.{__name__}')
@@ -32,11 +33,13 @@ def process_sftp_upload(sftp_path):
             match = SFTP_PATH_RE.search(sftp_path)
             if match:
                 match = match.groupdict()
+
+                uploader = User.objects.get(id=match['user_id'])
                 asset_cls = SFTP_PATH_ASSET_CLASSES.get(match['asset_type']) or AudioAsset
-                type_name = asset_cls._meta.verbose_name
-                asset = asset_cls(uploader_id=match['user_id'], file_basename=os.path.basename(sftp_path))
+                asset = asset_cls(uploader=uploader, file_basename=os.path.basename(sftp_path))
                 asset.file.save(f'uploads/{asset.file_basename}', File(open(sftp_path, 'rb')), save=False)
 
+                type_name = asset_cls._meta.verbose_name
                 try:
                     asset.clean()
                 except ValidationError as e:
@@ -44,6 +47,9 @@ def process_sftp_upload(sftp_path):
                 else:
                     asset.save()
                     logger.info(f'sftp upload of {type_name} successfully processed: {sftp_path}')
+
+                if isinstance(asset, AudioAsset) and uploader.default_playlist:
+                    asset.playlists.add(uploader.default_playlist)
             else:
                 logger.warning(f"sftp upload can't process, regular expression failed to match: {sftp_path}")
 

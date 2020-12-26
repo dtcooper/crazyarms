@@ -31,6 +31,7 @@ from django_redis import get_redis_connection
 from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
+from autodj.models import AudioAsset
 from carb import constants
 from common.admin import send_set_password_email
 from common.models import filter_inactive_group_queryset, User
@@ -122,7 +123,11 @@ class StatusView(LoginRequiredMixin, TemplateView):
 
 class InfoView(LoginRequiredMixin, TemplateView):
     template_name = 'webui/info.html'
-    extra_context = {'title': 'Server Information'}
+
+    def get_context_data(self, **kwargs):
+        sftp_allowable_models = self.request.user.get_sftp_allowable_models()
+        return {'has_sftp': bool(sftp_allowable_models), 'has_default_playlist': AudioAsset in sftp_allowable_models,
+                'title': 'Server Information', **super().get_context_data(**kwargs)}
 
 
 class BanListView(PermissionRequiredMixin, TemplateView):

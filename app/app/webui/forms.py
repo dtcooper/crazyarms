@@ -175,8 +175,12 @@ class UserProfileForm(forms.ModelForm):
                 label='Email address', required=True, initial=self.instance.email,
                 max_length=User._meta.get_field('email').max_length)
 
-        self.order_fields(('username', 'email', 'new_email', 'timezone', 'first_name', 'last_name', 'harbor_auth',
-                           'gcal_entry_grace_minutes', 'gcal_exit_grace_minutes', 'authorized_keys'))
+        if AudioAsset not in self.instance.get_sftp_allowable_models():
+            del self.fields['default_playlist']
+
+        self.order_fields((
+            'username', 'email', 'new_email', 'timezone', 'first_name', 'last_name', 'harbor_auth'
+            'default_playlist', 'gcal_entry_grace_minutes', 'gcal_exit_grace_minutes', 'authorized_keys'))
 
     def clean_update_email(self):
         email = self.cleaned_data['update_email']
@@ -188,7 +192,7 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'harbor_auth',
+        fields = ('username', 'timezone', 'first_name', 'last_name', 'email', 'default_playlist', 'harbor_auth',
                   'gcal_entry_grace_minutes', 'gcal_exit_grace_minutes', 'authorized_keys')
 
 

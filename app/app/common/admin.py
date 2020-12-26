@@ -148,29 +148,36 @@ class UserAdmin(auth_admin.UserAdmin):
     add_form_template = None
     add_form = EmailUserCreationForm
     form = EmailUserChangeForm
-    fieldsets = (
-        (None, {'fields': (
-            ('send_email',) if settings.EMAIL_ENABLED else ()) + ('username', 'email', 'password')}),
-        ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
-        ('Permissions', {'fields': ('harbor_auth', ('gcal_entry_grace_minutes', 'gcal_exit_grace_minutes'),
-                                    'is_active', 'is_superuser', 'groups')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined', 'modified')}),
-        ('Additional credentials', {'fields': ('authorized_keys',) + (
-            ('stream_key',) if settings.RTMP_ENABLED else ())}),
-    )
     list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_pretty', 'is_superuser')
     list_filter = (HarborAuthListFilter, 'is_superuser', 'is_active', 'groups')
     readonly_fields = ('last_login', 'date_joined', 'modified', 'stream_key')
-    add_fieldsets = (
-        (None, {'fields': (
-            ('send_email',) if settings.EMAIL_ENABLED else ()) + ('username', 'email', 'password1', 'password2')}),
-        ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
-        ('Permissions', {'fields': ('harbor_auth', ('gcal_entry_grace_minutes', 'gcal_exit_grace_minutes'),
-                                    'is_superuser', 'groups')}),
-    )
 
     class Media:
         js = ('common/admin/js/harbor_auth.js',)
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return (
+                (None, {'fields': (('send_email',) if settings.EMAIL_ENABLED else ()) + (
+                                    'username', 'email', 'password1', 'password2')}),
+                ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
+                ('Permissions', {'fields': ('harbor_auth', ('gcal_entry_grace_minutes', 'gcal_exit_grace_minutes'),
+                                            'is_superuser', 'groups')}),
+                ('Additional info', {'fields': (('default_playlist',) if config.AUTODJ_ENABLED else ()) + (
+                                                 'authorized_keys',)}),
+            )
+        else:
+            return (
+                (None, {'fields': (
+                    ('send_email',) if settings.EMAIL_ENABLED else ()) + ('username', 'email', 'password')}),
+                ('Personal info', {'fields': (('first_name', 'last_name'), 'timezone')}),
+                ('Permissions', {'fields': ('harbor_auth', ('gcal_entry_grace_minutes', 'gcal_exit_grace_minutes'),
+                                            'is_active', 'is_superuser', 'groups')}),
+                ('Additional info', {'fields': (
+                    ('default_playlist',) if config.AUTODJ_ENABLED else ()) + (
+                     'authorized_keys',) + (('stream_key',) if settings.RTMP_ENABLED else ())}),
+                ('Important dates', {'fields': ('last_login', 'date_joined', 'modified')}),
+            )
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         if not config.GOOGLE_CALENDAR_ENABLED and db_field.name == 'harbor_auth':
@@ -183,6 +190,11 @@ class UserAdmin(auth_admin.UserAdmin):
             queryset = filter_inactive_group_queryset(queryset)
         kwargs['queryset'] = queryset
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['default_playlist'].widget.can_delete_related = False
+        return form  # Delete widget was annoying me!
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)

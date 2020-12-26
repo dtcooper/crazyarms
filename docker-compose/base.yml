@@ -13,9 +13,9 @@ services:
       - app
       - logs
     volumes:
-      - static_root:/static_root:ro
-      - ./media:/media_root:ro
       - ./.env:/.env:ro
+      - ./media:/media_root:ro
+      - static_root:/static_root:ro
     environment:
       TZ: ${TIMEZONE:-US/Pacific}
 
@@ -27,10 +27,10 @@ services:
       context: ./app
     volumes:
       - ./.env:/.env:ro
-      - static_root:/static_root
       - ./imports:/imports_root
       - ./media:/media_root
       - services_config:/config
+      - static_root:/static_root
     depends_on:
       - db
       - harbor
@@ -106,8 +106,8 @@ services:
     depends_on:
       - db
     volumes:
-      - services_config:/config:ro
       - ./media:/media_root:ro
+      - services_config:/config:ro
     environment:
       CARB_VERSION: ${CARB_VERSION:-unknown}
       CONTAINER_NAME: upstream

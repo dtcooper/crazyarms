@@ -198,6 +198,8 @@ if [ "$FIRST_RUN" ]; then
     fi
 fi
 
+source .env
+
 if [ "$#" = 0 ]; then
     if [ -z "$FIRST_RUN" ]; then
         echo "Provide a command for docker-compose, i.e. \`$0 up', or \`$0 help' for help."
