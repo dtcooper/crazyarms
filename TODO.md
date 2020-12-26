@@ -74,6 +74,7 @@
 - [x] Remove bulk upload ui now that sftp works
 - [ ] On status page, move server uptime with some less pertinent details like version, etc below the source list
 - [ ] first name, last name => single field (dj name or display name)
+- [ ] What about sftp playlists based on first folder instead of a user preference?
 
 ## Future Version
 
@@ -92,3 +93,4 @@
 
 - [ ] Stop using Django admin, instead roll everything on our own.
     [Halfmoon](https://gethalfmoon.com) looks pretty slick.
+- [ ] user preference for harbor auth = always to be kicked off at the end of their show anyway

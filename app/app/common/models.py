@@ -379,7 +379,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
                     # Normalize extension if it's an acceptable format
                     file_name, file_ext = os.path.splitext(self.file.name)
                     correct_ext = self.metadata.format
-                    if correct_ext != file_ext.lower():
+                    if correct_ext != file_ext.lower()[1:]:
                         file_exists = os.path.exists(self.file.path)
                         if file_exists or isinstance(self.file.file, TemporaryUploadedFile):
                             # If it's pending and a UI based (TemporaryUploadedFile) upload, that's all we have to do
