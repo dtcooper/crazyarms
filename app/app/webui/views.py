@@ -16,7 +16,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core import signing
 from django.core.cache import cache
-from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -34,6 +33,7 @@ from huey.contrib import djhuey
 from autodj.models import AudioAsset
 from carb import constants
 from common.admin import send_set_password_email
+from common.mail import send_mail
 from common.models import filter_inactive_group_queryset, User
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
@@ -281,12 +281,10 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageM
             token = signing.dumps([self.request.user.id, session_token, email], salt='update:email', compress=True)
             url = self.request.build_absolute_uri(reverse('profile_email_update', kwargs={'token': token}))
 
-            messages.warning(self.request, f'A verification email was sent to {email}. To complete your email address '
-                                           'update, please open it and follow the verification link.')
-
-            # TODO: From (not just from this, but also from password reset)
-            send_mail(from_email=None, recipient_list=[email], subject=f'Verify Email Address on {config.STATION_NAME}',
-                      message=f'Please go to the following URL to verify your email address update: {url}')
+            if send_mail(email, f'Verify Email Address on {config.STATION_NAME}',
+                         f'Please go to the following URL to verify your email address: {url}', request=self.request):
+                messages.warning(self.request, f'A verification email was sent to {email}. To complete your email '
+                                 'address update, please open it and follow the verification link.')
 
         return super().form_valid(form)
 
@@ -330,7 +328,7 @@ class UserProfileEmailUpdateView(LoginRequiredMixin, View):
         return redirect('profile')
 
 
-class SetPasswordView(SuccessMessageMixin, FormErrorMessageMixin, FormView):
+class SetPasswordByEmailView(SuccessMessageMixin, FormErrorMessageMixin, FormView):
     form_class = SetPasswordForm
     success_url = reverse_lazy('status')
     success_message = "Your password was set and you've been logged in."
@@ -350,6 +348,10 @@ class SetPasswordView(SuccessMessageMixin, FormErrorMessageMixin, FormView):
             self.user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return redirect('status')
+
+        if not self.user.is_active:
+            messages.warning(request, 'Your account is locked. Please contact the station administration.')
+            return redirect('login')
 
         self.cache_token_usable = cache.get(f'{constants.CACHE_KEY_SET_PASSWORD_PREFIX}{self.cache_token}:usable')
         return super().dispatch(request, token=token, *args, **kwargs)
@@ -371,7 +373,7 @@ class SetPasswordView(SuccessMessageMixin, FormErrorMessageMixin, FormView):
             return render(request, 'webui/base.html', {
                 'title': self.get_title(), 'simple_content': 'An email has been sent to the address on file.'})
         else:
-            return redirect('password_set', token=token)
+            return redirect('password_set_by_email', token=token)
 
     def get_context_data(self, **kwargs):
         return {**super().get_context_data(), 'newly_created': self.newly_created,
@@ -396,24 +398,6 @@ class GCalView(LoginRequiredMixin, TemplateView):
         if not config.GOOGLE_CALENDAR_ENABLED:
             return redirect('status')
         return super().dispatch(*args, **kwargs)
-
-
-class PasswordChangeView(SuccessMessageMixin, FormErrorMessageMixin, auth_views.PasswordChangeView):
-    success_url = reverse_lazy('profile')
-    template_name = 'webui/form.html'
-    title = 'Change Your Password'
-    if settings.RTMP_ENABLED:
-        success_message = ('Your password was successfully changed and a new RTMP stream key was generated. '
-                           'Copy the new stream key below.')
-    else:
-        success_message = 'Your password was successfully changed.'
-
-    def __init__(self):
-        context = {'submit_text': 'Change Password'}
-        if settings.RTMP_ENABLED:
-            context['form_description'] = ('If you update your password, a new RTMP stream key will be generated. '
-                                           "You'll need to copy it from your profile page after updating.")
-        super().__init__(extra_context=context)
 
 
 class BootView(LoginRequiredMixin, View):
@@ -487,7 +471,27 @@ class PlayoutLogView(LoginRequiredMixin, ListView):
     extra_context = {'title': 'Playout Log', 'MAX_ENTRIES': MAX_ENTRIES}
 
 
+class PasswordChangeView(SuccessMessageMixin, FormErrorMessageMixin, auth_views.PasswordChangeView):
+    success_url = reverse_lazy('profile')
+    template_name = 'webui/form.html'
+    title = 'Change Your Password'
+    if settings.RTMP_ENABLED:
+        success_message = ('Your password was successfully changed and a new RTMP stream key was generated. '
+                           'Copy the new stream key below.')
+    else:
+        success_message = 'Your password was successfully changed.'
+
+    def __init__(self):
+        context = {'submit_text': 'Change Password'}
+        if settings.RTMP_ENABLED:
+            context['form_description'] = ('If you update your password, a new RTMP stream key will be generated. '
+                                           "You'll need to copy it from your profile page after updating.")
+        super().__init__(extra_context=context)
+
+
 class PasswordResetView(SuccessMessageMixin, auth_views.PasswordResetView):
+    # TODO: warn about locked account and email + not sent
+    # Maybe we roll our own here, then we could use common/mail.py:send_mail()
     success_message = ('A password reset email has been sent to %(email)s. If an account exists with that email '
                        "address, you should should receive it shortly. If you don’t receive an email, make sure you've"
                        'entered your address correctly, and check your spam folder.')

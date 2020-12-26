@@ -252,13 +252,13 @@ add_skip_command_carb(prerecord)
 {% endif %}
 
 # Our failsafe audio, right now some silly hold music.
-failsafe = single(id='failsafe',
+failsafe = audio_to_stereo(id='failsafe_stereo', single(id='failsafe',
 {% if config.HARBOR_FAILSAFE_AUDIO_FILE %}
     {{ settings.MEDIA_ROOT|add:'/'|add:config.HARBOR_FAILSAFE_AUDIO_FILE|liqval }}
 {% else %}
     '/assets/hold-music.mp3'
 {% endif %}
-)
+))
 
 # If you add a source that has timed tracks, they should be added to this list
 # in your user defined code below

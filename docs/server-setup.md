@@ -57,3 +57,7 @@ following,
 * In `.env` set `DEBUG = True`
 * `overrides.yml`
 * `./compose.sh` development commands
+
+## TODOs
+
+* Setting up email, mention `./manage.py sendtestemail user@example.com`

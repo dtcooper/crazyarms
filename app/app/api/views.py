@@ -12,7 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 from constance import config
 
 from autodj.models import AudioAsset, RotatorAsset
-from broadcast.models import BroadcastAsset
 from common.models import User
 
 from .tasks import process_sftp_upload, SFTP_PATH_ASSET_CLASSES
@@ -78,7 +77,7 @@ class DJAuthAPIView(APIView):
                     except User.DoesNotExist:
                         logger.info(f'dj auth requested by {username}: denied (user does not exist)')
                     else:
-                        logger.info(f'dj auth requested by {username}: denied (incorrect password)')
+                        logger.info(f'dj auth requested by {username}: denied (incorrect password / inactive account)')
 
         if user:
             authorized = user.currently_harbor_authorized()
@@ -131,15 +130,16 @@ class SFTPAuthView(APIView):
             except User.DoesNotExist:
                 pass
             else:
-                key_split = key.strip().split()
+                if non_logged_in_user.is_active:
+                    key_split = key.strip().split()
 
-                for authorized_key in non_logged_in_user.authorized_keys.strip().splitlines():
-                    authorized_key_split = authorized_key.strip().split()
-                    split_len = min(len(key_split), len(authorized_key_split))
-                    if split_len >= 2 and key_split[:split_len] == authorized_key_split[:split_len]:
-                        user = non_logged_in_user
-                        auth_type = 'ssh key'
-                        break
+                    for authorized_key in non_logged_in_user.authorized_keys.strip().splitlines():
+                        authorized_key_split = authorized_key.strip().split()
+                        split_len = min(len(key_split), len(authorized_key_split))
+                        if split_len >= 2 and key_split[:split_len] == authorized_key_split[:split_len]:
+                            user = non_logged_in_user
+                            auth_type = 'ssh key'
+                            break
 
         if user:
             allowed = user.get_sftp_allowable_models()
@@ -158,7 +158,7 @@ class SFTPAuthView(APIView):
             else:
                 logger.info(f'sftp auth requested by {user}: denied ({auth_type} allowed but no permissions)')
         elif non_logged_in_user:
-            logger.info(f'sftp auth requested by {username}: denied (invalid credentials)')
+            logger.info(f'sftp auth requested by {username}: denied (invalid credentials / inactive account)')
         else:
             logger.info(f'sftp auth requested by {username}: denied (user does not exist)')
 

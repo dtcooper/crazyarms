@@ -126,7 +126,14 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 if EMAIL_ENABLED:
-    EMAIL_HOST = 'email'
+    DEFAULT_FROM_EMAIL = env('EMAIL_FROM_ADDRESS', default=f'"Station Administration" <no-reply@{DOMAIN_NAME}>')
+    EMAIL_HOST = env('EMAIL_SMTP_SERVER')
+    EMAIL_HOST_PASSWORD = env('EMAIL_SMTP_PASSWORD')
+    EMAIL_HOST_USER = env('EMAIL_SMTP_USERNAME')
+    EMAIL_PORT = env.int('EMAIL_SMTP_PORT')
+    EMAIL_TIMEOUT = 10  # Longer than that and error occurs and we show a warning
+    EMAIL_USE_TLS = env.bool('EMAIL_SMTP_TLS', default=(EMAIL_PORT == 587))
+
 
 DATABASES = {
     'default': {

@@ -57,9 +57,9 @@
 - [x] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
 - [ ] User emails
     - [x] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
-    - [ ] Do we really need a postfix container? Can't we just configure Django to send email directly?
+    - [x] We don't really need a postfix container. Just configure Django to send email directly.
     - [x] Create user flow that sends user an email (and possibly they fill out their details)
-    - [ ] Consistent "From: " emails
+    - [x] Consistent "From: " emails
 - [x] rtmp streaming using nginx-rtmp
 - [ ] huey logs seem to print twice / django logging seems overly verbose (maybe just in gunicorn?)
 - [ ] use [multirun](https://github.com/nicolas-van/multirun) for nginx (nginx + certbot),
@@ -85,6 +85,7 @@
     Remove `@admin.site.register_view()`, associated code, and simplify admin links.
     Rename _"Miscellaneous Configuration"_ to _"Additional Modules"._ Rethink how admin nav links are generated.
 - [ ] Radio buttons for ban times
+- [ ] Stock error pages for nginx, in particular if app doesn't boot
 
 ## Down the line
 

@@ -186,6 +186,7 @@ if [ "$FIRST_RUN" ]; then
         get_str 'STMP port' EMAIL_SMTP_PORT 587
         get_str 'STMP username, ie user@gmail.com' EMAIL_SMTP_USERNAME
         get_str 'STMP password (WARNING: stored in plain text in the .env file)' EMAIL_SMTP_PASSWORD
+        get_bool 'Does the SMTP server use TLS?' EMAIL_SMTP_USE_TLS 1
     fi
 
     echo
@@ -233,7 +234,7 @@ else
     COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/base.yml"
 
     # Enable compose files for services
-    for CONF in https icecast zoom email harbor-telnet-web rtmp; do
+    for CONF in https icecast zoom harbor-telnet-web rtmp; do
         CONF_VAR="$(echo "$CONF" | LC_CTYPE=C tr '[:lower:]-' '[:upper:]_')_ENABLED"
         CONF_VAL="${!CONF_VAR}"
         if [ "$CONF_VAL" -a "$CONF_VAL" != '0' -o "$ALL_SERVICES" ]; then

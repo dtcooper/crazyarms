@@ -7,13 +7,13 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group
 from django.core import signing
 from django.core.cache import cache
-from django.core.mail import send_mail
 from django.urls import reverse
 
 from constance import config
 from constance.admin import ConstanceAdmin, Config
 
 from carb import constants
+from common.mail import send_mail
 
 from .forms import ProcessConfigChangesConstanceForm, EmailUserChangeForm, EmailUserCreationForm
 from .models import filter_inactive_group_queryset, User
@@ -130,17 +130,17 @@ def send_set_password_email(request, user, newly_created=True):
     cache.set(f'{constants.CACHE_KEY_SET_PASSWORD_PREFIX}{cache_token}:usable', True, timeout=12 * 60 * 60)
     cache.set(f'{constants.CACHE_KEY_SET_PASSWORD_PREFIX}{cache_token}:valid', True, timeout=14 * 24 * 60 * 60)
     token = signing.dumps([user.id, newly_created, cache_token], salt='set:password', compress=True)
-    url = request.build_absolute_uri(reverse('password_set', kwargs={'token': token}))
+    url = request.build_absolute_uri(reverse('password_set_by_email', kwargs={'token': token}))
 
     if newly_created:
         subject = f'Welcome to {config.STATION_NAME}'
-        message = (f"Congratulations you've got a new account with {config.STATION_NAME}!\n\n"
-                   f'To set your password go to {url}')
+        body = (f"Congratulations you've got a new account with {config.STATION_NAME}!\n\n"
+                f'To set your password please go to the following URL: {url}')
     else:
         subject = f'Change Your Password on {config.STATION_NAME}'
-        message = f'To set a password for your account, go to {url}'
+        body = f'To set a password for your account, please go to the following URL: {url}'
 
-    send_mail(subject=subject, message=message, from_email=None, recipient_list=[user.email])
+    return send_mail(user.email, subject, body, request=request)
 
 
 class UserAdmin(auth_admin.UserAdmin):
@@ -148,7 +148,7 @@ class UserAdmin(auth_admin.UserAdmin):
     add_form_template = None
     add_form = EmailUserCreationForm
     form = EmailUserChangeForm
-    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_pretty', 'is_superuser')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'harbor_auth_pretty', 'is_active', 'is_superuser')
     list_filter = (HarborAuthListFilter, 'is_superuser', 'is_active', 'groups')
     readonly_fields = ('last_login', 'date_joined', 'modified', 'stream_key')
 
@@ -199,8 +199,9 @@ class UserAdmin(auth_admin.UserAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         if form.cleaned_data.get('send_email'):
-            send_set_password_email(request, obj, newly_created=not change)
-            self.message_user(request, f'A an email has been sent to {obj.email} detailing how to set their password.')
+            if send_set_password_email(request, obj, newly_created=not change):
+                self.message_user(request,
+                                  f'A an email has been sent to {obj.email} detailing how to set their password.')
 
 
 class ProcessConfigChangesConstanceAdmin(ConstanceAdmin):

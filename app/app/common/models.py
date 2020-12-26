@@ -81,7 +81,7 @@ class User(DirtyFieldsMixin, AbstractUser):
         GOOGLE_CALENDAR = 'g', 'Google Calendar based'
 
     is_staff = True  # All users can access admin site if they've got at least one permission
-    is_superuser = models.BooleanField('administrator status', default=False, help_text=mark_safe(
+    is_superuser = models.BooleanField('administrator', default=False, help_text=mark_safe(
         'Designates that this user has <strong><u>all permissions</u></strong> without explicitly assigning them.'))
     modified = models.DateTimeField('last modified', auto_now=True)
     email = models.EmailField('email address', unique=True, help_text='This is needed to match Google Calendar events '
