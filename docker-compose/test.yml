@@ -9,7 +9,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: carb.settings_test
       TZ: ${TIMEZONE:-US/Pacific}
-      EMAIL_ENABLED: 1
+      EMAIL_ENABLED: 0
       HARBOR_TELNET_WEB_ENABLED: 1
       ICECAST_ENABLED: 1
       RTMP_ENABLED: 1

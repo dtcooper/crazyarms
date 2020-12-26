@@ -202,7 +202,7 @@ class ZoomForm(forms.Form):
 
     show_name = forms.CharField(label='Show Name', required=False,
                                 help_text="The name of your show for the stream's metadata. Can be left blank.")
-    zoom_room = forms.URLField(label='Room Link', help_text='Pasted from Zoom. Consult Help Docs for more info.',
+    zoom_room = forms.URLField(label='Room Link', help_text='Pasted from Zoom. Consult the Help Docs for more info.',
                                widget=forms.TextInput(attrs={
                                    'placeholder': 'https://zoom.us/j/91234567890?pwd=XYZ0XYZ0XYZ0XYZ0XYZ0XYZ0XYZ'}))
 

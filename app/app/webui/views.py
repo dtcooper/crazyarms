@@ -63,7 +63,8 @@ class FirstRunView(SuccessMessageMixin, FormErrorMessageMixin, FormView):
     extra_context = {'station_name_override': 'Crazy Arms Radio Backend', 'hide_nav': True,
                      'submit_text': 'Run Initial Setup', 'title': 'Initial Setup',
                      'form_description': "Welcome to Crazy Arms! Since no account has been created, you'll need to "
-                                         'create a new administrator and provide some settings below before starting.'}
+                                         'create a new administrator and choose from the settings below before '
+                                         'starting.'}
 
     def dispatch(self, request, *args, **kwargs):
         # Only work if no user exists
@@ -284,7 +285,9 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageM
             if send_mail(email, f'Verify Email Address on {config.STATION_NAME}',
                          f'Please go to the following URL to verify your email address: {url}', request=self.request):
                 messages.warning(self.request, f'A verification email was sent to {email}. To complete your email '
-                                 'address update, please open it and follow the verification link.')
+                                 "address update, please open it and follow the verification link. If you don't "
+                                 "receive an email, make sure you've entered the address correctly, and check your "
+                                 'spam folder.')
 
         return super().form_valid(form)
 
@@ -423,8 +426,8 @@ class BootView(LoginRequiredMixin, View):
                     user.save()
                     harbor.dj_harbor__stop()
                     logger.info(f'{self.request.user} banned {user} permanently (set harbor_auth = never)')
-                    response = (f'{user.get_full_name()} banned permanently. To undo, go the admin site and '
-                                'change their harbor authorization.')
+                    response = (f'{user.get_full_name()} banned permanently. To undo this change, go the Station Admin '
+                                'and change their harbor authorization.')
                 else:
                     try:
                         # XXX Covers case where user asks for "perm" (permanent), since ValueError is thrown
@@ -437,7 +440,7 @@ class BootView(LoginRequiredMixin, View):
                             harbor.dj_harbor__stop()
                             logger.info(f'{self.request.user} banned {user} for {ban_text}')
                             response = (f'{user.get_full_name()} banned for {ban_text}. To undo, visit the DJ Ban List '
-                                        'page')
+                                        'page.')
 
         return HttpResponse(response, content_type='text/plain')
 
@@ -493,7 +496,7 @@ class PasswordResetView(SuccessMessageMixin, auth_views.PasswordResetView):
     # TODO: warn about locked account and email + not sent
     # Maybe we roll our own here, then we could use common/mail.py:send_mail()
     success_message = ('A password reset email has been sent to %(email)s. If an account exists with that email '
-                       "address, you should should receive it shortly. If you don’t receive an email, make sure you've"
+                       "address, you should should receive it shortly. If you don't receive an email, make sure you've"
                        'entered your address correctly, and check your spam folder.')
     success_url = reverse_lazy('login')
     template_name = 'webui/form.html'
