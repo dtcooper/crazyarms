@@ -1,10 +1,4 @@
-from django import forms
-from django.core.exceptions import PermissionDenied
 from django.contrib import admin, messages
-from django.contrib.admin.helpers import AdminForm
-from django.shortcuts import redirect
-from django.template.response import TemplateResponse
-from django.urls import path
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 
@@ -12,8 +6,7 @@ from constance import config
 
 from common.admin import AudioAssetAdminBase
 
-from .forms import (AudioAssetCreateForm, AudioAssetUploadForm, PlaylistActionForm,
-                    RotatorActionForm, RotatorAssetCreateForm)
+from .forms import AudioAssetCreateForm, PlaylistActionForm, RotatorActionForm, RotatorAssetCreateForm
 from .models import AudioAsset, Playlist, Rotator, RotatorAsset, Stopset, StopsetRotator
 
 

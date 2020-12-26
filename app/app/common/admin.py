@@ -139,7 +139,7 @@ def send_set_password_email(request, user, newly_created=True):
     else:
         subject = f'Change Your Password on {config.STATION_NAME}'
         body = (f"To set a password for your account, please go to the following URL: {url}\n\nIn case you've "
-                f'the username for th account is: {user.username}')
+                f'forgotten, the username for the account is: {user.username}')
 
     return send_mail(user.email, subject, body, request=request)
 

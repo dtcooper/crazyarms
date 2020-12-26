@@ -1,5 +1,6 @@
 .coverage
 .env
+.pytest_cache
 .version
 __pycache__/
 _docs/

@@ -88,6 +88,9 @@
     Rename _"Miscellaneous Configuration"_ to _"Additional Modules"._ Rethink how admin nav links are generated.
 - [ ] Radio buttons for ban times
 - [ ] Stock error pages for nginx, in particular if app doesn't boot
+- [ ] Record shows on the calendar, or just record everything
+    - S3 storage will come in handy at that point
+- [ ] public API
 
 ## Down the line
 
