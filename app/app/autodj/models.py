@@ -73,8 +73,8 @@ class AudioAsset(AudioAssetBase):
         verbose_name = 'audio asset'
         verbose_name_plural = 'audio assets'
 
-    def clean(self):
-        super().clean()
+    def clean(self, allow_conversion=True):
+        super().clean(allow_conversion=allow_conversion)
 
         for field in self.TITLE_FIELDS:
             if field in self.get_dirty_fields():
