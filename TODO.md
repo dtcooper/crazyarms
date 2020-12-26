@@ -60,6 +60,7 @@
     - [x] We don't really need a postfix container. Just configure Django to send email directly.
     - [x] Create user flow that sends user an email (and possibly they fill out their details)
     - [x] Consistent "From: " emails
+    - [x] Add account username to set password emails
 - [x] rtmp streaming using nginx-rtmp
 - [ ] huey logs seem to print twice / django logging seems overly verbose (maybe just in gunicorn?)
 - [ ] use [multirun](https://github.com/nicolas-van/multirun) for nginx (nginx + certbot),

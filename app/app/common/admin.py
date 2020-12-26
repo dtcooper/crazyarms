@@ -133,12 +133,13 @@ def send_set_password_email(request, user, newly_created=True):
     url = request.build_absolute_uri(reverse('password_set_by_email', kwargs={'token': token}))
 
     if newly_created:
-        subject = f'Welcome to {config.STATION_NAME}'
-        body = (f"Congratulations you've got a new account with {config.STATION_NAME}!\n\n"
-                f'To set your password please go to the following URL: {url}')
+        subject = f'Welcome to {config.STATION_NAME}!'
+        body = (f"Congratulations you've got a new account with {config.STATION_NAME}!\n\nThe username for the account "
+                f'is: {user.username}\n\nTo set your password please go to the following URL: {url}')
     else:
         subject = f'Change Your Password on {config.STATION_NAME}'
-        body = f'To set a password for your account, please go to the following URL: {url}'
+        body = (f"To set a password for your account, please go to the following URL: {url}\n\nIn case you've "
+                f'the username for th account is: {user.username}')
 
     return send_mail(user.email, subject, body, request=request)
 
