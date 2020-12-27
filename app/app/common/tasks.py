@@ -11,6 +11,7 @@ import pytz
 
 from django.core.cache import cache
 from django.core.files import File
+from django.core.management import call_command
 from django.utils import timezone
 
 from constance import config
@@ -72,6 +73,28 @@ def install_youtube_dl():
 @djhuey.periodic_task(priority=2, validate_datetime=once_at_startup(local_daily_task(hour=4)))
 def youtube_dl_daily_update():
     install_youtube_dl()
+
+
+@djhuey.periodic_task(priority=2, validate_datetime=local_daily_task(hour=4, minute=30))
+def remove_unused_media_files_daily():
+    logger.info("purging unused media files")
+    call_command(
+        "cleanup_unused_media",
+        remove_empty_dirs=True,
+        minimum_file_age=5 * 60,
+        interactive=False,
+        # Make sure won't remove constance files, we _could_ probably generate this list problematically
+        exclude=list(
+            filter(
+                None,
+                (
+                    config.UPSTREAM_FAILSAFE_AUDIO_FILE,
+                    config.HARBOR_FAILSAFE_AUDIO_FILE,
+                    config.HARBOR_SWOOSH_AUDIO_FILE,
+                ),
+            )
+        ),
+    )
 
 
 def mark_asset_failed(asset, title):
@@ -153,15 +176,7 @@ def asset_download_external_url(asset, url, title="", task=None):
 
         # If file doesn't contain metadata for one of the title fields, try to get it from youtube-dl
         if not all(getattr(asset.metadata, field) for field in asset.TITLE_FIELDS):
-            args = [
-                YOUTUBE_DL_CMD,
-                "--dump-json",
-                "--no-playlist",
-                "--max-downloads",
-                "1",
-                "--",
-                url,
-            ]
+            args = [YOUTUBE_DL_CMD, "--dump-json", "--no-playlist", "--max-downloads", "1", "--", url]
             logger.info(f"Some metadata missing from file, using youtube-dl to set it, running: {shlex.join(args)}")
             cmd = subprocess.run(args, capture_output=True)
             if cmd.returncode == 0:

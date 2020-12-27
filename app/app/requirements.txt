@@ -5,8 +5,9 @@ django-constance[redis]
 django-dirtyfields
 django-environ
 django-extensions
-django-select2
 django-redis
+django-select2
+django-unused-media
 Django>=3.0,<4.0
 google-api-python-client
 google-auth-httplib2

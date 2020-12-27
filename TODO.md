@@ -72,9 +72,10 @@
 - [ ] Don't organize assets by folder prefixes that say where they came from like `upload/`, `external/`, etc
     instead organize by `<artist-normalized-and-non-empty>/<album-normalized-and-non-empty>/`
 - [x] Remove bulk upload ui now that sftp works
-- [ ] On status page, move server uptime with some less pertinent details like version, etc below the source list
+- [x] On status page, move server uptime with some less pertinent details like version, etc below the source list
 - [ ] first name, last name => single field (dj name or display name)
 - [x] SFTP audio asset playlists based on first folder instead of a user preference
+- [ ] way to convert asset types, potentially using https://github.com/ninemoreminutes/django-admin-object-actions
 
 ## Future Version
 
