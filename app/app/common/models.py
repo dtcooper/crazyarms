@@ -415,12 +415,12 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
         if cmd.returncode == 0:
             exiftool_data = json.loads(cmd.stdout)[0]
             for field in ("artist", "album", "title"):
-                kwargs[field] = exiftool_data.get(field.title(), "")
+                kwargs[field] = exiftool_data.get(field.title(), "").strip()
         else:
             logger.warning(f"exiftool returned {cmd.returncode}, using ffprobe for metadata")
             ffprobe_tags = ffprobe_data["format"].get("tags", {})
             for field in ("artist", "album", "title"):
-                kwargs[field] = ffprobe_tags.get(field, "")
+                kwargs[field] = ffprobe_tags.get(field, "").strip()
 
         return Metadata(**kwargs)
 
@@ -515,6 +515,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
                         self.title = " - ".join(filter(None, (self.metadata.artist, self.metadata.title)))
                     else:
                         setattr(self, field, getattr(self.metadata, field))
+                setattr(self, field, getattr(self, field).strip())
 
             if not self.title:
                 logger.warning("exiftool/ffprobe returned an empty title. Setting title from original file name.")
