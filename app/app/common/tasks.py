@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -81,6 +82,7 @@ def mark_asset_failed(asset, title):
         setattr(asset, field, "")
     asset.title = title
     asset.status = asset.Status.FAILED
+    asset.duration = datetime.timedelta(0)
     asset.save()
 
 
