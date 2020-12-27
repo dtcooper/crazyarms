@@ -207,7 +207,7 @@ class UserProfileForm(forms.ModelForm):
             )
 
         if AudioAsset not in self.instance.get_sftp_allowable_models():
-            del self.fields["default_playlist"]
+            del self.fields["sftp_playlists_by_folder"]
 
         self.order_fields(
             (
@@ -217,9 +217,10 @@ class UserProfileForm(forms.ModelForm):
                 "timezone",
                 "first_name",
                 "last_name",
-                "harbor_authdefault_playlist",
+                "harbor_auth",
                 "gcal_entry_grace_minutes",
                 "gcal_exit_grace_minutes",
+                "sftp_playlists_by_folder",
                 "authorized_keys",
             )
         )
@@ -240,11 +241,11 @@ class UserProfileForm(forms.ModelForm):
             "first_name",
             "last_name",
             "email",
-            "default_playlist",
             "harbor_auth",
             "gcal_entry_grace_minutes",
             "gcal_exit_grace_minutes",
             "authorized_keys",
+            "sftp_playlists_by_folder",
         )
 
 

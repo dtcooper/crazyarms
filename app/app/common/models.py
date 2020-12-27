@@ -138,14 +138,13 @@ class User(DirtyFieldsMixin, AbstractUser):
         related_name="user_set",
         related_query_name="user",
     )
-    default_playlist = models.ForeignKey(
-        "autodj.Playlist",
-        verbose_name="default playlist (SFTP)",
-        on_delete=models.SET_NULL,
-        default=None,
-        null=True,
+    sftp_playlists_by_folder = models.BooleanField(
+        "put uploads into playlists by folder",
         blank=True,
-        help_text="Optional default playlist for when you upload audio assets using SFTP.",
+        default=True,
+        help_text=(
+            "Put any audio assets uploaded by SFTP into folders, named by the first sub-folder they're placed in."
+        ),
     )
 
     def __init__(self, *args, **kwargs):

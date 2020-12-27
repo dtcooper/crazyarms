@@ -8,7 +8,7 @@ from django.core.files import File
 
 from huey.contrib import djhuey
 
-from autodj.models import AudioAsset, RotatorAsset
+from autodj.models import AudioAsset, Playlist, RotatorAsset
 from broadcast.models import BroadcastAsset
 from common.models import User
 
@@ -21,7 +21,8 @@ SFTP_PATH_ASSET_CLASSES = {
 }
 SFTP_PATH_RE = re.compile(
     fr"^{re.escape(settings.SFTP_UPLOADS_ROOT)}(?P<user_id>[^/]+)/"
-    fr'(?:(?P<asset_type>{"|".join(re.escape(p) for p in SFTP_PATH_ASSET_CLASSES.keys())})/)?.+$'
+    fr'(?:(?P<asset_type>{"|".join(re.escape(p) for p in SFTP_PATH_ASSET_CLASSES.keys())})/)?'
+    r"(?:(?P<first_folder_name>[^/]+)/)?.+$"
 )
 
 
@@ -48,13 +49,26 @@ def process_sftp_upload(sftp_path):
                 try:
                     asset.clean()
                 except ValidationError as e:
-                    logger.warning(f"sftp upload skipped {type_name} {sftp_path}: validation error: {e}")
+                    logger.warning(f"sftp upload skipped {type_name} by {uploader} {sftp_path}: validation error: {e}")
                 else:
                     asset.save()
-                    logger.info(f"sftp upload of {type_name} successfully processed: {sftp_path}")
+                    logger.info(f"sftp upload of {type_name} by {uploader} successfully processed: {sftp_path}")
 
-                if isinstance(asset, AudioAsset) and uploader.default_playlist:
-                    asset.playlists.add(uploader.default_playlist)
+                # Create a playlist if that's what a user wants (only for AudioAssets)
+                if isinstance(asset, AudioAsset) and uploader.sftp_playlists_by_folder:
+                    folder = match["first_folder_name"]
+                    if folder:
+                        playlist_name = " ".join(folder.strip().split())  # normalize whitespace
+                        playlist = Playlist.objects.filter(name__iexact=playlist_name).first()
+                        if playlist:
+                            logger.info(f"sftp upload by {uploader} used playlist {playlist.name}")
+                        else:
+                            logger.info(
+                                f"sftp upload by {uploader} used playlist folder, creating playlist {playlist_name}"
+                            )
+                            playlist = Playlist.objects.create(name=playlist_name)
+
+                        asset.playlists.add(playlist)
             else:
                 logger.warning(f"sftp upload can't process, regular expression failed to match: {sftp_path}")
 

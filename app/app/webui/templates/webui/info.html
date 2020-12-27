@@ -53,10 +53,10 @@
         <th>Password:</th>
         <td><em><u class="orange"><code>[your-password]</code></u></em> (replace with your password, don't include square brackets)</td>
       </tr>
-      {% if has_default_playlist %}
+      {% if has_sftp_playlists_by_folder %}
         <tr>
-          <th>Default playlist for uploads</th>
-          <td>{% if user.default_playlist %}{{ user.default_playlist.name }}{% else %}<em>none</em>{% endif %}</td>
+          <th>Create Playlist for SFTP Uploads<br>(by folder)</th>
+          <td>{{ user.sftp_playlists_by_folder|yesno:'Yes,No' }}</td>
         </tr>
       {% endif %}
     </table>

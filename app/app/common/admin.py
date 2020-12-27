@@ -236,7 +236,7 @@ class UserAdmin(auth_admin.UserAdmin):
                 ),
                 (
                     "Additional info",
-                    {"fields": (("default_playlist",) if config.AUTODJ_ENABLED else ()) + ("authorized_keys",)},
+                    {"fields": (("sftp_playlists_by_folder",) if config.AUTODJ_ENABLED else ()) + ("authorized_keys",)},
                 ),
             )
         else:
@@ -264,7 +264,7 @@ class UserAdmin(auth_admin.UserAdmin):
                 (
                     "Additional info",
                     {
-                        "fields": (("default_playlist",) if config.AUTODJ_ENABLED else ())
+                        "fields": (("sftp_playlists_by_folder",) if config.AUTODJ_ENABLED else ())
                         + ("authorized_keys",)
                         + (("stream_key",) if settings.RTMP_ENABLED else ())
                     },
@@ -291,11 +291,6 @@ class UserAdmin(auth_admin.UserAdmin):
             queryset = filter_inactive_group_queryset(queryset)
         kwargs["queryset"] = queryset
         return super().formfield_for_manytomany(db_field, request, **kwargs)
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        form.base_fields["default_playlist"].widget.can_delete_related = False
-        return form  # Delete widget was annoying me!
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)

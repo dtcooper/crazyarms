@@ -137,7 +137,7 @@ class InfoView(LoginRequiredMixin, TemplateView):
         sftp_allowable_models = self.request.user.get_sftp_allowable_models()
         return {
             "has_sftp": bool(sftp_allowable_models),
-            "has_default_playlist": AudioAsset in sftp_allowable_models,
+            "has_sftp_playlists_by_folder": AudioAsset in sftp_allowable_models,
             "title": "Server Information",
             **super().get_context_data(**kwargs),
         }
