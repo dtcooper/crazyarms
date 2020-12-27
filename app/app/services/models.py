@@ -66,7 +66,7 @@ class UpstreamServer(models.Model):
     )
 
     class Meta:
-        ordering = ("id",)
+        ordering = ("name",)
         unique_together = ("hostname", "port", "mount")
 
     def __str__(self):

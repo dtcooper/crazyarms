@@ -61,15 +61,16 @@ $(function() {
             // Needs to initialize slightly delayed for some reason otherwise placeholder doesn't show
             $('.django-select2').djangoSelect2({placeholder: 'Search for a track to request...', dropdownAutoWidth: true})
         }, 500)
-        $('#autodj-request-form').submit(function(e) {
+        $('.request-btn').click(function(e) {
             e.preventDefault()
             var $asset = $('#id_asset')
+            var assetId = $asset.val()
 
-            if ($asset.val()) {
-                var postData = $(this).serialize()
+            if (assetId) {
+                var postData = {"csrfmiddlewaretoken": csrfToken, "asset": assetId}
                 $asset.val(null).trigger('change') //clear select2
                 $.post(autoDJRequestsUrl, postData, function(response) {
-                    addMessage('info', response)
+                    addMessage('warning', response)
                 }).fail(function() {
                     addMessage('error', 'An error occurred while making your AutoDJ request.')
                 })

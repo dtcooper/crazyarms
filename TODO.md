@@ -91,6 +91,11 @@
 - [ ] Record shows on the calendar, or just record everything
     - S3 storage will come in handy at that point
 - [ ] public API
+- [ ] Get fancy with stopsets, create a telnet requests queue for them specifically so they get
+    scheduled on time. Could use something similar for autodj requests. Would be a track sensitive fallback:
+        1. stopsets via `requests.queue()`, these happen on a timer in liquidsoap or from huey
+        2. autodj requests via `requests.queue()` happen the web UI (do we need some way to cap them?)
+        3. regular autodj via `request.dynamic.list()`
 
 ## Down the line
 

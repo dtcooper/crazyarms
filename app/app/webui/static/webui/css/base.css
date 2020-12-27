@@ -87,3 +87,8 @@ th { text-align: center; }
 img {
   margin: 10px;
 }
+
+/* django_select2 */
+.autodj-requests-table select, .autodj-requests-table input {
+  width: 100%;
+}

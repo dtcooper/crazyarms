@@ -5,15 +5,6 @@
 {% block extrahead %}
 {% if autodj_requests_form %}
   {{ autodj_requests_form.media.css }}
-  <style>
-    .autodj-requests-table select, .autodj-requests-table input {
-      width: 100%;
-    }
-    .select2-container {
-      color: var(--nc-bg-1);
-      margin-bottom: 5px;
-    }
-  </style>
 {% endif %}
 
 {{ liquidsoap_status|json_script:'harbor-status-json' }}
@@ -46,7 +37,7 @@
     <caption>Harbor Information (Live)</caption>
     <tr>
       <td width="25%"><strong>Current Stream:</strong></td>
-      <td width="75%">
+      <td width="75%" colspan="3">
         {{#each sources}}
           {{#if this.is_current_stream}}
             <strong class="green">{{this.name}}</strong>
@@ -57,7 +48,7 @@
     </tr>
     <tr>
       <td><strong>Current Metadata:</strong></td>
-      <td>
+      <td colspan="3">
         {{#with metadata}}
           {{#if artist}}{{artist}}{{#if album}} - {{else}}{{#if title}} - {{/if}}{{/if}}{{/if}}
           {{#if album}}{{album}}{{#if title}} - {{/if}}{{/if}}
@@ -74,7 +65,7 @@
     </tr>
     <tr>
       <td><strong>Time Remaining:</strong></td>
-      <td>
+      <td colspan="3">
         {{#each sources}}
           {{#if this.is_current_stream}}
             {{#ifEqual this.id ../dj_harbor_source}}
@@ -101,9 +92,14 @@
           {{/if}}
         {{/each}}
       </td>
+    </tr>
     <tr>
       <td><strong>Server Uptime:</strong></td>
-      <td><code class="since-timer" data-since="{{server_info.start_time}}"></code></td>
+      <td width="25%"><code class="since-timer" data-since="{{server_info.start_time}}"></code></td>
+      <th width="25%" class="right-text"><strong>
+        <a href="https://crazyarms.xyz" target="_blank">Crazy Arms</a> Version:
+      </strong></td>
+      <td width="25%"><code>{% endverbatim %}{{ carb_version }}{% verbatim %}</code></td>
     </tr>
   </table>
   <table>
@@ -211,25 +207,21 @@
 {{/if}}
 </script>
 {% endverbatim %}
-
 <div id="harbor-status"></div>
+
 {% if autodj_requests_form %}
-  <form id="autodj-request-form">
-    {% csrf_token %}
-    <table class="autodj-requests-table first-td-right">
-      <caption>AutoDJ Requests</caption>
-        <tr>
-          <td width="15%">Your Request:</td>
-          <td width="85%">{{ autodj_requests_form.asset }}</td>
-        </tr>
-        <tr>
-          <td colspan="2" class="center-text">
-            <button class="autodj-request bg-green">Submit Request to be Queued</button>
-          </td>
-        </tr>
-    </table>
-  </form>
+  <table class="autodj-requests-table first-td-right">
+    <caption>AutoDJ Requests</caption>
+      <tr>
+        <td width="15%">Your Request:</td>
+        <td width="85%">{{ autodj_requests_form.asset }}</td>
+      </tr>
+      <tr>
+        <td colspan="2" class="center-text">
+          <button class="request-btn bg-green">Submit Request to be Queued</button>
+        </td>
+      </tr>
+  </table>
   {{ autodj_requests_form.media.js }}
 {% endif %}
-
 {% endblock %}
