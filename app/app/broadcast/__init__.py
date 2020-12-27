@@ -1,1 +1,1 @@
-default_app_config = 'broadcast.apps.BroadcastConfig'
+default_app_config = "broadcast.apps.BroadcastConfig"

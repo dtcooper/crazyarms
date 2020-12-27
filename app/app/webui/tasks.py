@@ -7,13 +7,12 @@ from huey.contrib import djhuey
 from carb import constants
 from services.services import ZoomService
 
-
-logger = logging.getLogger(f'carb.{__name__}')
+logger = logging.getLogger(f"carb.{__name__}")
 
 
 @djhuey.db_task(priority=5)
 def stop_zoom_broadcast():
-    logger.info('Stopping Zoom broadcast')
+    logger.info("Stopping Zoom broadcast")
 
     redis = get_redis_connection()
     redis.delete(constants.REDIS_KEY_ROOM_INFO)
@@ -23,4 +22,4 @@ def stop_zoom_broadcast():
     time.sleep(10)
 
     service = ZoomService()
-    service.supervisorctl('stop', 'zoom', 'zoom-runner')
+    service.supervisorctl("stop", "zoom", "zoom-runner")

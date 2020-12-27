@@ -1,1 +1,1 @@
-default_app_config = 'autodj.apps.AutoDJConfig'
+default_app_config = "autodj.apps.AutoDJConfig"

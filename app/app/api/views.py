@@ -1,6 +1,6 @@
 import datetime
-import logging
 import json
+import logging
 
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -14,18 +14,17 @@ from constance import config
 from autodj.models import AudioAsset, RotatorAsset
 from common.models import User
 
-from .tasks import process_sftp_upload, SFTP_PATH_ASSET_CLASSES
+from .tasks import SFTP_PATH_ASSET_CLASSES, process_sftp_upload
+
+logger = logging.getLogger(f"carb.{__name__}")
 
 
-logger = logging.getLogger(f'carb.{__name__}')
-
-
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class APIView(View):
     def dispatch(self, request):
         self.request_json = {}
 
-        if request.headers.get('X-CARB-Secret-Key') != settings.SECRET_KEY:
+        if request.headers.get("X-CARB-Secret-Key") != settings.SECRET_KEY:
             return HttpResponseForbidden()
 
         if request.body:
@@ -43,27 +42,27 @@ class APIView(View):
         elif isinstance(response, int):
             return HttpResponse(status=response)
         else:
-            raise Exception('View returned an invalid response')
+            raise Exception("View returned an invalid response")
 
 
 class DJAuthAPIView(APIView):
     def post(self, request):
-        response = {'authorized': False}
+        response = {"authorized": False}
         user = None
 
-        if self.request_json['username'] == '!':
+        if self.request_json["username"] == "!":
             try:
-                user = User.objects.get(stream_key=self.request_json['password'].strip())
+                user = User.objects.get(stream_key=self.request_json["password"].strip())
             except User.DoesNotExist:
-                logger.info('dj auth requested by stream key: denied')
+                logger.info("dj auth requested by stream key: denied")
         else:
             username_password_tries = [
-                (self.request_json['username'], self.request_json['password']),
+                (self.request_json["username"], self.request_json["password"]),
             ]
 
             # Allow username to be anything and password to be username:password or username-password
-            for pw_split_char in (':', '-'):
-                pw_split = self.request_json['password'].split(pw_split_char, 1)
+            for pw_split_char in (":", "-"):
+                pw_split = self.request_json["password"].split(pw_split_char, 1)
                 if len(pw_split) == 2:
                     username_password_tries.append(pw_split)
 
@@ -75,9 +74,9 @@ class DJAuthAPIView(APIView):
                     try:
                         user = User.objects.get(username=username)
                     except User.DoesNotExist:
-                        logger.info(f'dj auth requested by {username}: denied (user does not exist)')
+                        logger.info(f"dj auth requested by {username}: denied (user does not exist)")
                     else:
-                        logger.info(f'dj auth requested by {username}: denied (incorrect password / inactive account)')
+                        logger.info(f"dj auth requested by {username}: denied (incorrect password / inactive account)")
 
         if user:
             authorized = user.currently_harbor_authorized()
@@ -85,17 +84,24 @@ class DJAuthAPIView(APIView):
                 kickoff_time = None
                 if isinstance(authorized, datetime.datetime):
                     kickoff_time = int(authorized.timestamp())
-                response.update({'authorized': True, 'username': user.username, 'user_id': user.id,
-                                 'kickoff_time': kickoff_time, 'full_name': user.get_full_name(short=True)})
+                response.update(
+                    {
+                        "authorized": True,
+                        "username": user.username,
+                        "user_id": user.id,
+                        "kickoff_time": kickoff_time,
+                        "full_name": user.get_full_name(short=True),
+                    }
+                )
 
         return response
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class ValidateStreamKeyView(View):
     def post(self, request, *args, **kwargs):
         # nginx-rtmp expects a 2xx code to allow and a 4xx to deny
-        stream_key = self.request.POST.get('name')
+        stream_key = self.request.POST.get("name")
         if stream_key:
             try:
                 user = User.objects.get(stream_key=stream_key)
@@ -103,27 +109,41 @@ class ValidateStreamKeyView(View):
                 pass
             else:
                 if user.currently_harbor_authorized():
-                    logger.info(f'rtmp auth by {user} auth: allowed')
+                    logger.info(f"rtmp auth by {user} auth: allowed")
                     return HttpResponse(status=200)
 
-        logger.info('rtmp auth: denied')
+        logger.info("rtmp auth: denied")
         return HttpResponse(status=404)
 
 
 class SFTPAuthView(APIView):
-    RESTRICTED_DIR_PERMS = ('list', 'download')
+    RESTRICTED_DIR_PERMS = ("list", "download")
     # Don't allow creation of symlinks @ https://github.com/drakkan/sftpgo/blob/master/dataprovider/user.go
-    ALLOWED_DIR_PERMS = ('list', 'download', 'upload', 'overwrite', 'delete', 'rename',
-                         'create_dirs', 'chmod', 'chown', 'chtimes')
+    ALLOWED_DIR_PERMS = (
+        "list",
+        "download",
+        "upload",
+        "overwrite",
+        "delete",
+        "rename",
+        "create_dirs",
+        "chmod",
+        "chown",
+        "chtimes",
+    )
     SFTP_ASSET_CLASS_PATHS = {v: k for k, v in SFTP_PATH_ASSET_CLASSES.items()}
 
     def post(self, request):
-        username, password, key = self.request_json['username'], self.request_json['password'], self.request_json['key']
+        username, password, key = (
+            self.request_json["username"],
+            self.request_json["password"],
+            self.request_json["key"],
+        )
         non_logged_in_user = None
         user = authenticate(username=username, password=password)
 
         if user:
-            auth_type = 'password'
+            auth_type = "password"
         else:
             try:
                 non_logged_in_user = User.objects.get(username=username)
@@ -138,42 +158,49 @@ class SFTPAuthView(APIView):
                         split_len = min(len(key_split), len(authorized_key_split))
                         if split_len >= 2 and key_split[:split_len] == authorized_key_split[:split_len]:
                             user = non_logged_in_user
-                            auth_type = 'ssh key'
+                            auth_type = "ssh key"
                             break
 
         if user:
             allowed = user.get_sftp_allowable_models()
 
             if allowed:
-                permissions = {'/': self.RESTRICTED_DIR_PERMS}
+                permissions = {"/": self.RESTRICTED_DIR_PERMS}
                 if AudioAsset in allowed:
-                    permissions = {'/': self.ALLOWED_DIR_PERMS}
+                    permissions = {"/": self.ALLOWED_DIR_PERMS}
                 else:
-                    permissions = {'/': self.RESTRICTED_DIR_PERMS}
+                    permissions = {"/": self.RESTRICTED_DIR_PERMS}
 
-                permissions.update({f'/{self.SFTP_ASSET_CLASS_PATHS[m]}/': self.ALLOWED_DIR_PERMS for m in allowed})
-                logger.info(f'sftp auth requested by {user}: {auth_type} accepted (uploads allowed: '
-                            f'{[m._meta.verbose_name for m in allowed]})')
-                return {'status': 1, 'username': str(user.id), 'permissions': permissions, 'quota_size': 0}
+                permissions.update({f"/{self.SFTP_ASSET_CLASS_PATHS[m]}/": self.ALLOWED_DIR_PERMS for m in allowed})
+                logger.info(
+                    f"sftp auth requested by {user}: {auth_type} accepted (uploads allowed: "
+                    f"{[m._meta.verbose_name for m in allowed]})"
+                )
+                return {
+                    "status": 1,
+                    "username": str(user.id),
+                    "permissions": permissions,
+                    "quota_size": 0,
+                }
             else:
-                logger.info(f'sftp auth requested by {user}: denied ({auth_type} allowed but no permissions)')
+                logger.info(f"sftp auth requested by {user}: denied ({auth_type} allowed but no permissions)")
         elif non_logged_in_user:
-            logger.info(f'sftp auth requested by {username}: denied (invalid credentials / inactive account)')
+            logger.info(f"sftp auth requested by {username}: denied (invalid credentials / inactive account)")
         else:
-            logger.info(f'sftp auth requested by {username}: denied (user does not exist)')
+            logger.info(f"sftp auth requested by {username}: denied (user does not exist)")
 
-        return {'status': 0}
+        return {"status": 0}
 
 
 class SFTPUploadView(APIView):
     def post(self, request):
-        process_sftp_upload(self.request_json['path'])
+        process_sftp_upload(self.request_json["path"])
         return 200
 
 
 class NextTrackAPIView(APIView):
     def get(self, request):
-        response = {'has_asset': False}
+        response = {"has_asset": False}
         asset = annotations = None
 
         if config.AUTODJ_ENABLED:
@@ -181,19 +208,28 @@ class NextTrackAPIView(APIView):
                 # Will return None if we're not currently playing through a stopset
                 asset = RotatorAsset.get_next_for_autodj()
                 if asset:
-                    annotations = {'rotator_asset_id': str(asset.id)}
+                    annotations = {"rotator_asset_id": str(asset.id)}
 
             if not asset:
                 asset = AudioAsset.get_next_for_autodj()
                 if asset:
-                    annotations = {'audio_asset_id': str(asset.id)}
+                    annotations = {"audio_asset_id": str(asset.id)}
 
         if asset:
-            annotations.update({
-                # Escape " and \, as well as normalize whitespace for liquidsoap
-                field: ' '.join(getattr(asset, field).split()).replace('\\', '\\\\').replace('"', '\\"')
-                for field in asset.TITLE_FIELDS if getattr(asset, field)})
-            annotations = ','.join(f'{key}="{value}"' for key, value in annotations.items())
-            response.update({'has_asset': True, 'asset_uri': f'annotate:{annotations}:file://{asset.file.path}'})
+            annotations.update(
+                {
+                    # Escape " and \, as well as normalize whitespace for liquidsoap
+                    field: " ".join(getattr(asset, field).split()).replace("\\", "\\\\").replace('"', '\\"')
+                    for field in asset.TITLE_FIELDS
+                    if getattr(asset, field)
+                }
+            )
+            annotations = ",".join(f'{key}="{value}"' for key, value in annotations.items())
+            response.update(
+                {
+                    "has_asset": True,
+                    "asset_uri": f"annotate:{annotations}:file://{asset.file.path}",
+                }
+            )
 
         return response

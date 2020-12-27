@@ -4,29 +4,32 @@ from django.utils.formats import date_format
 
 from huey.contrib.djhuey import revoke_by_id
 
-
-from common.models import after_db_commit, AudioAssetBase, TimestampedModel
+from common.models import AudioAssetBase, TimestampedModel, after_db_commit
 
 
 class BroadcastAsset(AudioAssetBase):
-    UNNAMED_TRACK = 'Unnamed Broadcast'
-    UPLOAD_DIR = 'broadcasts'
+    UNNAMED_TRACK = "Unnamed Broadcast"
+    UPLOAD_DIR = "broadcasts"
 
     class Meta:
-        verbose_name = 'scheduled broadcast asset'
-        verbose_name_plural = 'scheduled broadcast assets'
-        ordering = ('title', 'id')
+        verbose_name = "scheduled broadcast asset"
+        verbose_name_plural = "scheduled broadcast assets"
+        ordering = ("title", "id")
 
 
 class Broadcast(TimestampedModel):
     class Status(models.TextChoices):
-        PENDING = '-', 'to be queued'
-        QUEUED = 'q', 'queued for play'
-        PLAYED = 'p', 'played'
-        FAILED = 'f', 'failed to play'
+        PENDING = "-", "to be queued"
+        QUEUED = "q", "queued for play"
+        PLAYED = "p", "played"
+        FAILED = "f", "failed to play"
 
-    asset = models.ForeignKey(BroadcastAsset, verbose_name='broadcast asset',  related_name='broadcasts',
-                              on_delete=models.CASCADE)
+    asset = models.ForeignKey(
+        BroadcastAsset,
+        verbose_name="broadcast asset",
+        related_name="broadcasts",
+        on_delete=models.CASCADE,
+    )
     scheduled_time = models.DateTimeField()
     status = models.CharField(max_length=1, choices=Status.choices, default=Status.PENDING)
     task_id = models.UUIDField(null=True)
@@ -36,13 +39,13 @@ class Broadcast(TimestampedModel):
         super().__init__(*args, **kwargs)
 
     def __str__(self):
-        scheduled_time = date_format(timezone.localtime(self.scheduled_time), 'SHORT_DATETIME_FORMAT')
-        return f'{self.asset} ({self.get_status_display()} at {scheduled_time})'
+        scheduled_time = date_format(timezone.localtime(self.scheduled_time), "SHORT_DATETIME_FORMAT")
+        return f"{self.asset} ({self.get_status_display()} at {scheduled_time})"
 
     class Meta:
-        ordering = ('-scheduled_time',)
-        verbose_name = 'scheduled broadcast'
-        verbose_name_plural = 'scheduled broadcasts'
+        ordering = ("-scheduled_time",)
+        verbose_name = "scheduled broadcast"
+        verbose_name_plural = "scheduled broadcasts"
 
     @after_db_commit
     def queue(self):

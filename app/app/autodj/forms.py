@@ -7,11 +7,16 @@ from .models import AudioAsset, Playlist, Rotator, RotatorAsset
 
 
 class PlaylistActionForm(ActionForm):
-    playlist = forms.ModelChoiceField(Playlist.objects.all(), required=False, label=' ', empty_label='--- Playlist ---')
+    playlist = forms.ModelChoiceField(
+        Playlist.objects.all(),
+        required=False,
+        label=" ",
+        empty_label="--- Playlist ---",
+    )
 
 
 class RotatorActionForm(ActionForm):
-    rotator = forms.ModelChoiceField(Rotator.objects.all(), required=False, label=' ', empty_label='--- Rotator ---')
+    rotator = forms.ModelChoiceField(Rotator.objects.all(), required=False, label=" ", empty_label="--- Rotator ---")
 
 
 class AudioAssetCreateForm(AudioAssetCreateFormBase):

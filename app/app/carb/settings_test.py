@@ -1,6 +1,7 @@
 # flake8: noqa
 
 import fakeredis
+
 from django_redis.pool import ConnectionFactory
 
 from .settings import *
@@ -14,25 +15,25 @@ class FakeDjangoRedisConnectionFactory(ConnectionFactory):
         return self.redis_client_cls(**self.redis_client_cls_kwargs)
 
 
-DJANGO_REDIS_CONNECTION_FACTORY = 'carb.settings_test.FakeDjangoRedisConnectionFactory'
+DJANGO_REDIS_CONNECTION_FACTORY = "carb.settings_test.FakeDjangoRedisConnectionFactory"
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://localhost',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'REDIS_CLIENT_CLASS': 'fakeredis.FakeStrictRedis',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://localhost",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "REDIS_CLIENT_CLASS": "fakeredis.FakeStrictRedis",
         },
     }
 }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
     }
 }
 
 
-HUEY['immediate'] = True
-del HUEY['connection']
+HUEY["immediate"] = True
+del HUEY["connection"]
