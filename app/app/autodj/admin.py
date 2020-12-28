@@ -4,7 +4,8 @@ from django.utils.safestring import mark_safe
 
 from constance import config
 
-from common.admin import AudioAssetAdminBase
+from broadcast.models import BroadcastAsset
+from common.admin import AudioAssetAdminBase, asset_conversion_action
 
 from .forms import AudioAssetCreateForm, PlaylistActionForm, RotatorActionForm, RotatorAssetCreateForm
 from .models import AudioAsset, Playlist, Rotator, RotatorAsset, Stopset, StopsetRotator
@@ -93,20 +94,40 @@ class PlaylistInline(admin.StackedInline):
 
 class AudioAssetAdmin(AudioAssetAdminBase, AutoDJModelAdmin):
     playlist_inlines = (PlaylistInline,)
-    playlist_actions = ("add_playlist_action", "remove_playlist_action")
     playlist_action_form = PlaylistActionForm
     create_form = AudioAssetCreateForm
     # title gets swapped to include artist and album
     list_display = ("title", "created", "playlists_list_display", "duration", "status")
     list_filter = ("playlists",) + AudioAssetAdminBase.list_filter
 
+    convert_to_rotator_assets = asset_conversion_action(AudioAsset, RotatorAsset)
+    convert_to_prerecorded_broadcasts = asset_conversion_action(AudioAsset, BroadcastAsset)
+
     @property
     def action_form(self):
         return self.playlist_action_form if config.AUTODJ_PLAYLISTS_ENABLED else super().action_form
 
-    @property
-    def actions(self):
-        return self.playlist_actions if config.AUTODJ_PLAYLISTS_ENABLED else super().actions
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if config.AUTODJ_PLAYLISTS_ENABLED:
+            actions.update(
+                {
+                    "add_playlist": (self.add_playlist, "add_playlist", "Add selected audio assets to playlist"),
+                    "remove_playlist": (
+                        self.remove_playlist,
+                        "remove_playlist",
+                        "Remove selected audio assets from playlist",
+                    ),
+                }
+            )
+        if config.AUTODJ_STOPSETS_ENABLED:
+            action = asset_conversion_action(AudioAsset, RotatorAsset)
+            actions["convert_to_rotator_asset"] = (action, "convert_to_rotator_asset", action.short_description)
+        if request.user.has_perm("broadcast.change_broadcast"):
+            action = asset_conversion_action(AudioAsset, BroadcastAsset)
+            actions["convert_to_broadcast_asset"] = (action, "convert_to_broadcast_asset", action.short_description)
+
+        return actions
 
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))
@@ -128,45 +149,43 @@ class AudioAssetAdmin(AudioAssetAdminBase, AutoDJModelAdmin):
 
     playlists_list_display.short_description = "Playlist(s)"
 
-    def add_playlist_action(self, request, queryset):
+    @staticmethod
+    def add_playlist(modeladmin, request, queryset):
         playlist_id = request.POST.get("playlist")
         if playlist_id:
             playlist = Playlist.objects.get(id=playlist_id)
             for audio_asset in queryset:
                 audio_asset.playlists.add(playlist)
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 f"Audio assets were added to playlist {playlist.name}.",
                 messages.SUCCESS,
             )
         else:
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 "You must select a playlist to add audio assets to.",
                 messages.WARNING,
             )
 
-    add_playlist_action.short_description = "Add to playlist"
-
-    def remove_playlist_action(self, request, queryset):
+    @staticmethod
+    def remove_playlist(modeladmin, request, queryset):
         playlist_id = request.POST.get("playlist")
         if playlist_id:
             playlist = Playlist.objects.get(id=playlist_id)
             for audio_asset in queryset:
                 audio_asset.playlists.remove(playlist)
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 f"Audio assets were removed from playlist {playlist.name}.",
                 messages.SUCCESS,
             )
         else:
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 "You must select a playlist to remove audio assets from.",
                 messages.WARNING,
             )
-
-    remove_playlist_action.short_description = "Remove from playlist"
 
 
 class RotatorAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJStopsetRelatedAdmin):
@@ -196,52 +215,69 @@ class RotatorAssetAdmin(AudioAssetAdminBase, AutoDJStopsetRelatedAdmin):
     list_display = ("title", "created", "rotators_list_display", "duration", "status")
     list_filter = ("rotators",) + AudioAssetAdminBase.list_filter
 
-    # TODO bulk upload view abstracted from AudioAssets
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        action = asset_conversion_action(RotatorAsset, AudioAsset)
+        actions.update(
+            {
+                "add_rotator": (self.add_rotator, "add_rotator", "Add selected rotator assets to rotator"),
+                "remove_rotator": (
+                    self.remove_rotator,
+                    "remove_rotator",
+                    "Remove selected rotator assets from rotator",
+                ),
+                "convert_to_audio_asset": (action, "convert_to_audio_asset", action.short_description),
+            }
+        )
+
+        if request.user.has_perm("broadcast.change_broadcast"):
+            action = asset_conversion_action(RotatorAsset, BroadcastAsset)
+            actions["convert_to_broadcast_asset"] = (action, "convert_to_broadcast_asset", action.short_description)
+
+        return actions
 
     def rotators_list_display(self, obj):
         return format_html_join(mark_safe(",<br>"), "{}", obj.rotators.values_list("name")) or None
 
     rotators_list_display.short_description = "Rotators(s)"
 
-    def add_rotator_action(self, request, queryset):
+    @staticmethod
+    def add_rotator(modeladmin, request, queryset):
         rotator_id = request.POST.get("rotator")
         if rotator_id:
             rotator = Rotator.objects.get(id=rotator_id)
             for rotator_asset in queryset:
                 rotator_asset.rotators.add(rotator)
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 f"Rotator assets were added to rotator {rotator.name}.",
                 messages.SUCCESS,
             )
         else:
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 "You must select a rotator to add rotator assets to.",
                 messages.WARNING,
             )
 
-    add_rotator_action.short_description = "Add to rotator"
-
-    def remove_rotator_action(self, request, queryset):
+    @staticmethod
+    def remove_rotator(modeladmin, request, queryset):
         rotator_id = request.POST.get("rotator")
         if rotator_id:
             rotator = Rotator.objects.get(id=rotator_id)
             for rotator_asset in queryset:
                 rotator_asset.rotators.remove(rotator)
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 f"Rotator assets were removed from rotator {rotator.name}.",
                 messages.SUCCESS,
             )
         else:
-            self.message_user(
+            modeladmin.message_user(
                 request,
                 "You must select a rotator to remove rotator assets from.",
                 messages.WARNING,
             )
-
-    remove_rotator_action.short_description = "Delete from rotator"
 
     def save_model(self, request, obj, form, change):
         if not change:

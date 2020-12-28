@@ -1,4 +1,5 @@
 from functools import wraps
+import os
 import secrets
 
 from django.conf import settings
@@ -7,6 +8,7 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group
 from django.core import signing
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from constance import config
@@ -32,6 +34,52 @@ def swap_title_fields(method):
         return fields
 
     return swapped
+
+
+def asset_conversion_action(from_cls, to_cls):
+    from_name = from_cls._meta.verbose_name_plural
+    to_name = to_cls._meta.verbose_name_plural
+
+    def quick_action(modeladmin, request, queryset):
+        num_converted = 0
+
+        for obj in queryset:
+            if obj.status == obj.Status.READY:
+                new_asset = to_cls(
+                    title=obj.get_full_title(include_duration=False),
+                    file_basename=obj.file_basename,
+                    uploader=request.user,
+                    fingerprint=obj.fingerprint,
+                )
+                new_asset.file.save(os.path.basename(obj.file.name), obj.file, save=False)
+
+                try:
+                    new_asset.clean()
+                except ValidationError as e:
+                    new_asset.file.delete()
+                    modeladmin.message_user(
+                        request,
+                        f'An error occurred while converting {obj}: {", ".join(e.messages)}',
+                        level=messages.ERROR,
+                    )
+
+                else:
+                    num_converted += 1
+                    new_asset.save()
+                    obj.delete()
+
+            else:
+                modeladmin.message_user(
+                    request,
+                    f"{obj} could not be converted since its status was {obj.get_status_display()}.",
+                    level=messages.WARNING,
+                )
+
+        if num_converted:
+            modeladmin.message_user(request, f"{num_converted} {from_name} were successfully converted to {to_name}.")
+
+    quick_action.short_description = f"Convert selected {from_name} to {to_name}"
+    return quick_action
 
 
 class AudioAssetAdminBase(admin.ModelAdmin):

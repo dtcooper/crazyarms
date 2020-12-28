@@ -5,7 +5,7 @@ if ! command -v docker-compose >/dev/null 2>&1; then
     exit 1
 fi
 
-cd "$(dirname "$@")"
+cd "$(dirname "$0")"
 
 ### Copied from https://github.com/bashup/dotenv
 

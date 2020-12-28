@@ -75,7 +75,10 @@
 - [x] On status page, move server uptime with some less pertinent details like version, etc below the source list
 - [ ] first name, last name => single field (dj name or display name)
 - [x] SFTP audio asset playlists based on first folder instead of a user preference
-- [ ] way to convert asset types, potentially using https://github.com/ninemoreminutes/django-admin-object-actions
+- [x] way to convert asset types, potentially using https://github.com/ninemoreminutes/django-admin-object-actions
+- [x] After asset.file.save(..., save=False) is called file is created, whether we create the asset or not
+    - `django-unused-media` good candidate, but may interfere with constance's file fields
+- [ ] Admin css for input type=file busted
 
 ## Future Version
 

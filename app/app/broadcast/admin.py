@@ -2,7 +2,10 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.formats import date_format
 
-from common.admin import AudioAssetAdminBase
+from constance import config
+
+from autodj.models import AudioAsset, RotatorAsset
+from common.admin import AudioAssetAdminBase, asset_conversion_action
 
 from .forms import BroadcastAssetCreateForm
 from .models import Broadcast, BroadcastAsset
@@ -38,6 +41,16 @@ def message_broadcast_added(request, broadcast):
 class BroadcastAssetAdmin(AudioAssetAdminBase):
     non_popup_inlines = (BroadcastInline,)
     create_form = BroadcastAssetCreateForm
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if config.AUTODJ_ENABLED and request.user.has_perm("autodj.change_audioasset"):
+            action = asset_conversion_action(BroadcastAsset, AudioAsset)
+            actions["convert_to_audio_asset"] = (action, "convert_to_audio_asset", action.short_description)
+            if config.AUTODJ_STOPSETS_ENABLED:
+                action = asset_conversion_action(BroadcastAsset, RotatorAsset)
+                actions["convert_to_rotator_asset"] = (action, "convert_to_rotator_asset", action.short_description)
+        return actions
 
     def get_inlines(self, request, obj=None):
         return () if request.GET.get("_popup") else self.non_popup_inlines

@@ -570,7 +570,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
         elif run_download_url:
             self.queue_download(url=run_download_url, set_title=set_title)
 
-    def full_title(self, include_duration=True):
+    def get_full_title(self, include_duration=True):
         s = (
             " - ".join(
                 filter(
@@ -589,4 +589,4 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
         return s
 
     def __str__(self):
-        return self.full_title()
+        return self.get_full_title()
