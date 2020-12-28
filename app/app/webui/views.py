@@ -240,6 +240,9 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, F
             )
             return redirect("zoom")
 
+    def get_initial(self):
+        return {**super().get_initial(), "show_name": f"{self.request.user.get_full_name(short=True)}'s Live Show"}
+
     def get_form_kwargs(self):
         now = timezone.now()
         current_auth = self.request.user.currently_harbor_authorized(now=now, should_log=False)
@@ -276,7 +279,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, F
         # A bit jenky, but the zoom-runner.sh script evals this
         room_env_str = "".join(f"{key}={shlex.quote(value)}\n" for key, value in room_env.items())
 
-        harbor.zoom_metadata(json.dumps(form.cleaned_data["show_name"] or "Live Broadcast"))
+        harbor.zoom_metadata(json.dumps(form.cleaned_data["show_name"]))
 
         self.redis.set(constants.REDIS_KEY_ROOM_INFO, room_env_str, ex=form.cleaned_data["ttl"])
         self.service.supervisorctl("restart", "zoom-runner")

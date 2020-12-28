@@ -20,6 +20,7 @@
     - [x] needs a second pass, and a better show length picker that limits users time based on google calendar
     - [x] time remaining of current Zoom Show
     - [x] Indicator about why the zoom form doesn't show for calendar based auth
+    - [ ] deal with invalid meeting popup
 - [ ] Code cleanup
     - [ ] Clean up Dockerfiles stripping dev stuff
     - [ ] Go over `TODO`s and `XXX`s in codebase

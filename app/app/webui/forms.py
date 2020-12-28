@@ -253,8 +253,7 @@ class ZoomForm(forms.Form):
 
     show_name = forms.CharField(
         label="Show Name",
-        required=False,
-        help_text="The name of your show for the stream's metadata. Can be left blank.",
+        help_text="The name of your show for the stream's metadata.",
     )
     zoom_room = forms.URLField(
         label="Room Link",

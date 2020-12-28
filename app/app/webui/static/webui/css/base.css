@@ -1,14 +1,21 @@
 :root {
-    /* From https://materializecss.com/color.html */
-    --nc-lk-1: #2196f3; /* blue */
-    --nc-lk-2: #26c6da; /* cyan lighten-1 */
-    --nc-bg-2: #fafafa; /* grey lighten-5 */
-    --nc-bg-3: #e0e0e0; /* grey lighten-2 */
-    --mt-orange: #ff9800;
-    --mt-orange-darken-2: #f57c00;
-    --mt-red: #f44336;
-    --mt-green: #4caf50;
-    --mt-grey-darken-1: #757575;
+  /* From https://materializecss.com/color.html */
+  --nc-lk-1: #2196f3; /* blue */
+  --nc-lk-2: #26c6da; /* cyan lighten-1 */
+  --nc-bg-2: #fafafa; /* grey lighten-5 */
+  --nc-bg-3: #e0e0e0; /* grey lighten-2 */
+  --mt-orange: #ff9800;
+  --mt-orange-darken-2: #f57c00;
+  --mt-red: #f44336;
+  --mt-green: #4caf50;
+  --mt-grey: #9e9e9e;
+  --mt-grey-darken-1: #757575;
+}
+
+input::placeholder {
+  color: var(--mt-grey-lighten-1);
+  font-style: italic;
+  opacity: 1;
 }
 
 body {

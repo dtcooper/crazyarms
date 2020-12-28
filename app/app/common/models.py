@@ -84,10 +84,13 @@ class User(DirtyFieldsMixin, AbstractUser):
     first_name = None  # Just go for one name
     last_name = None
     name = models.CharField(
-        "full name",
+        "display name",
         max_length=200,
         blank=True,
-        help_text="First and last name, or a DJ name if you'd prefer",
+        help_text=(
+            "A DJ name or a first and alst name if you'd prefer. This will be seen in the stream's metadata during live"
+            " shows."
+        ),
     )
     is_superuser = models.BooleanField(
         "administrator",
