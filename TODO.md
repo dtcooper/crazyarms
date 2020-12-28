@@ -78,7 +78,7 @@
 - [x] way to convert asset types, potentially using https://github.com/ninemoreminutes/django-admin-object-actions
 - [x] After asset.file.save(..., save=False) is called file is created, whether we create the asset or not
     - `django-unused-media` good candidate, but may interfere with constance's file fields
-- [ ] Admin css for input type=file busted
+- [x] Admin css for input type=file busted
 
 ## Future Version
 

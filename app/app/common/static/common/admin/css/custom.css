@@ -10,7 +10,7 @@
 }
 
 .help {
-  font-size: 14px !important;
+    font-size: 14px !important;
 }
 
 #branding h1, #branding h1 a:link, #branding h1 a:visited {
@@ -166,12 +166,6 @@ a.active.selector-chooseall:hover, a.active.selector-clearall:hover {
 
 .object-tools a:focus, .object-tools a:hover {
     background-color: #292D32;
-}
-
-
-input[type=file]::-webkit-file-upload-button:hover {
-    border: 0;
-    background: #292D32;
 }
 
 .selector-chosen h2 {
