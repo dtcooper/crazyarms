@@ -10,6 +10,8 @@ from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from constance import config
 from constance.admin import Config, ConstanceAdmin
@@ -117,6 +119,16 @@ class AudioAssetAdminBase(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return not (obj and obj.status != obj.Status.READY) and super().has_change_permission(request, obj=obj)
+
+    def audio_player_html(self, obj):
+        if obj.file:
+            return format_html(
+                '<audio src="{}" style="width: 100%" preload="auto" controls />',
+                obj.file.url,
+            )
+        return mark_safe("<em>None</em>")
+
+    audio_player_html.short_description = "Audio"
 
     @swap_title_fields
     def get_fields(self, request, obj=None):

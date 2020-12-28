@@ -21,7 +21,6 @@ from django.db import models
 from django.db.transaction import on_commit
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from constance import config
@@ -357,15 +356,22 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
         abstract = True
         ordering = ("title", "id")
 
-    def audio_player_html(self):
+    def liquidsoap_uri(self):
         if self.file:
-            return format_html(
-                '<audio src="{}" style="width: 100%" preload="auto" controls />',
-                self.file.url,
+            annotations = {}
+            if self.id:
+                model_name = self._meta.model_name.replace("asset", "_asset")
+                annotations.update({"carb_model": model_name, "carb_id": str(self.id)})
+            annotations.update(
+                {
+                    # Escape " and \, as well as normalize whitespace for liquidsoap
+                    field: " ".join(getattr(self, field).split()).replace("\\", "\\\\").replace('"', '\\"')
+                    for field in self.TITLE_FIELDS
+                    if getattr(self, field)
+                }
             )
-        return mark_safe("<em>None</em>")
-
-    audio_player_html.short_description = "Audio"
+            annotations = ",".join(f'{key}="{value}"' for key, value in annotations.items())
+            return f"annotate:{annotations}:file://{self.file.path}"
 
     @property
     def local_filename(self):

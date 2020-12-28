@@ -29,3 +29,7 @@ pytest
 pytest-cov
 pytest-django
 requests-mock
+
+# Dev
+# misc fix for ipython3
+jedi==0.17.2

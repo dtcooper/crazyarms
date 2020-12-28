@@ -17,7 +17,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core import signing
 from django.core.cache import cache
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -32,6 +32,7 @@ from django_select2.views import AutoResponseView
 from huey.contrib import djhuey
 
 from autodj.models import AudioAsset
+from broadcast.models import Broadcast, BroadcastAsset
 from carb import constants
 from common.admin import send_set_password_email
 from common.mail import send_mail
@@ -40,7 +41,7 @@ from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
 
-from .forms import AutoDJRequestsForm, FirstRunForm, UserProfileForm, ZoomForm
+from .forms import AutoDJRequestsForm, FirstRunForm, UserProfileForm, ZoomForm, pretty_seconds
 from .tasks import stop_zoom_broadcast
 
 logger = logging.getLogger(f"carb.{__name__}")
@@ -115,6 +116,7 @@ class AutoDJRequestAJAXFormView(AutoDJRequestsAllowedMixin, FormView):
 class StatusView(LoginRequiredMixin, TemplateView):
     template_name = "webui/status.html"
     extra_context = {"title": "Stream Status"}
+    SHOW_NUM_UPCOMING = 5
 
     def dispatch(self, request, *args, **kwargs):
         if not User.objects.exists():
@@ -122,11 +124,49 @@ class StatusView(LoginRequiredMixin, TemplateView):
         else:
             return super().dispatch(request, *args, **kwargs)
 
+    def get_upcoming_status_data(self):
+        upcoming_broadcasts = Broadcast.objects.filter(
+            status=Broadcast.Status.QUEUED, asset__status=BroadcastAsset.Status.READY
+        ).order_by("-scheduled_time")[: self.SHOW_NUM_UPCOMING]
+        data = [
+            (
+                broadcast.scheduled_time,
+                "{broadcast.asset.title} by {broadcast.creator.get_full_name() if broadcast.creator else None}",
+                "Scheduled Broadcast",
+            )
+            for broadcast in upcoming_broadcasts
+        ]
+
+        # XXX hack, shouldn't do it this way, don't iterate through users like this + we should use gcal names
+        for user in User.objects.all():
+            data.extend(
+                [
+                    (
+                        start,
+                        f"{user.get_full_name(short=True)}'s show ({pretty_seconds(finish - start)} long)",
+                        "Live DJ",
+                    )
+                    for start, finish in user.upcoming_show_times[: self.SHOW_NUM_UPCOMING]
+                ]
+            )
+
+        return [
+            {"date": date_format(timezone.localtime(date), "SHORT_DATETIME_FORMAT"), "title": title, "type": type}
+            for date, title, type in sorted(data)[: self.SHOW_NUM_UPCOMING]
+        ]
+
+    def get(self, request, *args, **kwargs):
+        if request.GET.get("upcoming_status_ajax"):
+            return JsonResponse(self.get_upcoming_status_data(), safe=False)
+        else:
+            return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         return {
             **super().get_context_data(**kwargs),
             "autodj_requests_form": AutoDJRequestsForm() if self.request.user.has_autodj_request_permission() else None,
             "liquidsoap_status": harbor.status(safe=True, as_dict=True),
+            "upcoming_status": self.get_upcoming_status_data(),
         }
 
 

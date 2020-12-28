@@ -247,6 +247,21 @@ class UserProfileForm(forms.ModelForm):
         )
 
 
+def pretty_seconds(seconds_or_timedelta):
+    if isinstance(seconds_or_timedelta, datetime.timedelta):
+        seconds = seconds_or_timedelta.total_seconds()
+    else:
+        seconds = seconds_or_timedelta
+
+    minutes = int(seconds / 60)
+    s = ""
+    if minutes > 60:
+        hours = minutes // 60
+        minutes = minutes % 60
+        s += f'{hours} hour{"s" if hours != 1 else ""}, '
+    return f'{s}{minutes} minute{"s" if minutes != 1 else ""}'
+
+
 class ZoomForm(forms.Form):
     TTL_RE = re.compile(r"^(?:(\d+):)?(\d+)$")
     MINUTE_STEP_AMOUNT = 15
@@ -260,16 +275,6 @@ class ZoomForm(forms.Form):
         help_text="Pasted from Zoom. Consult the Help Docs for more info.",
         widget=forms.TextInput(attrs={"placeholder": "https://zoom.us/j/91234567890?pwd=XYZ0XYZ0XYZ0XYZ0XYZ0XYZ0XYZ"}),
     )
-
-    @staticmethod
-    def pretty_seconds(seconds):
-        minutes = int(seconds / 60)
-        s = ""
-        if minutes > 60:
-            hours = minutes // 60
-            minutes = minutes % 60
-            s += f'{hours} hour{"s" if hours != 1 else ""}, '
-        return f'{s}{minutes} minute{"s" if minutes != 1 else ""}'
 
     def __init__(
         self,
@@ -310,9 +315,8 @@ class ZoomForm(forms.Form):
             choices.append(
                 (
                     "grace",
-                    f'Until {date_format(timezone.localtime(grace), "SHORT_DATETIME_FORMAT")} '
-                    f"(current scheduled show, including {user.gcal_exit_grace_minutes} "
-                    "minute grace period)",
+                    f'Until {date_format(timezone.localtime(grace), "SHORT_DATETIME_FORMAT")} (current scheduled show, '
+                    f"including {user.gcal_exit_grace_minutes} minute grace period)",
                 )
             )
         else:
@@ -323,7 +327,7 @@ class ZoomForm(forms.Form):
             choices.append(
                 (
                     "default",
-                    f'{self.pretty_seconds(self.values["default"])} (default show length)',
+                    f'{pretty_seconds(self.values["default"])} (default show length)',
                 )
             )
 
@@ -332,8 +336,8 @@ class ZoomForm(forms.Form):
             self.values["max"],
             self.MINUTE_STEP_AMOUNT * 60,
         ):
-            choices.append((seconds, self.pretty_seconds(seconds)))
-        choices.append(("max", f'{self.pretty_seconds(self.values["max"])} (maximum show length)'))
+            choices.append((seconds, pretty_seconds(seconds)))
+        choices.append(("max", f'{pretty_seconds(self.values["max"])} (maximum show length)'))
 
         self.fields["ttl"] = forms.ChoiceField(
             label="Show Duration",

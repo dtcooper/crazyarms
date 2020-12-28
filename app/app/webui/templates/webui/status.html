@@ -7,6 +7,7 @@
   {{ autodj_requests_form.media.css }}
 {% endif %}
 
+{{ upcoming_status|json_script:'upcoming-status-json' }}
 {{ liquidsoap_status|json_script:'harbor-status-json' }}
 <script>
   {% url 'boot' as boot_url %}
@@ -68,7 +69,7 @@
       <td colspan="3">
         {{#each sources}}
           {{#if this.is_current_stream}}
-            {{#ifEqual this.id ../dj_harbor_source}}
+            {{#ifEqual this.id ../source_ids.dj_harbor}}
               {{#if ../live_user}}
                 {{#with ../live_user}}
                   {{username}} {{#ifNotEqual username full_name}}({{full_name}}){{/ifNotEqual}}
@@ -122,7 +123,7 @@
 
             <td>
               {{name}}
-              {{#ifEqual id ../dj_harbor_source}}
+              {{#ifEqual id ../source_ids.dj_harbor}}
                 {{#if ../live_user}}
                   {{#with ../live_user}}
                     <span class="green">&mdash; DJ currently connected</span>
@@ -170,7 +171,7 @@
                     {{/if}}
                   {{/if}}
                 {{/ifContains}}
-                {{#ifEqual id ../dj_harbor_source}}
+                {{#ifEqual id ../source_ids.dj_harbor}}
                   {{#with ../live_user}}
                     {{#if ../../canBoot}}
                       <button class="boot-btn" data-time="60" data-text="1 minute" data-name="{{username}}" data-id="{{user_id}}">
@@ -208,6 +209,35 @@
 </script>
 {% endverbatim %}
 <div id="harbor-status"></div>
+
+{% verbatim %}
+<script id="upcoming-status-template" type="text/x-handlebars-template">
+<table>
+  <caption>Upcoming Broadcasts</caption>
+  {{#if this}}
+    <thead>
+      <tr>
+        <th width="25%">When</th>
+        <th width="55%">Title</th>
+        <th width="20%">Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each this}}
+        <tr>
+          <td>{{#ifEqual date "now"}}<strong class="green">Playing now!</strong>{{else}}{{date}}{{/ifEqual}}</td>
+          <td>{{#ifEqual date "now"}}<strong class="green">Currently playing:</strong> {{/ifEqual}}{{title}}</td>
+          <td>{{type}}</td>
+        </tr>
+      {{/each}}
+    </tbody>
+  {{else}}
+    <th><em>There are no upcoming broadcasts scheduled.</em></th>
+  {{/if}}
+</table>
+</script>
+{% endverbatim %}
+<div id="upcoming-status"></div>
 
 {% if autodj_requests_form %}
   <table class="autodj-requests-table first-td-right">

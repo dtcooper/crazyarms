@@ -4,7 +4,7 @@ from django.utils.formats import date_format
 
 from huey.contrib.djhuey import revoke_by_id
 
-from common.models import AudioAssetBase, TimestampedModel, after_db_commit
+from common.models import AudioAssetBase, TimestampedModel, User, after_db_commit
 
 
 class BroadcastAsset(AudioAssetBase):
@@ -24,6 +24,7 @@ class Broadcast(TimestampedModel):
         PLAYED = "p", "played"
         FAILED = "f", "failed to play"
 
+    creator = models.ForeignKey(User, verbose_name="creator", on_delete=models.SET_NULL, null=True)
     asset = models.ForeignKey(
         BroadcastAsset,
         verbose_name="broadcast asset",

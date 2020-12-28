@@ -12,9 +12,14 @@ logger = logging.getLogger(f"carb.{__name__}")
 @djhuey.db_task(priority=5, context=True, retries=10, retry_delay=2)
 def play_broadcast(broadcast, task=None):
     try:
-        harbor.prerecord__push(f"file://{broadcast.asset.file.path}")
+        uri = broadcast.asset.liquidsoap_uri()
+        if uri:
+            harbor.prerecord__push(uri)
+        else:
+            raise Exception("Broadcast asset doesn't have a URI. Not sending to liquidsoap.")
 
         Broadcast.objects.filter(id=broadcast.id).update(status=Broadcast.Status.PLAYED)
+        logger.info(f"Sent broadcast asset to harbor: {broadcast.asset}")
     except Exception:
         if task is None or task.retries == 0:
             logger.error(f"Failed to broadcast {broadcast}")

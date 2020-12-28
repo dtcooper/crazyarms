@@ -1,7 +1,8 @@
 from django.db import models
 from django.utils.safestring import mark_safe
 
-from autodj.models import AudioAsset
+from autodj.models import AudioAsset, RotatorAsset
+from broadcast.models import BroadcastAsset
 from common.models import TruncatingCharField, User
 
 
@@ -87,10 +88,6 @@ class UpstreamServer(models.Model):
 
         return super().save(*args, **kwargs)
 
-    # @cached_property
-    # def telnet_port(self):
-    #     return 1234 + type(self).objects.filter(id__lt=self.id).count()
-
 
 class PlayoutLogEntry(models.Model):
     class EventType(models.TextChoices):
@@ -105,6 +102,8 @@ class PlayoutLogEntry(models.Model):
     description = TruncatingCharField("Entry", max_length=500)
     active_source = TruncatingCharField("Active Source", max_length=50, default="N/A")
     audio_asset = models.ForeignKey(AudioAsset, on_delete=models.SET_NULL, null=True)
+    broadcast_asset = models.ForeignKey(BroadcastAsset, on_delete=models.SET_NULL, null=True)
+    rotator_asset = models.ForeignKey(RotatorAsset, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     class Meta:

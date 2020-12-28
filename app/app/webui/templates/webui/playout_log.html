@@ -41,14 +41,24 @@
         <td>{{ playout_log_entry.created|date:'SHORT_DATETIME_FORMAT' }}</td>
         <td>{{ playout_log_entry.get_event_type_display }}</td>
         <td>
-          {% if perms.playout.view_audioasset and playout_log_entry.audio_asset_id %}
-            <a href="{% url 'admin:autodj_audioasset_change' object_id=playout_log_entry.audio_asset_id %}">
-              {{ playout_log_entry.description }}
-            </a>
+          {# TODO: add playlist to logs? #}
+
+          {# audio assets #}
+          {% if config.AUTODJ_ENABLED and playout_log_entry.audio_asset_id and perms.playout.change_audioasset %}
+            <a href="{% url 'admin:autodj_audioasset_change' object_id=playout_log_entry.audio_asset_id %}">{{ playout_log_entry.description }}</a>
+
+          {# rotator assets #}
+          {% elif config.AUTODJ_ENABLED and config.AUTODJ_STOPSETS_ENABLED and playout_log_entry.rotator_asset_id and perms.playout.change_audioasset %}
+            <a href="{% url 'admin:autodj_rotatorasset_change' object_id=playout_log_entry.rotator_asset_id %}">{{ playout_log_entry.description }}</a>
+
+          {# broadcast assets #}
+          {% elif playout_log_entry.broadcast_asset_id and perms.broadcast.change_broadcast %}
+            <a href="{% url 'admin:broadcast_broadcastasset_change' object_id=playout_log_entry.broadcast_asset_id %}">{{ playout_log_entry.description }}</a>
+
+          {# user related #}
           {% elif user.is_superuser and playout_log_entry.user_id %}
-            <a href="{% url 'admin:common_user_change' object_id=playout_log_entry.user_id %}">
-              {{ playout_log_entry.description }}
-            </a>
+            <a href="{% url 'admin:common_user_change' object_id=playout_log_entry.user_id %}">{{ playout_log_entry.description }}</a>
+
           {% else%}
             {{ playout_log_entry.description }}
           {% endif %}

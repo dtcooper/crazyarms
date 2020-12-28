@@ -80,6 +80,10 @@
 - [x] After asset.file.save(..., save=False) is called file is created, whether we create the asset or not
     - `django-unused-media` good candidate, but may interfere with constance's file fields
 - [x] Admin css for input type=file busted
+- [ ] Protect assets via nginx's `internal;` flag
+- [ ] Skips to playout log
+- [ ] Don't use JSON field for show times so we get each show individually for status page and get show names
+    - [ ] Update user iteration hack in webui/views.py:StatusView.get_upcoming_status_data()
 
 ## Future Version
 

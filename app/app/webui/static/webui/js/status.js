@@ -1,3 +1,5 @@
+var updateHarborStatusInterval = 15000 // in ms
+
 // Based off https://stackoverflow.com/a/34252942
 Handlebars.registerHelper('ifEqual', function(arg1, arg2, options) {
     return (arg1 == arg2) ? options.fn(this) : options.inverse(this)
@@ -35,26 +37,66 @@ function updateTimers() {
 
 $(function() {
     var harborStatusTemplate =  Handlebars.compile($('#harbor-status-template').html())
+    var upcomingStatusTemplate = Handlebars.compile($('#upcoming-status-template').html())
+    var lastStatusData = null
     var $status = $('#harbor-status')
+    var $upcoming = $('#upcoming-status')
 
-    function updateHarborStatusTemplate(data) {
-        data = JSON.parse(data)
+    function updateHarborStatus(data) {
+        data = lastStatusData = JSON.parse(data)
+
         if (data) {
             var context = $.extend(data, perms)
             $status.html(harborStatusTemplate(context))
         } else {
-            $status.html('<p class="error">The harbor appears to be down. Please check the server logs or again later.</p>')
+            $status.html('<p class="error">The harbor appears to be down. Please try again later.</p>')
         }
         updateTimers()
     }
-    updateHarborStatusTemplate($('#harbor-status-json').text())
+    updateHarborStatus($('#harbor-status-json').text())
 
     var eventSource = new EventSource('/sse')
     eventSource.onmessage = function(e) {
-        updateHarborStatusTemplate(e.data)
+        updateHarborStatus(e.data)
+    }
+    eventSource.onerror = function() {
+        updateHarborStatus(null)
     }
 
+    function updateUpcomingStatus(data) {
+        if (data) {
+            if (lastStatusData) {
+                for (var i = 0; i < lastStatusData.sources.length; i++) {
+                    var source = lastStatusData.sources[i]
+                    if (source.is_current_stream && source.id == lastStatusData.source_ids.prerecord) {
+                        data.unshift({date: 'now', title: (lastStatusData.metadata.title || 'unknown'), type: 'Scheduled Broadcast'})
+                        data.pop()  // remove from the list, since we're adding to it
+                        break
+                    }
+                }
+            }
+
+            $upcoming.html(upcomingStatusTemplate(data))
+        } else {
+            $upcoming.html('<p class="error">The was an error fetching the schedule. Please try again later.</p>')
+        }
+    }
+
+    function updateUpcomingStatusTimeout() {
+        $.get('?upcoming_status_ajax=1', function(data) {
+            updateUpcomingStatus(data)
+            setTimeout(updateUpcomingStatusTimeout, updateHarborStatusInterval)
+        }).fail(function() {
+            updateUpcomingStatus(null)
+            setTimeout(updateUpcomingStatusTimeout, updateHarborStatusInterval * 2)
+        })
+    }
+
+    updateUpcomingStatus(JSON.parse($('#upcoming-status-json').text()))
+    setTimeout(updateUpcomingStatusTimeout, updateHarborStatusInterval)
+
     setInterval(updateTimers, 1000)
+
 
     if (perms.showAutoDJRequests) {
         setTimeout(function() {
@@ -67,7 +109,7 @@ $(function() {
             var assetId = $asset.val()
 
             if (assetId) {
-                var postData = {"csrfmiddlewaretoken": csrfToken, "asset": assetId}
+                var postData = {csrfmiddlewaretoken: csrfToken, asset: assetId}
                 $asset.val(null).trigger('change') //clear select2
                 $.post(autoDJRequestsUrl, postData, function(response) {
                     addMessage('warning', response)
@@ -83,7 +125,7 @@ $(function() {
         var sourceId = $(this).data('id')
         var sourceName = $(this).data('name')
         if (confirm('Are you skip you want to skip the current ' + sourceName + ' track?')) {
-            var postData = {"csrfmiddlewaretoken": csrfToken, "name": sourceName, "id": sourceId}
+            var postData = {csrfmiddlewaretoken: csrfToken, name: sourceName, id: sourceId}
             $.post(skipUrl, postData, function(response) {
                 addMessage('warning', response)
             }).fail(function() {
@@ -113,7 +155,7 @@ $(function() {
         }
 
         if (shouldBoot) {
-            var postData = {"time": time, "user_id": userId, "text": text, "csrfmiddlewaretoken": csrfToken}
+            var postData = {csrfmiddlewaretoken: csrfToken, time: time, user_id: userId, text: text}
             $.post(bootUrl, postData, function(response) {
                 addMessage(messageType, response)
             }).fail(function() {

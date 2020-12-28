@@ -340,17 +340,23 @@ def status_tuple()
     timed_sources = json_of(compact=true, list.filter(fun(s) -> snd(s) > -1., timed_sources))
 
     skippable_sources = json_of(compact=true, !skippable_sources)
-    dj_harbor_source = json_of(compact=true, source.id(dj_harbor))
     metadata = json_of(compact=true, !current_metadata)
     server_info = json_of(compact=true, [('start_time', start_time)])
+    source_ids = json_of(compact=true, [
+        {% if config.AUTODJ_ENABLED %}('autodj', source.id(autodj)),{% endif %}
+        {% if config.ZOOM_ENABLED %}('zoom', source.id(zoom)),{% endif %}
+        ('dj_harbor', source.id(dj_harbor)),
+        ('prerecord', source.id(prerecord)),
+        ('failsafe', source.id(failsafe)),
+    ])
 
     # timed_source constantly changes, so don't include it in comparison looking for changes in update status timeout
-    (sources, dj_harbor_source, live_user, skippable_sources, metadata, server_info, timed_sources)
+    (sources, source_ids, live_user, skippable_sources, metadata, server_info, timed_sources)
 end
 
 def status_json_from_tuple(tuple)
-    let (sources, dj_harbor_source, live_user, skippable_sources, metadata, server_info, timed_sources) = tuple
-    '{"sources":#{sources},"dj_harbor_source":#{dj_harbor_source},"live_user":#{live_user},'
+    let (sources, source_ids, live_user, skippable_sources, metadata, server_info, timed_sources) = tuple
+    '{"sources":#{sources},"source_ids":#{source_ids},"live_user":#{live_user},'
         ^ '"skippable_sources":#{skippable_sources},"timed_sources":#{timed_sources},"metadata":#{metadata},'
         ^ '"server_info": #{server_info}}'
 end
@@ -454,13 +460,17 @@ radio = on_metadata(fun(m) -> begin
     if !current_source_name == FAILSAFE_SOURCE_NAME then
         log_event(type=EVENT_TRACK, 'Played failsafe audio track')
     else
-        audio_asset_id = m['audio_asset_id']
+        id = m['carb_id']
+        model = m['carb_model']
         metadata = metadata.export(m)
 
-        let (metadata, extras) = if audio_asset_id == '' then
+        let (metadata, extras) = if id == '' or model == '' then
             (metadata, [])
         else
-            (list.add(('audio_asset_id', audio_asset_id), metadata), [('audio_asset_id', audio_asset_id)])
+            (
+                list.append(metadata, [('carb_id', id), ('carb_model', model)]),
+                [('#{model}_id', id)]
+            )
         end
 
         current_metadata := metadata

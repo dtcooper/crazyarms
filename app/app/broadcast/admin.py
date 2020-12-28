@@ -13,11 +13,10 @@ from .models import Broadcast, BroadcastAsset
 
 class BroadcastInline(admin.TabularInline):
     model = Broadcast
-    extra = 1
-    verbose_name_plural = "scheduled broadcast"
+    extra = 0
     add_fields = ("scheduled_time",)
-    change_fields = ("scheduled_time", "status")
-    readonly_fields = ("status",)
+    change_fields = ("scheduled_time", "status", "creator")
+    readonly_fields = ("status", "creator")
 
     def get_fields(self, request, obj=None):
         return self.add_fields if obj is None else self.change_fields
@@ -65,19 +64,23 @@ class BroadcastAssetAdmin(AudioAssetAdminBase):
         return queryset, use_distinct
 
     def save_related(self, request, form, formsets, change):
+        # TODO this is wacky and overwrites everything!
+        existed_before = set(form.instance.broadcasts.all())
         super().save_related(request, form, formsets, change)
-        for broadcast in form.instance.broadcasts.all():
+        newly_created = set(form.instance.broadcasts.all()) - existed_before
+        for broadcast in newly_created:
             message_broadcast_added(request, broadcast)
+            broadcast.creator = request.user
+            broadcast.save()
 
 
 class BroadcastAdmin(admin.ModelAdmin):
-    save_on_top = True
     add_fields = ("scheduled_time", "asset")
-    change_fields = ("scheduled_time", "asset", "status")
     autocomplete_fields = ("asset",)
-    list_display = ("scheduled_time", "asset", "status")
-    list_filter = ("status",)
     date_hierarchy = "scheduled_time"
+    list_display = change_fields = ("scheduled_time", "asset", "status", "creator")
+    list_filter = ("status",)
+    save_on_top = True
 
     def get_fields(self, request, obj=None):
         return self.add_fields if obj is None else self.change_fields
@@ -86,6 +89,7 @@ class BroadcastAdmin(admin.ModelAdmin):
         return False
 
     def save_model(self, request, obj, form, change):
+        obj.creator = request.user
         super().save_model(request, obj, form, change)
         message_broadcast_added(request, obj)
 
