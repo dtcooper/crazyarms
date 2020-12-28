@@ -245,8 +245,7 @@ class UserAdmin(auth_admin.UserAdmin):
     list_display = (
         "username",
         "email",
-        "first_name",
-        "last_name",
+        "name",
         "harbor_auth_pretty",
         "is_active",
         "is_superuser",
@@ -269,7 +268,7 @@ class UserAdmin(auth_admin.UserAdmin):
                 ),
                 (
                     "Personal info",
-                    {"fields": (("first_name", "last_name"), "timezone")},
+                    {"fields": ("name", "timezone")},
                 ),
                 (
                     "Permissions",
@@ -295,7 +294,7 @@ class UserAdmin(auth_admin.UserAdmin):
                 ),
                 (
                     "Personal info",
-                    {"fields": (("first_name", "last_name"), "timezone")},
+                    {"fields": ("name", "timezone")},
                 ),
                 (
                     "Permissions",

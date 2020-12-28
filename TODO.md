@@ -73,7 +73,7 @@
     instead organize by `<artist-normalized-and-non-empty>/<album-normalized-and-non-empty>/`
 - [x] Remove bulk upload ui now that sftp works
 - [x] On status page, move server uptime with some less pertinent details like version, etc below the source list
-- [ ] first name, last name => single field (dj name or display name)
+- [x] first name, last name => single field (dj name or display name)
 - [x] SFTP audio asset playlists based on first folder instead of a user preference
 - [x] way to convert asset types, potentially using https://github.com/ninemoreminutes/django-admin-object-actions
 - [x] After asset.file.save(..., save=False) is called file is created, whether we create the asset or not

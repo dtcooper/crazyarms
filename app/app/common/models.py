@@ -81,6 +81,14 @@ class User(DirtyFieldsMixin, AbstractUser):
         GOOGLE_CALENDAR = "g", "Google Calendar based"
 
     is_staff = True  # All users can access admin site if they've got at least one permission
+    first_name = None  # Just go for one name
+    last_name = None
+    name = models.CharField(
+        "full name",
+        max_length=200,
+        blank=True,
+        help_text="First and last name, or a DJ name if you'd prefer",
+    )
     is_superuser = models.BooleanField(
         "administrator",
         default=False,
@@ -158,12 +166,8 @@ class User(DirtyFieldsMixin, AbstractUser):
         super().save(*args, **kwargs)
 
     def get_full_name(self, short=False):
-        full_name = " ".join(filter(None, (self.first_name, self.last_name))).strip()
-        if full_name:
-            if short:
-                return full_name
-            else:
-                return f"{self.username} ({full_name})"
+        if self.name:
+            return self.name if short else f"{self.username} ({self.name})"
         else:
             return self.username
 
