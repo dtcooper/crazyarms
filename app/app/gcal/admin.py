@@ -15,7 +15,7 @@ from constance import config
 
 from carb import constants
 
-from .models import GCalShowTimes
+from .models import GCalShow
 from .tasks import sync_gcal_api
 
 logger = logging.getLogger(f"carb.{__name__}")
@@ -109,4 +109,4 @@ class GCalShowTimesAdmin(admin.ModelAdmin):
         return config.GOOGLE_CALENDAR_ENABLED
 
 
-admin.site.register(GCalShowTimes, GCalShowTimesAdmin)
+# admin.site.register(GCalShowTimes, GCalShowTimesAdmin)

@@ -212,7 +212,7 @@
 
 {% verbatim %}
 <script id="upcoming-status-template" type="text/x-handlebars-template">
-<table>
+<table class="first-td-right">
   <caption>Upcoming Broadcasts</caption>
   {{#if this}}
     <thead>
@@ -225,9 +225,18 @@
     <tbody>
       {{#each this}}
         <tr>
-          <td>{{#ifEqual date "now"}}<strong class="green">Playing now!</strong>{{else}}{{date}}{{/ifEqual}}</td>
-          <td>{{#ifEqual date "now"}}<strong class="green">Currently playing:</strong> {{/ifEqual}}{{title}}</td>
-          <td>{{type}}</td>
+          <td>{{#ifEqual date "now"}}<strong class="green">Now!</strong>{{else}}{{date}}{{/ifEqual}}</td>
+          {{! we're not sure whether DJs are playing are not, even if the DJ connected is the one, so we use
+              the copy "scheduled" for live... confusing, I know }}
+          <td>{{#ifEqual date "now"}}<strong class="green">Currently {{#ifEqual type "live"}}scheduled{{else}}airing{{/ifEqual}}:</strong> {{/ifEqual}}{{title}}</td>
+          <td>
+            {{#ifEqual type "scheduled"}}
+              Scheduled Broadcast
+            {{/ifEqual}}
+            {{#ifEqual type "live"}}
+              Live DJ
+            {{/ifEqual}}
+          </td>
         </tr>
       {{/each}}
     </tbody>

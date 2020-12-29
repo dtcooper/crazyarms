@@ -1,4 +1,3 @@
-from collections import defaultdict
 import datetime
 import json
 import logging
@@ -8,49 +7,56 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 from django.core.cache import cache
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from constance import config
 
 from carb import constants
-from common.models import TimestampedModel, User
+from common.models import TruncatingCharField, User
 
 logger = logging.getLogger(f"carb.{__name__}")
 
 
-class DatetimeRangeListJSONDecoder(json.JSONDecoder):
-    def decode(self, obj):
-        return [(parse(lower), parse(upper)) for lower, upper in super().decode(obj)]
+class GCalShow(models.Model):
+    UNTITLED_SHOW = "Unnamed show"
 
-
-class GCalShowTimes(TimestampedModel):
     SYNC_RANGE_DAYS_MIN = datetime.timedelta(days=60)
     SYNC_RANGE_DAYS_MAX = datetime.timedelta(days=120)
 
-    user = models.OneToOneField(User, db_index=True, on_delete=models.CASCADE, related_name="_show_times")
-    show_times = models.JSONField(encoder=DjangoJSONEncoder, decoder=DatetimeRangeListJSONDecoder, default=list)
+    gcal_id = TruncatingCharField(max_length=256, unique=True)
+    users = models.ManyToManyField(User, related_name="gcal_shows")
+    title = TruncatingCharField("title", max_length=1024)
+    start = models.DateTimeField("start time")
+    end = models.DateTimeField("end time")
 
     def __str__(self):
-        return f"{self.user} ({len(self.show_times)} shows)"
+        return (
+            f"{self.title}: {date_format(timezone.localtime(self.start), 'SHORT_DATETIME_FORMAT')}"
+            f" - {date_format(timezone.localtime(self.end), 'SHORT_DATETIME_FORMAT')}"
+        )
 
     class Meta:
-        order_with_respect_to = "user"
-        verbose_name = "Google Calendar shows"
+        ordering = ("start", "id")
+        verbose_name = "Google Calendar show"
         verbose_name_plural = "Google Calendar shows"
 
-    @classmethod
-    def get_last_sync(self):
+    @staticmethod
+    def get_last_sync(cls):
         return cache.get(constants.CACHE_KEY_GCAL_LAST_SYNC)
 
     @classmethod
     def sync_api(cls):
+        logger.info(
+            f"Syncing with Google Calendar events API in -{cls.SYNC_RANGE_DAYS_MIN.days} days,"
+            f" +{cls.SYNC_RANGE_DAYS_MAX.days} days range"
+        )
         credentials = Credentials.from_service_account_info(json.loads(config.GOOGLE_CALENDAR_CREDENTIALS_JSON))
         service = build("calendar", "v3", credentials=credentials)
 
-        email_to_user = {}
-        user_to_show_times = defaultdict(set)
+        email_to_user = {}  # lookup cache
+        shows = []
 
         page_token = None
         while True:
@@ -88,6 +94,8 @@ class GCalShowTimes(TimestampedModel):
                 if creator is not None:
                     emails.append(creator)
 
+                users = []
+
                 for email in emails:
                     user = email_to_user.get(email)
                     if not user:
@@ -97,13 +105,22 @@ class GCalShowTimes(TimestampedModel):
                             pass
 
                     if user:
-                        user_to_show_times[user].add((start, end))
+                        users.append(user)
+
+                title = item.get("summary", cls.UNTITLED_SHOW)
+                shows.append((item["id"], users, {"title": title, "start": start, "end": end}))
 
             page_token = response.get("nextPageToken")
             if page_token is None:
                 break
 
-        for user, show_times in user_to_show_times.items():
-            cls.objects.update_or_create(user=user, defaults={"show_times": sorted(show_times)})
+        synced_gcal_ids = []
 
-        cls.objects.exclude(user__in=list(user_to_show_times.keys())).delete()
+        for gcal_id, users, defaults in shows:
+            gcal_show, _ = cls.objects.update_or_create(gcal_id=gcal_id, defaults=defaults)
+            gcal_show.users.set(users)
+            synced_gcal_ids.append(gcal_id)
+
+        _, deleted_dict = cls.objects.exclude(gcal_id__in=synced_gcal_ids).delete()
+        num_deleted = deleted_dict.get(f"{cls._meta.app_label}.{cls._meta.object_name}", 0)
+        logger.info(f"Done. Synced {len(synced_gcal_ids)} shows, deleted {num_deleted} shows.")

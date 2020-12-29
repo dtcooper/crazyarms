@@ -194,29 +194,40 @@ class User(DirtyFieldsMixin, AbstractUser):
     harbor_auth_pretty.short_description = harbor_auth.verbose_name
     harbor_auth_pretty.admin_order_field = "harbor_auth"
 
+    def _show_times_qs(self):
+        return self.gcal_shows.order_by("start", "end", "id").values_list("title", "start", "end")
+
     @cached_property
     def show_times(self):
-        try:
-            return self._show_times.show_times
-        except User._show_times.RelatedObjectDoesNotExist:
-            return []
+        return list(self._show_times_qs())
 
     @cached_property
     def upcoming_show_times(self):
-        now = timezone.now()
-        entry_grace = datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
-        exit_grace = datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
+        now_with_entry_grace = timezone.now() + datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
+        return list(self._show_times_qs().filter(start__gte=now_with_entry_grace))
 
-        upcoming_show_times = []
-        for show_time in self.show_times:
-            lower, upper = show_time
-            # Current show
-            if (lower - entry_grace) <= now <= (upper + exit_grace):
-                upcoming_show_times.append(show_time)
-            # And future shows
-            elif lower > now:
-                upcoming_show_times.append(show_time)
-        return upcoming_show_times
+    @cached_property
+    def current_show_times(self):
+        now = timezone.now()
+        now_with_entry_grace = now + datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
+        now_with_exit_grace = now - datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
+        return list(self._show_times_qs().filter(start__lte=now_with_entry_grace, end__gte=now_with_exit_grace))
+
+    # This one shouldn't be cached since we may need to pass it a dynamic now, ie in authorization
+    # where exact timings and a consistent now is more important
+    def current_authorized_show_bounds(self, now=None):
+        if now is None:
+            now = timezone.now()
+        now_with_entry_grace = now + datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
+        now_with_exit_grace = now - datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
+        return (
+            self.gcal_shows()
+            # We want the latest ending one, hence -end
+            .filter("-end", "start")
+            .values_list("start", "end")
+            .filter(start__lte=now_with_entry_grace, end__gte=now_with_exit_grace)
+            .first()
+        )
 
     def has_autodj_request_permission(self):
         if config.AUTODJ_ENABLED:
@@ -265,28 +276,23 @@ class User(DirtyFieldsMixin, AbstractUser):
 
         elif self.harbor_auth == self.HarborAuth.GOOGLE_CALENDAR:
             if config.GOOGLE_CALENDAR_ENABLED:
-                if self.show_times:
-                    if now is None:
-                        now = timezone.now()
-                    entry_grace = datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
-                    exit_grace = datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
-                    for show_time in self.show_times:
-                        lower, upper = show_time
-                        if (lower - entry_grace) <= now <= (upper + exit_grace):
-                            log(
-                                f"dj auth requested by {self}: allowed ({auth_log} and {now} in time bounds -"
-                                f" {timezone.localtime(lower)} [{entry_grace} entry grace] -"
-                                f" {timezone.localtime(upper)} [{exit_grace} exit grace])"
-                            )
-                            return upper + exit_grace
-                    else:
-                        log(
-                            f"dj auth requested by {self}: denied ({auth_log} with {now} not in time bounds"
-                            f" for {len(self.show_times)} show times)"
-                        )
-                        return False
+                current_show = self.current_authorized_show_bounds(now=now)
+                if current_show:
+                    lower, upper = current_show
+                    log(
+                        f"dj auth requested by {self}: allowed ({auth_log}, {timezone.localtime(now)} in time bounds -"
+                        f" {timezone.localtime(lower)} - {timezone.localtime(upper)} with"
+                        f" {self.gcal_entry_grace_minutes} minutes entry grace, {self.gcal_exit_grace_minutes} minutes"
+                        " exit grace)"
+                    )
+                    # Return the authorized until amount
+                    return upper + datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
                 else:
-                    log(f"dj auth requested by {self}: denied ({auth_log} with no show times)")
+                    log(
+                        f"dj auth requested by {self}: denied ({auth_log}, {timezone.localtime(now)} not in time bounds"
+                        f" for {self.gcal_shows.count()} show times, {self.gcal_entry_grace_minutes} minutes entry"
+                        f" grace, {self.gcal_exit_grace_minutes} minutes exit grace)"
+                    )
                     return False
             else:
                 log(

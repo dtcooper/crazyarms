@@ -7,6 +7,7 @@ import shlex
 
 from dotenv import dotenv_values
 from huey.exceptions import TaskLockedException
+import pytz
 
 from django.conf import settings
 from django.contrib import messages
@@ -37,6 +38,7 @@ from carb import constants
 from common.admin import send_set_password_email
 from common.mail import send_mail
 from common.models import User, filter_inactive_group_queryset
+from gcal.models import GCalShow
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
 from services.services import ZoomService
@@ -131,28 +133,42 @@ class StatusView(LoginRequiredMixin, TemplateView):
         data = [
             (
                 broadcast.scheduled_time,
-                "{broadcast.asset.title} by {broadcast.creator.get_full_name() if broadcast.creator else None}",
-                "Scheduled Broadcast",
+                f"{broadcast.asset.title} by {broadcast.creator.get_full_name() if broadcast.creator else None}",
+                "scheduled",
             )
             for broadcast in upcoming_broadcasts
         ]
 
-        # XXX hack, shouldn't do it this way, don't iterate through users like this + we should use gcal names
-        for user in User.objects.all():
-            data.extend(
-                [
-                    (
-                        start,
-                        f"{user.get_full_name(short=True)}'s show ({pretty_seconds(finish - start)} long)",
-                        "Live DJ",
-                    )
-                    for start, finish in user.upcoming_show_times[: self.SHOW_NUM_UPCOMING]
-                ]
-            )
+        now = timezone.now()
+        # current shows
+        data.extend(
+            [
+                ("now", f"{show.title} ({pretty_seconds(show.end - show.start)})", "live")
+                for show in GCalShow.objects.filter(start__lte=now, end__gte=now)[: self.SHOW_NUM_UPCOMING]
+            ]
+        )
+        # future shows
+        data.extend(
+            [
+                (show.start, f"{show.title} ({pretty_seconds(show.end - show.start)})", "live")
+                for show in GCalShow.objects.filter(start__gte=now)[: self.SHOW_NUM_UPCOMING]
+            ]
+        )
 
+        # Format for template
         return [
-            {"date": date_format(timezone.localtime(date), "SHORT_DATETIME_FORMAT"), "title": title, "type": type}
-            for date, title, type in sorted(data)[: self.SHOW_NUM_UPCOMING]
+            {
+                "date": date_format(timezone.localtime(date), "SHORT_DATETIME_FORMAT")
+                if isinstance(date, datetime.datetime)
+                else date,
+                "title": title,
+                "type": type,
+            }
+            for date, title, type in sorted(
+                # Treat strings ("now") as highest sort
+                data,
+                key=lambda item: pytz.utc.localize(datetime.datetime.min) if isinstance(item[0], str) else item[0],
+            )[: self.SHOW_NUM_UPCOMING]
         ]
 
     def get(self, request, *args, **kwargs):

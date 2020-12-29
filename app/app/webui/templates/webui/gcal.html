@@ -31,38 +31,81 @@
   </p>
 {% endif %}
 
-{% if user.upcoming_show_times %}
+{% if user.upcoming_show_times or user.current_show_times %}
   {% if user.harbor_auth_actual == user.HarborAuth.NEVER %}
     <p class="orange">Below are your scheduled shows, however you will not be able to broadcast during
       them until you are authorized on the harbor.</p>
   {% endif %}
 
-  <table>
-    <caption>
-      My Upcoming Scheduled Shows
-      {% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
-        {% if user.gcal_entry_grace_minutes > 0 or user.gcal_exit_grace_minutes > 0 %}
-          <em>(Not Including Grace Period)</em>
-        {% endif %}
+  {% if user.current_show_times %}
+    <p class="orange">
+      You have {{ user.current_show_times|pluralize:"a show that is,shows that are" }}
+      <strong><em>scheduled for right now!</em></strong>
+      {% if user.harbor_auth_actual != user.HarborAuth.NEVER %}
+        If you haven't already done so, please start your broadcast.
       {% endif %}
-    </caption>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Start Time ({{ user.timezone }})</th>
-        <th>End Time ({{ user.timezone }})</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for lower, upper in user.upcoming_show_times %}
+    </p>
+
+    <table class="first-td-right">
+      <caption>
+        My Current Scheduled Shows
+        {% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
+          {% if user.gcal_entry_grace_minutes > 0 or user.gcal_exit_grace_minutes > 0 %}
+            <em>(Not Including Grace Period)</em>
+          {% endif %}
+        {% endif %}
+      </caption>
+      <thead class="white bg-green">
         <tr>
-          <td>{{ forloop.counter }}</td>
-          <td>{{ lower }}</td>
-          <td>{{ upper }}</td>
+          <th>#</th>
+          <th>Start Time ({{ user.timezone }})</th>
+          <th>End Time ({{ user.timezone }})</th>
+          <th>Title</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody class="white bg-green">
+        {% for title, start, end in user.current_show_times %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ start }}</td>
+            <td>{{ end }}</td>
+            <td>{{ title }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if user.upcoming_show_times %}
+    <table class="first-td-right">
+      <caption>
+        My Upcoming Scheduled Shows
+        {% if user.harbor_auth_actual == user.HarborAuth.GOOGLE_CALENDAR %}
+          {% if user.gcal_entry_grace_minutes > 0 or user.gcal_exit_grace_minutes > 0 %}
+            <em>(Not Including Grace Period)</em>
+          {% endif %}
+        {% endif %}
+      </caption>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Start Time ({{ user.timezone }})</th>
+          <th>End Time ({{ user.timezone }})</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for title, start, end in user.upcoming_show_times %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ start }}</td>
+            <td>{{ end }}</td>
+            <td>{{ title }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 {% elif user.harbor_auth_actual != user.HarborAuth.NEVER %}
   <p>No show times scheduled. Please contact the station administration if you believe this in error.</p>
 {% endif %}

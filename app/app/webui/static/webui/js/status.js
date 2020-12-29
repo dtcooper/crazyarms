@@ -69,7 +69,7 @@ $(function() {
                 for (var i = 0; i < lastStatusData.sources.length; i++) {
                     var source = lastStatusData.sources[i]
                     if (source.is_current_stream && source.id == lastStatusData.source_ids.prerecord) {
-                        data.unshift({date: 'now', title: (lastStatusData.metadata.title || 'unknown'), type: 'Scheduled Broadcast'})
+                        data.unshift({date: 'now', title: (lastStatusData.metadata.title || 'unknown'), type: 'scheduled'})
                         data.pop()  // remove from the list, since we're adding to it
                         break
                     }

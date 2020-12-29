@@ -67,6 +67,7 @@ button[type=reset], .bg-red { background-color: var(--mt-red); }
 .error, .bold { font-weight: bold; }
 .success, .green { color: var(--mt-green); }
 .bg-green { background-color: var(--mt-green); }
+.white { color: #ffffff; }
 
 .center-text { text-align: center; }
 .right-text,

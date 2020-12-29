@@ -11,7 +11,7 @@ from huey.contrib import djhuey
 from carb import constants
 from common.tasks import once_at_startup
 
-from .models import GCalShowTimes
+from .models import GCalShow
 
 logger = logging.getLogger(f"carb.{__name__}")
 
@@ -22,7 +22,7 @@ def sync_gcal_api():
     if config.GOOGLE_CALENDAR_ENABLED:
         logger.info("Synchronizing with Google Calendar API")
         try:
-            GCalShowTimes.sync_api()
+            GCalShow.sync_api()
         except Exception:
             cache.set(
                 constants.CACHE_KEY_GCAL_LAST_SYNC,
