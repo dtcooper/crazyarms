@@ -143,14 +143,14 @@ class StatusView(LoginRequiredMixin, TemplateView):
         # current shows
         data.extend(
             [
-                ("now", f"{show.title} ({pretty_seconds(show.end - show.start)})", "live")
+                ("now", f"{show.title or 'Untitled Show'} ({pretty_seconds(show.end - show.start)})", "live")
                 for show in GCalShow.objects.filter(start__lte=now, end__gte=now)[: self.SHOW_NUM_UPCOMING]
             ]
         )
         # future shows
         data.extend(
             [
-                (show.start, f"{show.title} ({pretty_seconds(show.end - show.start)})", "live")
+                (show.start, f"{show.title or 'Untitled Show'} ({pretty_seconds(show.end - show.start)})", "live")
                 for show in GCalShow.objects.filter(start__gte=now)[: self.SHOW_NUM_UPCOMING]
             ]
         )
@@ -251,7 +251,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, F
         self.redis = get_redis_connection()
         self.room_env = self.redis.get(constants.REDIS_KEY_ROOM_INFO)
         self.room_ttl = max(self.redis.ttl(constants.REDIS_KEY_ROOM_INFO), 0)
-        self.currently_authorized = False
+        self.current_auth = False
 
         if self.room_env:
             self.room_env = dotenv_values(stream=StringIO(self.room_env.decode("utf-8")))
@@ -297,23 +297,27 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, F
             return redirect("zoom")
 
     def get_initial(self):
-        return {**super().get_initial(), "show_name": f"{self.request.user.get_full_name(short=True)}'s Live Show"}
+        show_name = self.current_auth.title
+        if config.APPEND_LIVE_ON_STATION_NAME_TO_METADATA:
+            # Make sure this matches up with title copy in common/models.py:User.currently_harbor_authorized() + below
+            show_name = show_name.removesuffix(f" LIVE on {config.STATION_NAME}")
+
+        return {**super().get_initial(), "show_name": show_name}
 
     def get_form_kwargs(self):
         now = timezone.now()
-        current_auth = self.request.user.currently_harbor_authorized(now=now, should_log=False)
-        self.currently_authorized = bool(current_auth)
+        self.current_auth = self.request.user.currently_harbor_authorized(now=now, should_log=False)
 
         bound = None
-        if isinstance(current_auth, datetime.datetime):
+        if self.current_auth.end:
             bound = min(
-                current_auth,
+                self.current_auth.end,
                 now + datetime.timedelta(minutes=config.ZOOM_DEFAULT_SHOW_LENTH_MINUTES),
             )
 
         return {
             "zoom_is_running": self.zoom_is_running_cached,
-            "currently_authorized": self.currently_authorized,
+            "currently_authorized": self.current_auth.authorized,
             "now": now,
             "user": self.request.user,
             "authorization_time_bound": bound,
@@ -335,7 +339,12 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, F
         # A bit jenky, but the zoom-runner.sh script evals this
         room_env_str = "".join(f"{key}={shlex.quote(value)}\n" for key, value in room_env.items())
 
-        harbor.zoom_metadata(json.dumps(form.cleaned_data["show_name"]))
+        show_name = form.cleaned_data["show_name"]
+        if config.APPEND_LIVE_ON_STATION_NAME_TO_METADATA:
+            # Make sure this matches up with title copy in common/models.py:User.currently_harbor_authorized() + above
+            show_name += f" LIVE on {config.STATION_NAME}"
+
+        harbor.zoom_metadata(json.dumps(show_name))
 
         self.redis.set(constants.REDIS_KEY_ROOM_INFO, room_env_str, ex=form.cleaned_data["ttl"])
         self.service.supervisorctl("restart", "zoom-runner")
@@ -345,7 +354,7 @@ class ZoomView(LoginRequiredMixin, SuccessMessageMixin, FormErrorMessageMixin, F
     def get_context_data(self, **kwargs):
         return {
             **super().get_context_data(**kwargs),
-            "currently_authorized": self.currently_authorized,
+            "currently_authorized": self.current_auth.authorized,
             "submit_text": "Start Zoom Broadcast Now",
             "title": "Zoom Broadcasting",
             "zoom_is_running": self.zoom_is_running_cached,

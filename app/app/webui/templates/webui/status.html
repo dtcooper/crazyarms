@@ -62,6 +62,11 @@
             {{/unless}}
           {{/unless}}
         {{/with}}
+        {{#ifEqual current_source_id source_ids.dj_harbor}}
+          {{#ifNotEqual live_user.title metadata.title}}
+            <br><em>Scheduled Show: {{live_user.title}}</em>
+          {{/ifNotEqual}}
+        {{/ifEqual}}
       </td>
     </tr>
     <tr>

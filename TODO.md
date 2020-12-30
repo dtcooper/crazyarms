@@ -45,9 +45,8 @@
 - [x] Thoroughly test new ffprobe + ffmpeg flows for audio assets + task
 - [x] Harbor: use an add_timeout poll to check for `status_json()` changes rather than
     hooks `update_status[_ref]()` hooks throughout the code.
-- [x] GCal shows stored as `JSONField`
-    - [ ] add show name to JSON, useful for Zoom or Liquidsoap metadata am I sure I want this??? :tongue:
-    - [ ] scrap `gcal` package, moving to user model in `common` completely
+- [x] GCal shows stored as `ManyToManyField`
+    - [x] add show name to JSON, useful for Zoom or Liquidsoap metadata am I sure I want this??? :tongue:
 - [ ] Tasks to purge failed broadcasts/assets + unstuck processing ones, clean sftpgo files
 - [x] Re-try broadcasts for which underlying assets which aren't `READY` every 2 seconds.
     Fix asset's inline broadcasts.
@@ -56,7 +55,7 @@
     - [x] Deal with WinSCP's `.filepart` situation
     - [x] Add ability to use SSH authorized keys.
 - [x] Rename uploads with valid contents but wrong extension (ie file that's an mp3 but named wav)
-- [ ] User emails
+- [x] User emails
     - [x] Users can update their email address in their profile (`EMAIL_ENABLED` + verification only)
     - [x] We don't really need a postfix container. Just configure Django to send email directly.
     - [x] Create user flow that sends user an email (and possibly they fill out their details)
@@ -70,8 +69,9 @@
     (Does it only matter with unique indexes?)
 - [x] "There were errors on this page" message for forms with errors at top of page. Possible mixin
     that adds a message when `form_invalid(...)`
-- [ ] Don't organize assets by folder prefixes that say where they came from like `upload/`, `external/`, etc
-    instead organize by `<artist-normalized-and-non-empty>/<album-normalized-and-non-empty>/`
+- [ ] ~~Don't organize assets by folder prefixes that say where they came from like `upload/`, `external/`, etc
+    instead organize by `<artist-normalized-and-non-empty>/<album-normalized-and-non-empty>/`~~
+    - Kind of difficult to do, since we don't have a model with metadata yet at time of `upload_to=` function
 - [x] Remove bulk upload ui now that sftp works
 - [x] On status page, move server uptime with some less pertinent details like version, etc below the source list
 - [x] first name, last name => single field (dj name or display name)
@@ -82,8 +82,8 @@
 - [x] Admin css for input type=file busted
 - [ ] Protect assets via nginx's `internal;` flag
 - [ ] Skips to playout log
-- [ ] Don't use JSON field for show times so we get each show individually for status page and get show names
-    - [ ] Update user iteration hack in webui/views.py:StatusView.get_upcoming_status_data()
+- [x] Don't use JSON field for show times so we get each show individually for status page and get show names
+    - [x] Update user iteration hack in webui/views.py:StatusView.get_upcoming_status_data()
 
 ## Future Version
 
@@ -105,6 +105,7 @@
         1. stopsets via `requests.queue()`, these happen on a timer in liquidsoap or from huey
         2. autodj requests via `requests.queue()` happen the web UI (do we need some way to cap them?)
         3. regular autodj via `request.dynamic.list()`
+- [ ] Ban DJs dynamically on the ban page (not just live ones) using select2
 
 ## Down the line
 

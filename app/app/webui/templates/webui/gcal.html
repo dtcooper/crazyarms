@@ -69,7 +69,7 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ start }}</td>
             <td>{{ end }}</td>
-            <td>{{ title }}</td>
+            <td>{% if title %}{{ title }}{% else %}Untitled Show{% endif %}</td>
           </tr>
         {% endfor %}
       </tbody>
@@ -100,7 +100,7 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ start }}</td>
             <td>{{ end }}</td>
-            <td>{{ title }}</td>
+            <td>{% if title %}{{ title }}{% else %}Untitled Show{% endif %}</td>
           </tr>
         {% endfor %}
       </tbody>

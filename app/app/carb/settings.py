@@ -278,6 +278,13 @@ CONSTANCE_CONFIG = OrderedDict(
             ),
         ),
         (
+            "APPEND_LIVE_ON_STATION_NAME_TO_METADATA",
+            (
+                True,
+                'Append the string "LIVE on <Station Name>" to the stream\'s metadata for live broadcasts.',
+            ),
+        ),
+        (
             "HARBOR_COMPRESSION_NORMALIZATION",
             (True, "Enable compression and normalization on harbor stream."),
         ),
@@ -436,7 +443,7 @@ CONSTANCE_CONFIG = OrderedDict(
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
     (
-        ("General Options", ("STATION_NAME", "PLAYOUT_LOG_PURGE_DAYS")),
+        ("General Options", ("STATION_NAME", "PLAYOUT_LOG_PURGE_DAYS", "APPEND_LIVE_ON_STATION_NAME_TO_METADATA")),
         (
             "AutoDJ Configuration",
             (

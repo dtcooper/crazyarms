@@ -79,18 +79,20 @@ class DJAuthAPIView(APIView):
                         logger.info(f"dj auth requested by {username}: denied (incorrect password / inactive account)")
 
         if user:
-            authorized = user.currently_harbor_authorized()
-            if authorized:
+            current_auth = user.currently_harbor_authorized()
+            if current_auth.authorized:
                 kickoff_time = None
-                if isinstance(authorized, datetime.datetime):
-                    kickoff_time = int(authorized.timestamp())
+                if current_auth.end:
+                    kickoff_time = int(current_auth.end.timestamp())
+
                 response.update(
                     {
                         "authorized": True,
-                        "username": user.username,
-                        "user_id": user.id,
-                        "kickoff_time": kickoff_time,
                         "full_name": user.get_full_name(short=True),
+                        "kickoff_time": kickoff_time,
+                        "title": current_auth.title,
+                        "user_id": user.id,
+                        "username": user.username,
                     }
                 )
 
@@ -108,7 +110,7 @@ class ValidateStreamKeyView(View):
             except User.DoesNotExist:
                 pass
             else:
-                if user.currently_harbor_authorized():
+                if user.currently_harbor_authorized().authorized:
                     logger.info(f"rtmp auth by {user} auth: allowed")
                     return HttpResponse(status=200)
 

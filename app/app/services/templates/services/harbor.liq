@@ -69,8 +69,8 @@ def string_of_metadata(metadata)
 end
 
 # DJ authorization: hits api/views.py:
-# last_authorized_user = (username, full_name, kickoff_time, user_id)
-last_authorized_user = ref ('', '', -1., 0)
+# last_authorized_user = (username, full_name, title, kickoff_time, user_id)
+last_authorized_user = ref ('', '', '', -1., 0)
 def dj_auth(username, password)
     data = json_of(compact=true, [('username', username), ('password', password)])
     url = '#{API_PREFIX}dj-auth/'
@@ -80,12 +80,14 @@ def dj_auth(username, password)
         log('dj_auth: authorize with API for user #{username} returned: #{string_of(authorized)}')
         if authorized then
             # Parse out response and save to last_authorized_user
-            full_name = list.assoc(default='', 'full_name', of_json(default=[('_', '')], response))
-            username = list.assoc(default='', 'username', of_json(default=[('_', '')], response))
+            json_strs = of_json(default=[('_', '')], response)
+            full_name = json_strs['full_name']
+            username = json_strs['username']
+            title = json_strs['title']
             json_ints = of_json(default=[('_', 0)], response)
             kickoff_time = float_of_int(list.assoc(default=-1, 'kickoff_time', json_ints))
             user_id = list.assoc(default=0, 'user_id', json_ints)
-            last_authorized_user := (username, full_name, kickoff_time, user_id)
+            last_authorized_user := (username, full_name, title, kickoff_time, user_id)
         end
         authorized
     else
@@ -97,8 +99,8 @@ end
 # Process internal state changes for dj connection and dj disconnection below
 
 live_user_connected = ref false
-# live_user = (username, full_name, kickoff_time, user_id, connection_time)
-live_user = ref ('', '', -1., 0, -1.)
+# live_user = (username, full_name, title, kickoff_time, user_id, connection_time)
+live_user = ref ('', '', '', -1., 0, -1.)
 
 # Circular references, ie status_update and dj_harbor_insert_metadata, need to be defined below but called here
 dj_harbor_insert_metadata_ref = ref fun(~new_track=false, m) -> ()  # requires dj_harbor to be defined
@@ -108,15 +110,13 @@ def dj_connect(headers)
     live_user_connected := true
 
     # Get data saved from last call to dj_auth
-    let (username, full_name, kickoff_time, user_id) = !last_authorized_user
-    log_event(type=EVENT_LIVE_DJ, '#{username} authorized on the harbor', extras=[('user_id', string_of(user_id))])
-    live_user := (username, full_name, kickoff_time, user_id, time())
+    let (username, full_name, title, kickoff_time, user_id) = !last_authorized_user
+    log_event(type=EVENT_LIVE_DJ, '#{username} / #{title} authorized on the harbor', extras=[('user_id', string_of(user_id))])
+    live_user := (username, full_name, title, kickoff_time, user_id, time())
 
     # Insert metadata about DJ (they can always override it via their client)
     dj_harbor_insert_metadata = !dj_harbor_insert_metadata_ref
-
-    # TODO: log show name if we have it?
-    dj_harbor_insert_metadata(new_track=true, [('title', '#{full_name} LIVE on #{STATION_NAME}')])
+    dj_harbor_insert_metadata(new_track=true, [('title', title)])
 end
 
 # Process DJ disconnect
@@ -125,17 +125,17 @@ def dj_disconnect()
     if !live_user_connected then
         live_user_connected := false
 
-        let (username, _, _, user_id, _) = !live_user
+        let (username, _, _, _, user_id, _) = !live_user
         log_event(type=EVENT_LIVE_DJ, '#{username} disconnected from harbor', extras=[('user_id', string_of(user_id))])
-        last_authorized_user := ('', '', -1., 0)
-        live_user := ('', '', -1., 0, -1.)
+        last_authorized_user := ('', '', '', -1., 0)
+        live_user := ('', '', '', -1., 0, -1.)
     end
 end
 
 # Our "reaper" internal function
 add_timeout(fast=false, LIVE_DJ_KICKOFF_INTERVAL, fun() -> begin
     if !live_user_connected then
-        let (username, _, kickoff_time, user_id, _) = !live_user
+        let (username, _, _, kickoff_time, user_id, _) = !live_user
         # 1.5s of buffer to be sure backend will refuse DJ in the event of immediately trying to log in again
         if kickoff_time > 0. and time() - 1.5 > kickoff_time then
             log('kicking off #{username} for streaming past kickoff time')
@@ -147,8 +147,8 @@ add_timeout(fast=false, LIVE_DJ_KICKOFF_INTERVAL, fun() -> begin
     LIVE_DJ_KICKOFF_INTERVAL
 end)
 
-reset_status = ("", "", "", "", "", "")
-last_status_without_timed_sources = ref ("", "", "", "", "", "")
+reset_status = ("", "", "", "", "", "", "")
+last_status_without_timed_sources = ref ("", "", "", "", "", "", "")
 
 ### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
 {{ section1 }}
@@ -307,25 +307,26 @@ current_metadata = ref []
 def status_tuple()
     # List of sources
     active_sources = list.filter(fun(src) -> source.is_ready(fst(src)), source_hierarchy)
-    streaming_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(fst(src)), active_sources))
+    current_source_id = list.hd(default='unknown', list.map(fun(src) -> source.id(fst(src)), active_sources))
     sources = '[' ^ string.concat(separator=',', list.mapi(fun(n, src) -> begin
         let (source, name) = src
         id = source.id(source)
         json_of_mixed_types(
             strs=[('id', id), ('name', name)], ints=[('priority', n + 1)],
-            bools=[('is_active', source.is_ready(source)), ('is_current_stream', id == streaming_source_id)])
+            bools=[('is_active', source.is_ready(source)), ('is_current_stream', id == current_source_id)])
     end, source_hierarchy)) ^ ']'
 
     # Live DJ
     live_user = if !live_user_connected then
-        let (username, full_name, kickoff_time, user_id, connected_since) = !live_user
+        let (username, full_name, title, kickoff_time, user_id, connected_since) = !live_user
         let (user_nulls, user_floats) = if kickoff_time > 0. then
             ([], [('connected_since', connected_since), ('kickoff_time', kickoff_time)])
         else
             (['kickoff_time'], [('connected_since', connected_since)])
         end
 
-        json_of_mixed_types(strs=[('username', username), ('full_name', full_name)], ints=[('user_id', user_id)],
+        json_of_mixed_types(strs=[('username', username), ('full_name', full_name), ('title', title)],
+                            ints=[('user_id', user_id)],
                             floats=user_floats, nulls=user_nulls)
     else
         'null'
@@ -349,14 +350,15 @@ def status_tuple()
         ('prerecord', source.id(prerecord)),
         ('failsafe', source.id(failsafe)),
     ])
+    current_source_id = json_of(compact=true, current_source_id)
 
     # timed_source constantly changes, so don't include it in comparison looking for changes in update status timeout
-    (sources, source_ids, live_user, skippable_sources, metadata, server_info, timed_sources)
+    (current_source_id, sources, source_ids, live_user, skippable_sources, metadata, server_info, timed_sources)
 end
 
 def status_json_from_tuple(tuple)
-    let (sources, source_ids, live_user, skippable_sources, metadata, server_info, timed_sources) = tuple
-    '{"sources":#{sources},"source_ids":#{source_ids},"live_user":#{live_user},'
+    let (current_source_id, sources, source_ids, live_user, skippable_sources, metadata, server_info, timed_sources) = tuple
+    '{"current_source_id":#{current_source_id},"sources":#{sources},"source_ids":#{source_ids},"live_user":#{live_user},'
         ^ '"skippable_sources":#{skippable_sources},"timed_sources":#{timed_sources},"metadata":#{metadata},'
         ^ '"server_info": #{server_info}}'
 end
@@ -388,11 +390,12 @@ post_to_sse('null')  # Empty to start
 STATUS_UPDATE_CHECK_INTERVAL = .1  # Check for changes to push via SSE every 100ms
 add_timeout(fast=false, STATUS_UPDATE_CHECK_INTERVAL, fun() -> begin
     current_status_tuple = status_tuple()
-    let (a, b, c, d, e, f, _) = current_status_tuple
-    status_without_timed_sources = (a, b, c, d, e, f)
-    # See if there are any changes
+    let (a, b, c, d, e, f, g, _) = current_status_tuple
+    status_without_timed_sources = (a, b, c, d, e, f, g)
+    # See if there are any changes (but not to the timed sources, those _will_ change slightly every time)
     if status_without_timed_sources != !last_status_without_timed_sources then
         last_status_without_timed_sources := status_without_timed_sources
+        # If there is a change in the internal status, push it to SSE service
         post_to_sse(status_json_from_tuple(current_status_tuple))
     end
     STATUS_UPDATE_CHECK_INTERVAL

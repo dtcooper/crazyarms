@@ -71,6 +71,9 @@ def filter_inactive_group_queryset(queryset):
     return queryset
 
 
+CurrentHarborAuthorization = namedtuple("CurrentHarborAuthorization", ("authorized", "end", "title"))
+
+
 class User(DirtyFieldsMixin, AbstractUser):
     STREAM_KEY_LENGTH = 80
 
@@ -215,17 +218,16 @@ class User(DirtyFieldsMixin, AbstractUser):
 
     # This one shouldn't be cached since we may need to pass it a dynamic now, ie in authorization
     # where exact timings and a consistent now is more important
-    def current_authorized_show_bounds(self, now=None):
+    def current_show_time(self, now=None):
         if now is None:
             now = timezone.now()
         now_with_entry_grace = now + datetime.timedelta(minutes=self.gcal_entry_grace_minutes)
         now_with_exit_grace = now - datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
         return (
-            self.gcal_shows()
             # We want the latest ending one, hence -end
-            .filter("-end", "start")
-            .values_list("start", "end")
+            self.gcal_shows.order_by("-end", "start")
             .filter(start__lte=now_with_entry_grace, end__gte=now_with_exit_grace)
+            .values_list("title", "start", "end")
             .first()
         )
 
@@ -259,26 +261,42 @@ class User(DirtyFieldsMixin, AbstractUser):
         return perms
 
     def currently_harbor_authorized(self, now=None, should_log=True):
-        auth_log = f"harbor_auth = {self.get_harbor_auth_display()}"
-        ban_seconds = cache.ttl(f"{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}")
-
         def log(s):
             if should_log:
                 logger.info(s)
 
+        if now is None:
+            now = timezone.now()
+
+        title = None
+        current_show = self.current_show_time(now=now)
+        if current_show:
+            title = current_show[0]
+        if not title:
+            title = f"{self.get_full_name(short=True)}'s show"
+        if config.APPEND_LIVE_ON_STATION_NAME_TO_METADATA:
+            # This copy is used in webui/views.py:ZoomView twice, so change it there too
+            title += f" LIVE on {config.STATION_NAME}"
+
+        auth_log = f'harbor_auth = {self.get_harbor_auth_display()} for show "{title}"'
+
+        ban_seconds = cache.ttl(f"{constants.CACHE_KEY_HARBOR_BAN_PREFIX}{self.id}")
         if ban_seconds > 0:
             log(f"dj auth requested by {self}: denied ({auth_log}, but BANNED with {ban_seconds} seconds left)")
-            return False
+            return CurrentHarborAuthorization(False, None, title)
+
+        if self.harbor_auth == self.HarborAuth.NEVER:
+            log(f"dj auth requested by {self}: denied ({auth_log})")
+            return CurrentHarborAuthorization(False, None, title)
 
         elif self.harbor_auth == self.HarborAuth.ALWAYS:
             log(f"dj auth requested by {self}: allowed ({auth_log})")
-            return True
+            return CurrentHarborAuthorization(True, None, title)
 
         elif self.harbor_auth == self.HarborAuth.GOOGLE_CALENDAR:
             if config.GOOGLE_CALENDAR_ENABLED:
-                current_show = self.current_authorized_show_bounds(now=now)
                 if current_show:
-                    lower, upper = current_show
+                    _, lower, upper = current_show
                     log(
                         f"dj auth requested by {self}: allowed ({auth_log}, {timezone.localtime(now)} in time bounds -"
                         f" {timezone.localtime(lower)} - {timezone.localtime(upper)} with"
@@ -286,23 +304,21 @@ class User(DirtyFieldsMixin, AbstractUser):
                         " exit grace)"
                     )
                     # Return the authorized until amount
-                    return upper + datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
+                    end = upper + datetime.timedelta(minutes=self.gcal_exit_grace_minutes)
+                    return CurrentHarborAuthorization(True, end, title)
                 else:
                     log(
                         f"dj auth requested by {self}: denied ({auth_log}, {timezone.localtime(now)} not in time bounds"
                         f" for {self.gcal_shows.count()} show times, {self.gcal_entry_grace_minutes} minutes entry"
                         f" grace, {self.gcal_exit_grace_minutes} minutes exit grace)"
                     )
-                    return False
+                    return CurrentHarborAuthorization(False, None, title)
             else:
                 log(
                     f"dj auth requested by {self}: allowed ({auth_log}, however GOOGLE_CALENDAR_ENABLED ="
                     f" False, so treating this like harbor_auth = {self.HarborAuth.ALWAYS.label})"
                 )
-                return True
-        else:
-            log(f"dj auth requested by {self}: denied ({auth_log})")
-            return False
+                return CurrentHarborAuthorization(True, None, title)
 
 
 def audio_asset_file_upload_to(instance, filename):

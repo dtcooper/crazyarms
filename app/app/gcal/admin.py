@@ -21,65 +21,24 @@ from .tasks import sync_gcal_api
 logger = logging.getLogger(f"carb.{__name__}")
 
 
-class GCalShowTimesAdmin(admin.ModelAdmin):
+class GCalShowAdmin(admin.ModelAdmin):
     save_on_top = True
-    list_display = ("user", "num_shows")
-    fields = ("user", "shows")
-    readonly_fields = ("shows",)
-    list_filter = (("user", admin.RelatedOnlyFieldListFilter),)
-
-    class ShowsField:
-        def __init__(self, include_individual_shows=True):
-            self.include_individual_shows = include_individual_shows
-
-        def __call__(self, obj):
-            num_shows = len(obj.show_times)
-            s = f'{num_shows} show{"s" if num_shows != 1 else ""}'
-            if self.include_individual_shows and obj.show_times:
-                s = mark_safe(escape(s))
-                s += mark_safe("\n<ol>\n")
-                s += format_html_join(
-                    "\n",
-                    "<li>{} - {}</li>",
-                    (
-                        (
-                            date_format(timezone.localtime(lower), "SHORT_DATETIME_FORMAT"),
-                            date_format(timezone.localtime(upper), "SHORT_DATETIME_FORMAT"),
-                        )
-                        for lower, upper in obj.show_times
-                    ),
-                )
-                s += mark_safe("\n</ol>")
-            return s
-
-        @cached_property
-        def short_description(self):
-            now = timezone.now()
-            show_times_range_start = date_format(now - GCalShowTimes.SYNC_RANGE_DAYS_MIN, "SHORT_DATE_FORMAT")
-            show_times_range_end = date_format(now + GCalShowTimes.SYNC_RANGE_DAYS_MAX, "SHORT_DATE_FORMAT")
-            return f"show(s) from {show_times_range_start} to {show_times_range_end}"
-
-    @cached_property
-    def shows(self):
-        return self.ShowsField()
-
-    @cached_property
-    def num_shows(self):
-        return self.ShowsField(include_individual_shows=False)
+    search_fields = ("title",)
+    fields = ("title_non_blank", "users", "start", "end")
+    list_display = ("title_non_blank", "start", "end")
+    date_hierarchy = "start"
+    list_filter = (("users", admin.RelatedOnlyFieldListFilter),)
 
     def get_urls(self):
         return [
-            path(
-                "sync/",
-                self.admin_site.admin_view(self.sync_view),
-                name="gcal_gcalshowtimes_sync",
-            )
+            path("sync/", self.admin_site.admin_view(self.sync_view), name="gcal_gcalshow_sync")
         ] + super().get_urls()
 
-    def users_list(self, obj):
-        return ", ".join(obj.users.order_by("username").values_list("username", flat=True)) or None
+    def title_non_blank(self, obj):
+        return obj.title or "Untitled Event"
 
-    users_list.short_description = "User(s)"
+    title_non_blank.short_description = "Title"
+    title_non_blank.admin_order_field = ("title",)
 
     def sync_view(self, request):
         if not self.has_view_permission(request):
@@ -87,14 +46,20 @@ class GCalShowTimesAdmin(admin.ModelAdmin):
 
         cache.set(constants.CACHE_KEY_GCAL_LAST_SYNC, "currently running", timeout=None)
         sync_gcal_api()
-        messages.info(
-            request,
-            "Google Calendar is currently being sync'd. Please refresh this page in a few moments.",
-        )
-        return redirect("admin:gcal_gcalshowtimes_changelist")
+        messages.info(request, "Google Calendar is currently being sync'd. Please refresh this page in a few moments.")
+        return redirect("admin:gcal_gcalshow_changelist")
 
     def changelist_view(self, request, extra_context=None):
-        return super().changelist_view(request, {"last_sync": GCalShowTimes.get_last_sync()})
+        now = timezone.now()
+        extra_context = {
+            "last_sync": GCalShow.get_last_sync(),
+            "SYNC_RANGE_MIN_DAYS": GCalShow.SYNC_RANGE_MIN.days,
+            "SYNC_RANGE_MAX_DAYS": GCalShow.SYNC_RANGE_MAX.days,
+            "sync_range_start": now - GCalShow.SYNC_RANGE_MIN,
+            "sync_range_end": now + GCalShow.SYNC_RANGE_MAX,
+            **(extra_context or {}),
+        }
+        return super().changelist_view(request, extra_context=extra_context)
 
     def has_add_permission(self, request):
         return False
@@ -109,4 +74,4 @@ class GCalShowTimesAdmin(admin.ModelAdmin):
         return config.GOOGLE_CALENDAR_ENABLED
 
 
-# admin.site.register(GCalShowTimes, GCalShowTimesAdmin)
+admin.site.register(GCalShow, GCalShowAdmin)

@@ -54,6 +54,7 @@ class PlaylistAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJModelAdmin):
     fields = ("name", "is_active", "weight", "audio_assets")
     list_display = ("name", "is_active", "weight", "audio_assets_list_display")
     filter_horizontal = ("audio_assets",)
+    list_filter = ("is_active",)
 
     def set_active_action(self, request, queryset):
         queryset.update(is_active=True)
@@ -189,9 +190,20 @@ class AudioAssetAdmin(AudioAssetAdminBase, AutoDJModelAdmin):
 
 
 class RotatorAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJStopsetRelatedAdmin):
-    fields = ("name", "rotator_assets")
+    fields = ("name", "stopset_list", "rotator_assets")
     filter_horizontal = ("rotator_assets",)
-    list_display = ("name", "rotator_assets_list_display")
+    search_fields = ("name",)
+    readonly_fields = ("stopset_list",)
+    list_filter = ("stopset_rotators__stopset",)
+    list_display = ("name", "stopset_list", "rotator_assets_list_display")
+
+    def stopset_list(self, obj):
+        stopsets = (
+            StopsetRotator.objects.filter(rotator=obj).order_by("stopset__name").values_list("stopset__name").distinct()
+        )
+        return format_html_join(mark_safe(",<br>"), "{}", stopsets)
+
+    stopset_list.short_description = "Stopset(s)"
 
     def rotator_assets_list_display(self, obj):
         return obj.rotator_assets.count()
@@ -237,7 +249,7 @@ class RotatorAssetAdmin(AudioAssetAdminBase, AutoDJStopsetRelatedAdmin):
         return actions
 
     def rotators_list_display(self, obj):
-        return format_html_join(mark_safe(",<br>"), "{}", obj.rotators.values_list("name")) or None
+        return format_html_join(mark_safe(",<br>"), "{}", obj.rotators.order_by("name").values_list("name")) or None
 
     rotators_list_display.short_description = "Rotators(s)"
 
@@ -305,6 +317,7 @@ class StopsetAdmin(AutoDJStopsetRelatedAdmin):
     search_fields = ("name",)
     fields = ("name", "is_active", "weight")
     list_display = ("name", "stopset_rotators_list_display", "is_active", "weight")
+    list_filter = ("stopset_rotators__rotator", "is_active")
 
     def set_active_action(self, request, queryset):
         queryset.update(is_active=True)

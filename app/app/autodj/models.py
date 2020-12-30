@@ -434,8 +434,8 @@ class Stopset(PlaylistStopsetBase):
 
 
 class StopsetRotator(models.Model):
-    rotator = models.ForeignKey(Rotator, on_delete=models.CASCADE)
-    stopset = models.ForeignKey(Stopset, on_delete=models.CASCADE)
+    rotator = models.ForeignKey(Rotator, on_delete=models.CASCADE, related_name="stopset_rotators")
+    stopset = models.ForeignKey(Stopset, on_delete=models.CASCADE, related_name="stopset_rotators")
 
     def __str__(self):
         s = f"{self.rotator.name} in {self.stopset.name}"

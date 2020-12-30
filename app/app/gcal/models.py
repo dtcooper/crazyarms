@@ -20,13 +20,11 @@ logger = logging.getLogger(f"carb.{__name__}")
 
 
 class GCalShow(models.Model):
-    UNTITLED_SHOW = "Unnamed show"
-
-    SYNC_RANGE_DAYS_MIN = datetime.timedelta(days=60)
-    SYNC_RANGE_DAYS_MAX = datetime.timedelta(days=120)
+    SYNC_RANGE_MIN = datetime.timedelta(days=60)
+    SYNC_RANGE_MAX = datetime.timedelta(days=120)
 
     gcal_id = TruncatingCharField(max_length=256, unique=True)
-    users = models.ManyToManyField(User, related_name="gcal_shows")
+    users = models.ManyToManyField(User, related_name="gcal_shows", verbose_name="users")
     title = TruncatingCharField("title", max_length=1024)
     start = models.DateTimeField("start time")
     end = models.DateTimeField("end time")
@@ -43,14 +41,14 @@ class GCalShow(models.Model):
         verbose_name_plural = "Google Calendar shows"
 
     @staticmethod
-    def get_last_sync(cls):
+    def get_last_sync():
         return cache.get(constants.CACHE_KEY_GCAL_LAST_SYNC)
 
     @classmethod
     def sync_api(cls):
         logger.info(
-            f"Syncing with Google Calendar events API in -{cls.SYNC_RANGE_DAYS_MIN.days} days,"
-            f" +{cls.SYNC_RANGE_DAYS_MAX.days} days range"
+            f"Syncing with Google Calendar events API in -{cls.SYNC_RANGE_MIN.days} days,"
+            f" +{cls.SYNC_RANGE_MAX.days} days range"
         )
         credentials = Credentials.from_service_account_info(json.loads(config.GOOGLE_CALENDAR_CREDENTIALS_JSON))
         service = build("calendar", "v3", credentials=credentials)
@@ -65,8 +63,8 @@ class GCalShow(models.Model):
                 .list(
                     calendarId=config.GOOGLE_CALENDAR_ID,
                     maxResults=2500,
-                    timeMin=(datetime.datetime.utcnow() - cls.SYNC_RANGE_DAYS_MIN).isoformat() + "Z",
-                    timeMax=(datetime.datetime.utcnow() + cls.SYNC_RANGE_DAYS_MAX).isoformat() + "Z",
+                    timeMin=(datetime.datetime.utcnow() - cls.SYNC_RANGE_MIN).isoformat() + "Z",
+                    timeMax=(datetime.datetime.utcnow() + cls.SYNC_RANGE_MAX).isoformat() + "Z",
                     timeZone="UTC",
                     singleEvents="true",
                     pageToken=page_token,
@@ -107,7 +105,7 @@ class GCalShow(models.Model):
                     if user:
                         users.append(user)
 
-                title = item.get("summary", cls.UNTITLED_SHOW)
+                title = item.get("summary", "").strip()
                 shows.append((item["id"], users, {"title": title, "start": start, "end": end}))
 
             page_token = response.get("nextPageToken")
