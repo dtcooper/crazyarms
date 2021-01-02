@@ -89,8 +89,8 @@ _that is active_ will be what the robot chooses to play. We call this concept
 
 [^1]:
     Crazy Arms tries very hard to reject invalid audio files, but it is
-    theoretically possible for it happen, in which case the AutoDJ will fail
-    and become inactive.
+    theoretically possible for it happen. In this case the AutoDJ could
+    temporarily fail and become inactive for a short time.
 
 #### Upstream Servers
 

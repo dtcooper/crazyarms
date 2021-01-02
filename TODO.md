@@ -87,9 +87,8 @@
 
 ## Future Version
 
-- [ ] Show live info about zoom on status page, similar to `dj_harbor_source` + `live_user` in status JSON
+- [x] Show live info about zoom on status page, similar to `dj_harbor_source` + `live_user` in status JSON
 - [ ] S3 as a storage source using [django-storages](https://django-storages.readthedocs.io/)
-- [ ] Schedule stopsets at specific times - necessary? nice-to-have
 - [ ] Compression and normalization on a per-DJ basis. (Add a liquidsoap `switch()` to
     change between compressed or not). Hard part is what are the rules for triggering this?
 - [ ] Move liquidsoap harbor source editing into webui, but we could still only link it from admin.
@@ -110,5 +109,6 @@
 ## Down the line
 
 - [ ] Stop using Django admin, instead roll everything on our own.
-    [Halfmoon](https://gethalfmoon.com) looks pretty slick.
+    - [Halfmoon](https://gethalfmoon.com) looks pretty slick.
+    - Use [alpine.js](https://github.com/alpinejs/alpine) as mini-framework for reactive front-end, not jQuery
 - [ ] user preference for harbor auth = always to be kicked off at the end of their show anyway
