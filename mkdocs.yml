@@ -63,8 +63,7 @@ theme:
         - navigation.tabs
         - toc.integrate
     palette:
-        scheme: slate
-        primary: pink
+        primary: black
         accent: light blue
     font:
         text: Inter
