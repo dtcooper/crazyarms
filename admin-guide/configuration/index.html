@@ -7,16 +7,16 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://crazyarms.xyz/admin-guide/configuration/" rel="canonical"/>
 <link href="../../img/favicon.svg" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-6.2.2" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-6.2.3" name="generator"/>
 <title>Configuration - Crazy Arms Radio Backend Documentation</title>
-<link href="../../assets/stylesheets/main.73f7c429.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/main.3b61ea93.min.css" rel="stylesheet"/>
 <link href="../../assets/stylesheets/palette.39b8e14a.min.css" rel="stylesheet"/>
-<meta content="#e92063" name="theme-color"/>
+<meta content="#000000" name="theme-color"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Inter:300,400,400i,700%7C&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Inter",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"",SFMono-Regular,Consolas,Menlo,monospace}</style>
 </head>
-<body data-md-color-accent="light-blue" data-md-color-primary="pink" data-md-color-scheme="slate" dir="ltr">
+<body data-md-color-accent="light-blue" data-md-color-primary="black" data-md-color-scheme="" dir="ltr">
 <input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
@@ -391,6 +391,8 @@ sections will not be available. See
 <dd>The name of your radio station.</dd>
 <dt><code>PLAYOUT_LOG_PURGE_DAYS</code> — <strong>Type: Integer (non-negative)</strong></dt>
 <dd>The number of days to keep playout log entries after which they’re purged. Set to 0 to keep playout log entries forever.</dd>
+<dt><code>APPEND_LIVE_ON_STATION_NAME_TO_METADATA</code> — <strong>Type: Boolean (true or false)</strong></dt>
+<dd>Append the string “LIVE on <station name="">” to the stream’s metadata for live broadcasts.</station></dd>
 </dl>
 </div>
 <h3 id="autodj-configuration">AutoDJ Configuration<a class="headerlink" href="#autodj-configuration" title="Permanent link">¶</a></h3>
@@ -545,12 +547,15 @@ HTTPS_ENABLED=0
 # letencrypt requires an email address if you use it
 HTTPS_CERTBOT_EMAIL=
 
-# Enable email notifications by enabling and filling these out
+# Enable email notifications
 EMAIL_ENABLED=0
-EMAIL_SMTP_SERVER=
-EMAIL_SMTP_PORT=
-EMAIL_SMTP_USERNAME=
+# If you've enabled emails, these must to be specified
+EMAIL_FROM_ADDRESS="Station Admin &lt;no-reply@mystation.com&gt;"
+EMAIL_SMTP_SERVER=smtp.mystation.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USERNAME=no-reply@mystation.com
 EMAIL_SMTP_PASSWORD=
+EMAIL_SMTP_USE_TLS=
 
 # Harbor Telnet Access over Web (experimental, so disabled by default)
 HARBOR_TELNET_WEB_ENABLED=0
@@ -612,7 +617,7 @@ RTMP_ENABLED=0
 <div class="md-footer-meta__inner md-grid">
 <div class="md-footer-copyright">
 <div class="md-footer-copyright__highlight">
-            Copyright © 2020 David Cooper
+            Copyright © 2020-2021 David Cooper
           </div>
         
         Made with

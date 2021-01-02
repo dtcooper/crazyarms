@@ -7,16 +7,16 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://crazyarms.xyz/" rel="canonical"/>
 <link href="img/favicon.svg" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-6.2.2" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-6.2.3" name="generator"/>
 <title>Crazy Arms Radio Backend Documentation</title>
-<link href="assets/stylesheets/main.73f7c429.min.css" rel="stylesheet"/>
+<link href="assets/stylesheets/main.3b61ea93.min.css" rel="stylesheet"/>
 <link href="assets/stylesheets/palette.39b8e14a.min.css" rel="stylesheet"/>
-<meta content="#e92063" name="theme-color"/>
+<meta content="#000000" name="theme-color"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Inter:300,400,400i,700%7C&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Inter",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"",SFMono-Regular,Consolas,Menlo,monospace}</style>
 </head>
-<body data-md-color-accent="light-blue" data-md-color-primary="pink" data-md-color-scheme="slate" dir="ltr">
+<body data-md-color-accent="light-blue" data-md-color-primary="black" data-md-color-scheme="" dir="ltr">
 <input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
@@ -389,11 +389,11 @@ it may include incorrect information until the first release.</p>
 <p>Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-end
 written from the ground up.</p>
 <p>It’s specifically written after its author built a few <em>fully decentralized</em>
-online radio stations with some common needs finding no existing product fit.
+online radio stations with some common needs, but found no existing product fit.
 Crazy Arms seeks to fit those needs needs out of the box, but allows for
 stations to customize their stream if necessary to fit their unique use cases.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">¶</a></h2>
-<p>If you’re an technical user or a systems administrator wanting to install Crazy
+<p>If you’re a technical user or a systems administrator wanting to install Crazy
 Arms, head over to the <a href="server-setup/#installation">installation instructions</a>.</p>
 <h2 id="audio-infrastructure-overview">Audio Infrastructure Overview<a class="headerlink" href="#audio-infrastructure-overview" title="Permanent link">¶</a></h2>
 <h3 id="sources-harbor-and-upstreams-explained">Sources, Harbor, and Upstreams Explained<a class="headerlink" href="#sources-harbor-and-upstreams-explained" title="Permanent link">¶</a></h3>
@@ -767,7 +767,7 @@ isn’t included.</dd>
 not necessarily a beautiful, easy to use interface but instead meant for
 somewhat technical users. This is by design and was chosen for ease of
 programming. The technical reason for why is that we chose to build it on
-top of <a href="https://docs.djangoproject.com/en/3.1/ref/contrib/admin/">Django’s station admin site</a>
+top of <a href="https://docs.djangoproject.com/en/3.1/ref/contrib/admin/">Django’s admin module</a>
 module.</dd>
 </dl>
 <div class="footnote">
@@ -775,8 +775,8 @@ module.</dd>
 <ol>
 <li id="fn:1">
 <p>Crazy Arms tries very hard to reject invalid audio files, but it is
-theoretically possible for it happen, in which case the AutoDJ will fail
-and become inactive. <a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">↩</a></p>
+theoretically possible for it happen. In this case the AutoDJ could
+temporarily fail and become inactive for a short time. <a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">↩</a></p>
 </li>
 </ol>
 </div>
@@ -806,7 +806,7 @@ and become inactive. <a class="footnote-backref" href="#fnref:1" title="Jump ba
 <div class="md-footer-meta__inner md-grid">
 <div class="md-footer-copyright">
 <div class="md-footer-copyright__highlight">
-            Copyright © 2020 David Cooper
+            Copyright © 2020-2021 David Cooper
           </div>
         
         Made with
