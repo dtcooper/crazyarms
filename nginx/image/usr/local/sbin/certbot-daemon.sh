@@ -2,7 +2,7 @@
 
 check_self_signed() {
     openssl x509 -noout -subject -nameopt multiline -in "$CERT_PATH/fullchain.pem" \
-        | grep -q 'organizationName *= *CARB Self-Signed'
+        | grep -q 'organizationName *= *Crazy Arms Self-Signed'
 }
 
 log() {

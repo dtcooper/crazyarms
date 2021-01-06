@@ -26,9 +26,9 @@ from django.utils.safestring import mark_safe
 from constance import config
 from dirtyfields import DirtyFieldsMixin
 
-from carb import constants
+from crazyarms import constants
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 def after_db_commit(func):
@@ -383,7 +383,7 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             annotations = {}
             if self.id:
                 model_name = self._meta.model_name.replace("asset", "_asset")
-                annotations.update({"carb_model": model_name, "carb_id": str(self.id)})
+                annotations.update({"crazyarms_model": model_name, "crazyarms_id": str(self.id)})
             annotations.update(
                 {
                     # Escape " and \, as well as normalize whitespace for liquidsoap

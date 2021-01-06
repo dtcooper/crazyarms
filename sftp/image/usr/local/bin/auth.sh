@@ -4,7 +4,7 @@
 
 URL='http://app:8000/api/sftp-auth/'
 JSON_IN="$(jq -nc --arg u "$SFTPGO_AUTHD_USERNAME" --arg p "$SFTPGO_AUTHD_PASSWORD" --arg k "$SFTPGO_AUTHD_PUBLIC_KEY" '{"username": $u, "password": $p, "key": $k}')"
-JSON_OUT="$(curl -d "$JSON_IN" -H "X-Carb-Secret-Key: $SECRET_KEY" "$URL")"
+JSON_OUT="$(curl -d "$JSON_IN" -H "X-Crazyarms-Secret-Key: $SECRET_KEY" "$URL")"
 STATUS="$(echo "$JSON_OUT" | jq -r .status)"
 
 if [ "$STATUS" = 1 ]; then

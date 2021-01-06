@@ -10,7 +10,7 @@ from autodj.models import AudioAsset, Playlist, RotatorAsset
 from broadcast.models import BroadcastAsset
 from common.models import User
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 class Command(BaseCommand):

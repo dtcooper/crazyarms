@@ -1,7 +1,7 @@
 services:
   rtmp:
     container_name: rtmp
-    image: dtcooper/carb-rtmp:${CARB_VERSION:-latest}
+    image: dtcooper/carb-rtmp:${CRAZYARMS_VERSION:-latest}
     restart: always
     depends_on:
       - app

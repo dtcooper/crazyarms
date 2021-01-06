@@ -237,7 +237,7 @@ input[type="reset"]:focus,
 input[type="reset"]:enabled:hover,
 input[type="button"]:focus,
 input[type="button"]:enabled:hover {
-    /* CARB: Changed to dim
+    /* Crazy Arms: Changed to dim
     background: var(--nc-lk-2);
     */
     filter: brightness(80%);

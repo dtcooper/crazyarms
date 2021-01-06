@@ -3,7 +3,7 @@ import logging
 from django.contrib import messages
 from django.core.mail import send_mail as django_send_mail
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 def send_mail(recipient, subject, body, request=None):

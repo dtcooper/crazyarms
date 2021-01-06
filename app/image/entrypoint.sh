@@ -20,7 +20,7 @@ if [ "$#" = 0 ]; then
             exec $CMD
         fi
     else
-        echo "Starting up Crazy Arms Radio Backend version $CARB_VERSION"
+        echo "Starting up Crazy Arms Radio Backend version $CRAZYARMS_VERSION"
 
         wait-for-it -t 0 db:5432
         ./manage.py migrate
@@ -35,7 +35,7 @@ if [ "$#" = 0 ]; then
                 GUNICORN_WORKERS="$(python -c 'import multiprocessing as m; print(max(round(m.cpu_count() * 1.5 + 1), 3))')"
             fi
 
-            exec gunicorn $GUNICORN_ARGS --forwarded-allow-ips '*' -b 0.0.0.0:8000 -w $GUNICORN_WORKERS --capture-output --access-logfile - carb.wsgi
+            exec gunicorn $GUNICORN_ARGS --forwarded-allow-ips '*' -b 0.0.0.0:8000 -w $GUNICORN_WORKERS --capture-output --access-logfile - crazyarms.wsgi
         fi
     fi
 else

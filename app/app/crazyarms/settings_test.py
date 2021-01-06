@@ -15,7 +15,7 @@ class FakeDjangoRedisConnectionFactory(ConnectionFactory):
         return self.redis_client_cls(**self.redis_client_cls_kwargs)
 
 
-DJANGO_REDIS_CONNECTION_FACTORY = "carb.settings_test.FakeDjangoRedisConnectionFactory"
+DJANGO_REDIS_CONNECTION_FACTORY = "crazyarms.settings_test.FakeDjangoRedisConnectionFactory"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",

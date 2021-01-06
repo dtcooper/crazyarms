@@ -13,7 +13,7 @@ if [ "$HTTPS_ENABLED" -a "$HTTPS_ENABLED" != '0' ]; then
         openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
             -keyout "$CERT_PATH/privkey.pem" \
             -out "$CERT_PATH/fullchain.pem" \
-            -subj "/C=US/O=CARB Self-Signed/CN=$DOMAIN_NAME"
+            -subj "/C=US/O=Crazy Arms Self-Signed/CN=$DOMAIN_NAME"
     fi
 
     CERTBOT_LOG=/var/log/certbot_daemon.log

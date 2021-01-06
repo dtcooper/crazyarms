@@ -9,7 +9,7 @@ services:
 
   zoom:
     container_name: zoom
-    image: dtcooper/carb-zoom:${CARB_VERSION:-latest}
+    image: dtcooper/carb-zoom:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./zoom

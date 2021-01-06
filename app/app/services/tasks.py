@@ -10,7 +10,7 @@ from common.tasks import local_daily_task
 
 from .models import PlayoutLogEntry
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 @djhuey.periodic_task(priority=1, validate_datetime=local_daily_task(hour=3, minute=30))  # daily @ 3:30am local time

@@ -34,10 +34,10 @@ from huey.contrib import djhuey
 
 from autodj.models import AudioAsset
 from broadcast.models import Broadcast, BroadcastAsset
-from carb import constants
 from common.admin import send_set_password_email
 from common.mail import send_mail
 from common.models import User, filter_inactive_group_queryset
+from crazyarms import constants
 from gcal.models import GCalShow
 from services.liquidsoap import harbor
 from services.models import PlayoutLogEntry
@@ -46,7 +46,7 @@ from services.services import ZoomService
 from .forms import AutoDJRequestsForm, FirstRunForm, UserProfileForm, ZoomForm, pretty_seconds
 from .tasks import stop_zoom_broadcast
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 class FormErrorMessageMixin:

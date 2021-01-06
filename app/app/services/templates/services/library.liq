@@ -2,7 +2,7 @@
 
 # Things common to harbor.liq and upstream.liq
 PLAYOUT_LOG_ENTRY_TABLE_NAME = {{ playout_log_entry_table_name|liqval }}
-CARB_VERSION = getenv('CARB_VERSION')
+CRAZYARMS_VERSION = getenv('CRAZYARMS_VERSION')
 
 {% for var, value in event_types %}
     EVENT_{{ var }} = {{ value|liqval }}
@@ -55,4 +55,4 @@ on_shutdown(fun() -> begin
     is_shutting_down := true
 end)
 
-log_event(async=false, '#{SCRIPT_NAME} came online (version: #{CARB_VERSION})')
+log_event(async=false, '#{SCRIPT_NAME} came online (version: #{CRAZYARMS_VERSION})')

@@ -6,7 +6,7 @@ from django.test import TestCase
 from constance.test import override_config
 from django_redis import get_redis_connection
 
-from carb import constants
+from crazyarms import constants
 
 from .models import AudioAsset
 
@@ -122,44 +122,45 @@ class AntiRepeatTests(TestCase):
     )
     def test_corner_cases_when_anti_repeat_not_possible(self):
         # No assets exist
-        with self.assertLogs("carb.autodj.models", level="INFO") as logger:
+        with self.assertLogs("crazyarms.autodj.models", level="INFO") as logger:
             self.assertIsNone(AudioAsset.get_next_for_autodj())
         self.assertEqual(
             logger.output,
-            ["WARNING:carb.autodj.models:autodj: no assets exist (no min/max id), giving up early"],
+            ["WARNING:crazyarms.autodj.models:autodj: no assets exist (no min/max id), giving up early"],
         )
 
         # Should only work on status = READY
         AudioAsset(status=AudioAsset.Status.PENDING).save()
-        with self.assertLogs("carb.autodj.models", level="INFO") as logger:
+        with self.assertLogs("crazyarms.autodj.models", level="INFO") as logger:
             self.assertIsNone(AudioAsset.get_next_for_autodj())
         self.assertEqual(
             logger.output,
-            ["WARNING:carb.autodj.models:autodj: no assets exist, giving up early"],
+            ["WARNING:crazyarms.autodj.models:autodj: no assets exist, giving up early"],
         )
 
         self.create_assets(2, 1)
-        with self.assertLogs("carb.autodj.models", level="INFO") as logger:
+        with self.assertLogs("crazyarms.autodj.models", level="INFO") as logger:
             self.assertEqual(str(AudioAsset.get_next_for_autodj()), "A:0 - T:0")
-        self.assertEqual(logger.output, ["INFO:carb.autodj.models:autodj: selected A:0 - T:0"])
+        self.assertEqual(logger.output, ["INFO:crazyarms.autodj.models:autodj: selected A:0 - T:0"])
 
-        with self.assertLogs("carb.autodj.models", level="INFO") as logger:
+        with self.assertLogs("crazyarms.autodj.models", level="INFO") as logger:
             self.assertEqual(str(AudioAsset.get_next_for_autodj()), "A:0 - T:1")
         self.assertEqual(
             logger.output,
             [
-                "WARNING:carb.autodj.models:autodj: no track found, attempting to run with artist repeats",
-                "INFO:carb.autodj.models:autodj: selected A:0 - T:1",
+                "WARNING:crazyarms.autodj.models:autodj: no track found, attempting to run with artist repeats",
+                "INFO:crazyarms.autodj.models:autodj: selected A:0 - T:1",
             ],
         )
 
-        with self.assertLogs("carb.autodj.models", level="INFO") as logger:
+        with self.assertLogs("crazyarms.autodj.models", level="INFO") as logger:
             self.assertEqual(str(AudioAsset.get_next_for_autodj()), "A:0 - T:0")
         self.assertEqual(
             logger.output,
             [
-                "WARNING:carb.autodj.models:autodj: no track found, attempting to run with artist repeats",
-                "WARNING:carb.autodj.models:autodj: no track found, attempting to run with artist and track repeats",
-                "INFO:carb.autodj.models:autodj: selected A:0 - T:0",
+                "WARNING:crazyarms.autodj.models:autodj: no track found, attempting to run with artist repeats",
+                "WARNING:crazyarms.autodj.models:autodj: no track found, attempting to run with artist and track"
+                " repeats",
+                "INFO:crazyarms.autodj.models:autodj: selected A:0 - T:0",
             ],
         )

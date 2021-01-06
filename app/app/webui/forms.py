@@ -43,7 +43,7 @@ SAMPLE_STOPSETS = (
     ("id", "ad", "ad", "id", "psa"),
 )
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 class FirstRunForm(UserCreationForm):

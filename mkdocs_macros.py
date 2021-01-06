@@ -15,7 +15,7 @@ def get_django_settings():
                 "environ": Mock(Env=lambda: Mock(bool=lambda *args, **kwargs: True)),
             }
         )
-        from carb import settings
+        from crazyarms import settings
 
         _django_settings = settings
     return _django_settings

@@ -8,12 +8,12 @@ from django.utils import timezone
 from constance import config
 from huey.contrib import djhuey
 
-from carb import constants
 from common.tasks import once_at_startup
+from crazyarms import constants
 
 from .models import GCalShow
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 @djhuey.db_periodic_task(priority=2, validate_datetime=once_at_startup(crontab(minute="*/5")))

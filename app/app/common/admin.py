@@ -16,8 +16,8 @@ from django.utils.safestring import mark_safe
 from constance import config
 from constance.admin import Config, ConstanceAdmin
 
-from carb import constants
 from common.mail import send_mail
+from crazyarms import constants
 
 from .forms import EmailUserChangeForm, EmailUserCreationForm, ProcessConfigChangesConstanceForm
 from .models import User, filter_inactive_group_queryset

@@ -13,10 +13,10 @@ from django.utils.formats import date_format
 
 from constance import config
 
-from carb import constants
 from common.models import TruncatingCharField, User
+from crazyarms import constants
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 class GCalShow(models.Model):

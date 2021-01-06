@@ -166,8 +166,8 @@ if [ "$FIRST_RUN" ]; then
     echo 'Crazy Arms Radio Backend'
     echo '########################'
     echo
-    echo 'Welcome to Crazy Arms Radio Backend (CARB). Before we get started, '
-    echo "you'll have to answer a few questions to configure its services."
+    echo "Welcome to Crazy Arms Radio Backend. Before we get started, you'll "
+    echo 'have to answer a few questions to configure its services.'
     echo
 
     get_str 'Domain name' DOMAIN_NAME 'localhost'
@@ -194,7 +194,7 @@ if [ "$FIRST_RUN" ]; then
     echo 'things at any time by editing this file.'
     echo
     if [ "$#" = 0 ]; then
-        echo "To start CARB, run \`$0 up'."
+        echo "To start Crazy Arms, run \`$0 up'."
         echo
     fi
 fi
@@ -250,11 +250,11 @@ fi
 # Make imports/ folder with current user permissions for easy of copying
 mkdir -p imports
 
-export CARB_VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo unknown)"
-.env -f .version set "CARB_VERSION=$CARB_VERSION"
+export CRAZYARMS_VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo unknown)"
+.env -f .version set "CRAZYARMS_VERSION=$CRAZYARMS_VERSION"
 
 if [ "$1" = 'version' ]; then
-    echo "Crazy Arms Radio Backend version: $CARB_VERSION"
+    echo "Crazy Arms Radio Backend version: $CRAZYARMS_VERSION"
 else
     set -x
 fi

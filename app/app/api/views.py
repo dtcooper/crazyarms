@@ -16,7 +16,7 @@ from common.models import User
 
 from .tasks import SFTP_PATH_ASSET_CLASSES, process_sftp_upload
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -24,7 +24,7 @@ class APIView(View):
     def dispatch(self, request):
         self.request_json = {}
 
-        if request.headers.get("X-CARB-Secret-Key") != settings.SECRET_KEY:
+        if request.headers.get("X-Crazyarms-Secret-Key") != settings.SECRET_KEY:
             return HttpResponseForbidden()
 
         if request.body:

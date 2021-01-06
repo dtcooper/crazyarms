@@ -5,7 +5,7 @@ services:
 
   icecast:
     container_name: icecast
-    image: dtcooper/carb-icecast-kh:${CARB_VERSION:-latest}
+    image: dtcooper/carb-icecast-kh:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./icecast

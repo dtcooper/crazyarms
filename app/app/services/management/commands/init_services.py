@@ -5,7 +5,7 @@ from services import init_services
 
 
 class Command(BaseCommand):
-    help = "Initialize CARB Services"
+    help = "Initialize Crazy Arms Services"
 
     def add_arguments(self, parser):
         parser.add_argument(

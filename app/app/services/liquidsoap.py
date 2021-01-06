@@ -5,7 +5,7 @@ from threading import Lock
 
 END_PREFIX = b"\r\nEND\r\n"
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 class LiquidsoapTelnetException(Exception):

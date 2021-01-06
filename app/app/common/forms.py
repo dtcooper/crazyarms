@@ -11,7 +11,7 @@ from constance.admin import ConstanceForm
 from gcal.tasks import sync_gcal_api
 from services import init_services
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 class AudioAssetCreateFormBase(forms.ModelForm):

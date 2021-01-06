@@ -16,7 +16,7 @@ from django.views.generic import FormView
 
 from constance import config
 
-from carb import constants
+from crazyarms import constants
 
 from .forms import HarborCustomConfigForm
 from .liquidsoap import upstream

@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Custom admin site
-    "carb.apps.CARBAdminConfig",
+    "crazyarms.apps.CrazyArmsAdminConfig",
     # Third-party
     "constance",
     "django_extensions",
@@ -65,13 +65,13 @@ MIDDLEWARE = [
     "common.middleware.UserTimezoneMiddleware",
 ]
 
-ROOT_URLCONF = "carb.urls"
+ROOT_URLCONF = "crazyarms.urls"
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         # To override admin templates
-        "DIRS": [f"{BASE_DIR}/carb/templates"],
+        "DIRS": [f"{BASE_DIR}/crazyarms/templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -80,7 +80,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "constance.context_processors.config",
-                "carb.context_processors.carb_extra_context",
+                "crazyarms.context_processors.crazyarms_extra_context",
             ],
         },
     },
@@ -101,7 +101,7 @@ LOGGING = {
         },
     },
     "loggers": {
-        "carb": {
+        "crazyarms": {
             "handlers": ["console"],
             "level": "INFO",
         },
@@ -112,7 +112,7 @@ LOGGING = {
     },
 }
 
-WSGI_APPLICATION = "carb.wsgi.application"
+WSGI_APPLICATION = "crazyarms.wsgi.application"
 
 # In order to read uploaded audio metadata, we need a temporary file to exist
 FILE_UPLOAD_HANDLERS = ("django.core.files.uploadhandler.TemporaryFileUploadHandler",)
@@ -184,7 +184,7 @@ HUEY = {
     "expire_time": 60 * 60,
     "huey_class": "huey.PriorityRedisExpireHuey",
     "immediate": False,
-    "name": "carb",
+    "name": "crazyarms",
     # 'connection_pool': ConnectionPool(host='redis', max_connections=5),
 }
 
@@ -192,7 +192,7 @@ HUEY = {
 SHELL_PLUS_IMPORTS = [
     "from constance import config",
     "from django_redis import get_redis_connection",
-    "from carb import constants",
+    "from crazyarms import constants",
     # tasks
     "from common.tasks import asset_convert_to_acceptable_format, asset_download_external_url, youtube_dl_daily_update,"
     " remove_unused_media_files_daily",

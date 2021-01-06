@@ -45,7 +45,7 @@ class FirstRunTests(TransactionTestCase):
         lambda *args, **kwargs: Mock(id=uuid.uuid4()),
     )
     def test_post(self, requests_mock, supervisor_mock):
-        ccmixter_response = open(f"{settings.BASE_DIR}/carb/test_data/ccmixter.json", "rb")
+        ccmixter_response = open(f"{settings.BASE_DIR}/crazyarms/test_data/ccmixter.json", "rb")
         requests_mock.register_uri("GET", CCMIXTER_API_URL, body=ccmixter_response)
         requests_mock.register_uri(
             "GET",
@@ -61,7 +61,7 @@ class FirstRunTests(TransactionTestCase):
             reverse("first_run"),
             {
                 "username": "admin",
-                "email": "admin@carb.example",
+                "email": "admin@crazyarms.example",
                 "password1": "user-pw",
                 "password2": "user-pw",
                 "icecast_admin_password": "icecast-pw",
@@ -75,14 +75,14 @@ class FirstRunTests(TransactionTestCase):
         self.assertEqual(User.objects.count(), 1)
         user = User.objects.get()
         self.assertEqual(user.username, "admin")
-        self.assertEqual(user.email, "admin@carb.example")
+        self.assertEqual(user.email, "admin@crazyarms.example")
         self.assertTrue(user.check_password("user-pw"))
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
         self.assertEqual(config.STATION_NAME, "Test Station")
         self.assertEqual(config.ICECAST_ADMIN_PASSWORD, "icecast-pw")
-        self.assertEqual(config.ICECAST_ADMIN_EMAIL, "admin@carb.example")
+        self.assertEqual(config.ICECAST_ADMIN_EMAIL, "admin@crazyarms.example")
         self.assertEqual(config.ICECAST_SOURCE_PASSWORD, "random-pw")
         self.assertEqual(config.ICECAST_RELAY_PASSWORD, "random-pw")
 

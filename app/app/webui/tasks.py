@@ -4,10 +4,10 @@ import time
 from django_redis import get_redis_connection
 from huey.contrib import djhuey
 
-from carb import constants
+from crazyarms import constants
 from services.services import ZoomService
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 @djhuey.db_task(priority=5)

@@ -16,7 +16,7 @@ class AdminBaseContextMixin:
         return context
 
 
-class CARBAdminSite(admin.AdminSite):
+class CrazyArmsAdminSite(admin.AdminSite):
     AdminBaseContextMixin = AdminBaseContextMixin
     index_title = ""
     empty_value_display = mark_safe("<em>none</em>")

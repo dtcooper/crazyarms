@@ -12,10 +12,10 @@ from django.utils import timezone
 
 from constance import config
 
-from carb import constants
 from common.models import AudioAssetBase, TruncatingCharField
+from crazyarms import constants
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 RANDOM_CHUNK_TRIES = 15
 RANDOM_CHUNK_SIZE = 250
 STOPSET_CACHE_TIMEOUT = REQUESTS_CACHE_TIMEOUT = 2 * 60 * 60

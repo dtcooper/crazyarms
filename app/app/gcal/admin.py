@@ -13,12 +13,12 @@ from django.utils.safestring import mark_safe
 
 from constance import config
 
-from carb import constants
+from crazyarms import constants
 
 from .models import GCalShow
 from .tasks import sync_gcal_api
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 class GCalShowAdmin(admin.ModelAdmin):

@@ -16,5 +16,5 @@ fi
 if [ "$INFILE" ]; then
     URL='http://app:8000/api/sftp-upload/'
     JSON_IN="$(jq -nc --arg p "$INFILE" '{"path": $p}')"
-    curl -d "$JSON_IN" -H "X-Carb-Secret-Key: $SECRET_KEY" "$URL"
+    curl -d "$JSON_IN" -H "X-Crazyarms-Secret-Key: $SECRET_KEY" "$URL"
 fi

@@ -10,9 +10,9 @@ from django.template.loader import get_template
 
 from constance import config
 
-from carb import constants
+from crazyarms import constants
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 SUPERVISOR_RUNNING_STATES = {"STARTING", "RUNNING", "BACKOFF"}
 

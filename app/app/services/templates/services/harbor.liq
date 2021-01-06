@@ -10,7 +10,7 @@ set('server.timeout', -1.)
 set('scheduler.fast_queues', 2)
 set('scheduler.generic_queues', 4)
 
-API_HEADERS = [('X-CARB-Secret-Key', getenv('SECRET_KEY'))]
+API_HEADERS = [('X-Crazyarms-Secret-Key', getenv('SECRET_KEY'))]
 API_PREFIX = 'http://app:8000/api/'
 BUFFER = 5.
 FAILSAFE_SOURCE_NAME = 'Failsafe'
@@ -52,7 +52,7 @@ def is_infinity(f) int_of_float(f) == 0 and abs(f) > 1. end
 
 # Track what sources we skip so we can serve that in status JSON
 skippable_sources = ref []
-def add_skip_command_carb(source)
+def add_skip_command_crazyarms(source)
     skippable_sources := list.add(source.id(source), !skippable_sources)
     add_skip_command(source)
 end
@@ -172,6 +172,7 @@ ignore(output.dummy(id='dj_harbor_dummy', dj_harbor, fallible=true))
 dj_harbor = strip_blank(
     id='dj_harbor_strip',
     max_blank=MAX_SILENCE,
+    track_sensitive=false,
     start_blank=true,
     dj_harbor,
 )
@@ -197,6 +198,7 @@ dj_harbor = strip_blank(
     zoom = strip_blank(
         id='zoom_strip',
         max_blank=MAX_SILENCE,
+        track_sensitive=false,
         start_blank=true,
         min_noise=0.25,  # Higher threshold here since a microphone could be on but a room silent
         zoom,
@@ -213,7 +215,7 @@ prerecord = on_end(id='prerecord_onend', delay=0., fun(_, _) -> begin
     # Clear status since timed_sources may be the only thing that changed
     last_status_without_timed_sources := reset_status
 end, prerecord)
-add_skip_command_carb(prerecord)
+add_skip_command_crazyarms(prerecord)
 
 {% if config.AUTODJ_ENABLED %}
     # Auto DJ
@@ -248,7 +250,7 @@ add_skip_command_carb(prerecord)
 
     # Having autodj safe for a few seconds means resolution loading files won't
     # transition to failsafe and just have a few seconds of silence
-    add_skip_command_carb(autodj)
+    add_skip_command_crazyarms(autodj)
 {% endif %}
 
 # Our failsafe audio, right now some silly hold music.
@@ -463,15 +465,15 @@ radio = on_metadata(fun(m) -> begin
     if !current_source_name == FAILSAFE_SOURCE_NAME then
         log_event(type=EVENT_TRACK, 'Played failsafe audio track')
     else
-        id = m['carb_id']
-        model = m['carb_model']
+        id = m['crazyarms_id']
+        model = m['crazyarms_model']
         metadata = metadata.export(m)
 
         let (metadata, extras) = if id == '' or model == '' then
             (metadata, [])
         else
             (
-                list.append(metadata, [('carb_id', id), ('carb_model', model)]),
+                list.append(metadata, [('crazyarms_id', id), ('crazyarms_model', model)]),
                 [('#{model}_id', id)]
             )
         end

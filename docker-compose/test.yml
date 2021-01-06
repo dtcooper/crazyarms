@@ -1,13 +1,13 @@
 services:
   test:
     container_name: app
-    image: dtcooper/carb-app:${CARB_VERSION:-latest}
+    image: dtcooper/carb-app:${CRAZYARMS_VERSION:-latest}
     build:
       context: ./app
     volumes:
       - ./app/app:/app
     environment:
-      DJANGO_SETTINGS_MODULE: carb.settings_test
+      DJANGO_SETTINGS_MODULE: crazyarms.settings_test
       TZ: ${TIMEZONE:-US/Pacific}
       EMAIL_ENABLED: 0
       HARBOR_TELNET_WEB_ENABLED: 1

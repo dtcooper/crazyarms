@@ -17,7 +17,7 @@ from django.utils import timezone
 from constance import config
 from huey.contrib import djhuey
 
-from carb import constants
+from crazyarms import constants
 
 YOUTUBE_DL_PKG = "youtube-dl"
 YOUTUBE_DL_CMD = "youtube-dl"
@@ -28,7 +28,7 @@ YOUTUBE_DL_TITLE_FIELD_MAPPINGS = {
 }
 PROCESSING_TEMP_PREFIX = "/tmp/asset-processing"
 
-logger = logging.getLogger(f"carb.{__name__}")
+logger = logging.getLogger(f"crazyarms.{__name__}")
 
 
 def once_at_startup(crontab):
