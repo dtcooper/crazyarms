@@ -38,4 +38,4 @@ Here are the instructions to start [Zoom](https://zoom.us/) broadcasting via a r
     If a **Broadcast Bot** attendee does not enter your Zoom room roughly
     15 seconds after you click _Start Zoom Broadcast Now_, please contact
     the systems administrator or
-    [report a bug with Crazy Arms](https://github.com/dtcooper/carb/issues).
+    [report a bug with Crazy Arms](https://github.com/dtcooper/crazyarms/issues).

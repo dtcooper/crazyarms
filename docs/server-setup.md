@@ -15,8 +15,8 @@ In your terminal clone the repo and start the code. Building the containers may
 take several minutes.
 
 ```bash
-git clone git@github.com:dtcooper/carb.git
-cd carb
+git clone git@github.com:dtcooper/crazyarms.git
+cd crazyarms
 
 ./compose.sh up
 ```

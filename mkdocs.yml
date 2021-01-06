@@ -49,8 +49,8 @@ plugins:
         arguments:
             theme: dark
     - search
-repo_name: dtcooper/carb
-repo_url: https://github.com/dtcooper/carb
+repo_name: dtcooper/crazyarms
+repo_url: https://github.com/dtcooper/crazyarms
 site_dir: _docs
 site_name: Crazy Arms Radio Backend Documentation
 site_url: https://crazyarms.xyz
