@@ -3,7 +3,7 @@ version: '3'
 services:
   nginx:
     container_name: nginx
-    image: dtcooper/carb-nginx:${CRAZYARMS_VERSION:-latest}
+    image: dtcooper/crazyarms-nginx:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./nginx
@@ -21,7 +21,7 @@ services:
 
   app:
     container_name: app
-    image: dtcooper/carb-app:${CRAZYARMS_VERSION:-latest}
+    image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./app
@@ -42,7 +42,7 @@ services:
 
   tasks:
     container_name: tasks
-    image: dtcooper/carb-app:${CRAZYARMS_VERSION:-latest}
+    image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./app
@@ -80,7 +80,7 @@ services:
 
   harbor:
     container_name: harbor
-    image: dtcooper/carb-liquidsoap:${CRAZYARMS_VERSION:-latest}
+    image: dtcooper/crazyarms-liquidsoap:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./liquidsoap
@@ -99,7 +99,7 @@ services:
 
   upstream:
     container_name: upstream
-    image: dtcooper/carb-liquidsoap:${CRAZYARMS_VERSION:-latest}
+    image: dtcooper/crazyarms-liquidsoap:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./liquidsoap
@@ -126,7 +126,7 @@ services:
 
   sftp:
     container_name: sftp
-    image: dtcooper/carb-sftp:${CRAZYARMS_VERSION:-latest}
+    image: dtcooper/crazyarms-sftp:${CRAZYARMS_VERSION:-latest}
     restart: always
     build:
       context: ./sftp
