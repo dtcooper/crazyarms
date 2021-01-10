@@ -18,7 +18,8 @@ RUN apt-get update \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases/download/v${LIQUIDSOAP_VERSION}/liquidsoap-v${LIQUIDSOAP_VERSION}_${LIQUIDSOAP_VERSION}-ubuntu-focal-amd64-1_amd64.deb" \
+RUN ARCH="$(dpkg --print-architecture)" \
+    && wget -qO /tmp/liquidsoap.deb "https://github.com/savonet/liquidsoap/releases/download/v${LIQUIDSOAP_VERSION}/liquidsoap-v${LIQUIDSOAP_VERSION}_${LIQUIDSOAP_VERSION}-ubuntu-focal-${ARCH}-1_${ARCH}.deb" \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         /tmp/liquidsoap.deb \

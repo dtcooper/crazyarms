@@ -47,7 +47,7 @@ plugins:
         module_name: mkdocs_macros
     - mermaid2:
         arguments:
-            theme: dark
+            theme: default
     - search
 repo_name: dtcooper/crazyarms
 repo_url: https://github.com/dtcooper/crazyarms

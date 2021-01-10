@@ -209,7 +209,7 @@ if [ "$#" = 0 ]; then
 fi
 
 if [ -z "$SECRET_KEY" ]; then
-    .env set SECRET_KEY="'$(LC_CTYPE=C tr -dc 'a-z0-9!@#%^&*(-_=+)' < /dev/urandom | head -c50)'"
+    .env set SECRET_KEY="'$(LC_ALL=C tr -dc 'a-z0-9!@#%^&*(-_=+)' < /dev/urandom | head -c50)'"
     source .env
 fi
 
@@ -235,7 +235,7 @@ else
 
     # Enable compose files for services
     for CONF in https icecast zoom harbor-telnet-web rtmp; do
-        CONF_VAR="$(echo "$CONF" | LC_CTYPE=C tr '[:lower:]-' '[:upper:]_')_ENABLED"
+        CONF_VAR="$(echo "$CONF" | LC_ALL=C tr '[:lower:]-' '[:upper:]_')_ENABLED"
         CONF_VAL="${!CONF_VAR}"
         if [ "$CONF_VAL" -a "$CONF_VAL" != '0' -o "$ALL_SERVICES" ]; then
             COMPOSE_ARGS="$COMPOSE_ARGS -f docker-compose/$CONF.yml"

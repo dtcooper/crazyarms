@@ -12,6 +12,7 @@ RUN apt-get update \
         ffmpeg \
         gnupg \
         wget \
+        libpq-dev \
     && echo 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main' > /etc/apt/sources.list.d/deadsnakes.list \
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6A755776 \
     && apt-get update \

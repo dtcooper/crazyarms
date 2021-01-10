@@ -11,6 +11,7 @@ services:
     container_name: zoom
     image: dtcooper/crazyarms-zoom:${CRAZYARMS_VERSION:-latest}
     restart: always
+    platform: linux/amd64
     build:
       context: ./zoom
     volumes:

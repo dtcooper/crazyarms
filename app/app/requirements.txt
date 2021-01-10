@@ -14,7 +14,7 @@ google-auth-httplib2
 google-auth-oauthlib
 gunicorn
 huey
-psycopg2-binary
+psycopg2
 python-dotenv
 pyyaml
 requests
