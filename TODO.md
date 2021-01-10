@@ -87,6 +87,7 @@
 
 ## Future Version
 
+- [ ] Archiving of shows
 - [x] Show live info about zoom on status page, similar to `dj_harbor_source` + `live_user` in status JSON
 - [ ] S3 as a storage source using [django-storages](https://django-storages.readthedocs.io/)
 - [ ] Compression and normalization on a per-DJ basis. (Add a liquidsoap `switch()` to
