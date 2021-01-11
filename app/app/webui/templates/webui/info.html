@@ -29,10 +29,6 @@
         <td width="70%"><code>rtmp://{{ host }}{% if settings.RTMP_PORT != 1935 %}:{{ settings.RTMP_PORT }}{% endif %}/stream</code></td>
       </tr>
       <tr>
-        <th>Port:</th>
-        <td><code>{{ settings.RTMP_PORT }}</code>{% if settings.RTMP_PORT == 1935 %} <em>(the default)</em>{% endif %}</td>
-      </tr>
-      <tr>
         <th>Stream Key:</th>
         <td>
           <small><code>{{ user.stream_key }}</code></small><br>

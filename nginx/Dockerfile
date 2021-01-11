@@ -3,8 +3,8 @@ FROM nginx:alpine AS builder
 # Thanks https://gist.github.com/hermanbanken/96f0ff298c162a522ddbba44cad31081
 ENV NCHAN_VERSION 1.2.7
 
-RUN wget -O nginx.tar.gz "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz"  \
-    && wget -O nchan.tar.gz "https://github.com/slact/nchan/archive/v${NCHAN_VERSION}.tar.gz"
+RUN wget -qO nginx.tar.gz "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz"  \
+    && wget -qO nchan.tar.gz "https://github.com/slact/nchan/archive/v${NCHAN_VERSION}.tar.gz"
 
 RUN apk add --no-cache --virtual .build-deps \
   gcc \

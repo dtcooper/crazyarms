@@ -14,7 +14,7 @@ RUN apt-get update \
         wget \
         libpq-dev \
     && echo 'deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main' > /etc/apt/sources.list.d/deadsnakes.list \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6A755776 \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 6A755776 \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         python3.9 \
