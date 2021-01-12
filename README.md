@@ -1,4 +1,4 @@
-# Crazy Arms Radio Backend
+# Crazy Arms Radio Backend &mdash; :zany_face: :mechanical_arm: :radio: :woman_technologist:
 
 Crazy Arms Radio Backend is a flexible and fully featured Internet radio back-end
 written from the ground up.
