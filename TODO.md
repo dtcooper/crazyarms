@@ -112,4 +112,5 @@
 - [ ] Stop using Django admin, instead roll everything on our own.
     - [Halfmoon](https://gethalfmoon.com) looks pretty slick.
     - Use [alpine.js](https://github.com/alpinejs/alpine) as mini-framework for reactive front-end, not jQuery
+    - `ConstanceForm` can be used outside admin, it just needs to run `form.save()` on success.
 - [ ] user preference for harbor auth = always to be kicked off at the end of their show anyway
