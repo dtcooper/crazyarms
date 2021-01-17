@@ -9,6 +9,12 @@ product fit some common needs out of the box.
 
 Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
 
+## Liquidshop 1.0 Slide Deck
+
+Here's [a slide deck](https://docs.google.com/presentation/d/18K1RagpDW79u086r2EV_ysAzFR9gkGJiZTk1cOZCUTg/edit?usp=sharing)
+about Crazy Arms from the [Liquidshop 1.0](https://liquidsoap.info/liquidshop) conference
+giving a high level overview and some of the technical approaches taken.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
