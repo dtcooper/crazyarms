@@ -84,10 +84,14 @@
 - [ ] Skips to playout log
 - [x] Don't use JSON field for show times so we get each show individually for status page and get show names
     - [x] Update user iteration hack in webui/views.py:StatusView.get_upcoming_status_data()
+- [ ] Verify sftp playlist uploads aren't broken when playlists are disabled
+- [ ] Configure pre-recorded broadcasts to come with lower priority than live sources
+- [ ] Test stream
 
 ## Future Version
 
 - [ ] Archiving of shows
+- [ ] Different upstream output types (HLS, RTMP using ffmpeg like iHeartRadio used?)
 - [x] Show live info about zoom on status page, similar to `dj_harbor_source` + `live_user` in status JSON
 - [ ] S3 as a storage source using [django-storages](https://django-storages.readthedocs.io/)
 - [ ] Compression and normalization on a per-DJ basis. (Add a liquidsoap `switch()` to
@@ -114,3 +118,4 @@
     - Use [alpine.js](https://github.com/alpinejs/alpine) as mini-framework for reactive front-end, not jQuery
     - `ConstanceForm` can be used outside admin, it just needs to run `form.save()` on success.
 - [ ] user preference for harbor auth = always to be kicked off at the end of their show anyway
+- [ ] Twilio integration that forwards calls to live DJs + works with voicemail/text/dial to listen
