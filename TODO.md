@@ -110,6 +110,8 @@
         2. autodj requests via `requests.queue()` happen the web UI (do we need some way to cap them?)
         3. regular autodj via `request.dynamic.list()`
 - [ ] Ban DJs dynamically on the ban page (not just live ones) using select2
+- [ ] Skip button appears when it shouldn't
+- [ ] Downloaded assets
 
 ## Down the line
 

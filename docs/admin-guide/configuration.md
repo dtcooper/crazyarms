@@ -29,6 +29,8 @@ Below are a list of configuration options, organized by section.
     {% with default=config[0], description=config[1], type=config[2] %}
     `{{ name }}` --- **Type: {{ get_constance_config_type(default, type) }}**
     :   {{ description }}
+
+        Default: `{{ get_constance_config_default(name, default) }}`
     {% endwith %}
     {% endwith %}
     {% endfor %}

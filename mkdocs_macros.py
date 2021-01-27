@@ -55,6 +55,12 @@ def get_constance_config_type(default, type_hint=None):
         return type_hints_to_string[type_hint]
 
 
+def get_constance_config_default(name, default):
+    if name == 'ICECAST_ADMIN_EMAIL':
+        default = 'admin@mystation.com'
+    return repr(default)
+
+
 def define_env(env):
     env.variables["DJANGO_SETTINGS"] = get_django_settings()
     with open("LICENSE", "r") as license:
@@ -62,3 +68,4 @@ def define_env(env):
     with open(".default.env", "r") as default_env:
         env.variables["DEFAULT_ENV"] = default_env.read()
     env.macro(get_constance_config_type)
+    env.macro(get_constance_config_default)
