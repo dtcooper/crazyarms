@@ -180,6 +180,7 @@ if [ "$FIRST_RUN" ]; then
 
     get_bool 'Run Icecast service (kh branch)' ICECAST_ENABLED 1
     get_bool 'Enable Zoom (for DJs to broadcast using a Zoom room)' ZOOM_ENABLED 0
+    get_bool 'Enable RTMP (for DJs to broadcast using tools like OBS)' RTMP_ENABLED 0
     get_bool 'Enable email notifications (via SMTP, like GMail)' EMAIL_ENABLED 0
     if .env get EMAIL_ENABLED && [ "$REPLY" = 1 ]; then
         get_str 'SMTP server, ie smtp.gmail.com' EMAIL_SMTP_SERVER
@@ -187,6 +188,7 @@ if [ "$FIRST_RUN" ]; then
         get_str 'STMP username, ie user@gmail.com' EMAIL_SMTP_USERNAME
         get_str 'STMP password (WARNING: stored in plain text in the .env file)' EMAIL_SMTP_PASSWORD
         get_bool 'Does the SMTP server use TLS?' EMAIL_SMTP_USE_TLS 1
+        .env set EMAIL_FROM_ADDRESS="'\"Station Admin\" <no-reply@$(.env get DOMAIN_NAME && echo "$REPLY")>'"
     fi
 
     echo

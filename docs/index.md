@@ -42,7 +42,7 @@ on the console. Out of the box examples of sources include the
 [AutoDJ](users-guide/autodj.md),
 [scheduled, pre-recorded broadcasts](users-guide/prerecorded-broadcasts.md),
 and live DJs streaming with [Icecast 2](users-guide/dj/icecast.md),
-[RTMP](users-guide/dj/rtmp.md) (experimental), or a [Zoom room](users-guide/dj/zoom.md).
+[RTMP](users-guide/dj/rtmp.md), or a [Zoom room](users-guide/dj/zoom.md).
 Each input is assigned a priority, and the source with the highest priority
 _that is active_ will be what the robot chooses to play. We call this concept
 **priority-based streaming.**
@@ -286,9 +286,9 @@ Streaming Customization
 :   At your own risk, you can modify [Liquidsoap](https://www.liquidsoap.info/)
     Harbor scripts. This gives pretty high flexibility for various use cases.
 
-RTMP Support (Experimental)
-:   There's experimental support for RTMP, so anyone who's familiar with tools
-    like [Open Source Broadcaster (OBS)](https://obsproject.com/) can stream to
+RTMP Support
+:   Support for RTMP, so anyone who's familiar with RTMP-based tools, notably
+    [Open Source Broadcaster (OBS)](https://obsproject.com/) can stream to
     the harbor. Of course, video is discarded.
 
 ### Non-Features
