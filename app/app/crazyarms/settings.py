@@ -254,7 +254,8 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     "positive_float": ["django.forms.FloatField", {"min_value": 0.0}],
     "zoom_minutes": [
         "django.forms.IntegerField",
-        {"min_value": 30, "max_value": 60 * 24},
+        # Per https://zoom.us/pricing, 30 hour show max
+        {"min_value": 30, "max_value": 60 * 30},
     ],
 }
 

@@ -30,7 +30,7 @@ Here are the instructions to start [Zoom](https://zoom.us/) broadcasting via a r
 1. Paste the link into the _Room Link_ input, choose a show length, and
     click _Start Zoom Broadcast Now._
 1. As soon as the **Broadcast Bot** has entered your Zoom room, your show
-    starts, however you must produce make noise for the stream to transition
+    starts, however you must produce noise for the stream to transition
     to your show. This way, you can set up your show a little bit early. Just
     be quiet until you're ready!
 
