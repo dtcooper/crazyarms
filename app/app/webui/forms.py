@@ -213,7 +213,7 @@ class UserProfileForm(forms.ModelForm):
             (
                 "username",
                 "email",
-                "new_email",
+                "update_email",
                 "timezone",
                 "name",
                 "harbor_auth",

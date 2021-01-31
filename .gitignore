@@ -1,9 +1,11 @@
+__pycache__/
+_docs/
+.DS_Store
 .coverage
 .env
 .pytest_cache
 .version
-__pycache__/
-_docs/
+.vscode
 credentials.json
 docker-compose/overrides.yml
 htmlcov/

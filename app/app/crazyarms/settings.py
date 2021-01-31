@@ -122,10 +122,6 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 if EMAIL_ENABLED:
-    DEFAULT_FROM_EMAIL = env(
-        "EMAIL_FROM_ADDRESS",
-        default=f'"Station Administration" <no-reply@{DOMAIN_NAME}>',
-    )
     EMAIL_HOST = env("EMAIL_SMTP_SERVER")
     EMAIL_HOST_PASSWORD = env("EMAIL_SMTP_PASSWORD")
     EMAIL_HOST_USER = env("EMAIL_SMTP_USERNAME")
