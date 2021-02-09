@@ -6,10 +6,6 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from django.urls import path
 from django.utils import timezone
-from django.utils.formats import date_format
-from django.utils.functional import cached_property
-from django.utils.html import escape, format_html_join
-from django.utils.safestring import mark_safe
 
 from constance import config
 

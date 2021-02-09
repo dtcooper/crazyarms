@@ -4,7 +4,6 @@ services:
       - harbor-telnet-web
   harbor-telnet-web:
     container_name: harbor-telnet-web
-    image: dtcooper/crazyarms-harbor-telnet:${CRAZYARMS_VERSION:-latest}
     build:
       context: ./liquidsoap
       dockerfile: Dockerfile.harbor-telnet

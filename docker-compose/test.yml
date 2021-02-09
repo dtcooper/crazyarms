@@ -1,7 +1,6 @@
 services:
   test:
     container_name: app
-    image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION:-latest}
     build:
       context: ./app
     volumes:

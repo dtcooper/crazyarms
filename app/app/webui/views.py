@@ -471,6 +471,9 @@ class SetPasswordByEmailView(SuccessMessageMixin, FormErrorMessageMixin, FormVie
     template_name = "webui/password_set.html"
 
     def dispatch(self, request, token, *args, **kwargs):
+        if not settings.EMAIL_ENABLED:
+            return redirect("status")
+
         try:
             user_id, self.newly_created, self.cache_token = signing.loads(token, salt="set:password")
         except signing.BadSignature:

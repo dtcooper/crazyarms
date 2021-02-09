@@ -245,6 +245,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     "email": ["django.forms.EmailField", {}],
     "char": ["django.forms.CharField", {"required": False}],
     "required_char": ["django.forms.CharField", {"required": True}],
+    "station_name": ["django.forms.CharField", {"required": True, "max_length": 40}],
     "positive_int": ["django.forms.IntegerField", {"min_value": 0}],
     "nonzero_positive_int": ["django.forms.IntegerField", {"min_value": 1}],
     "positive_float": ["django.forms.FloatField", {"min_value": 0.0}],
@@ -262,7 +263,7 @@ CONSTANCE_CONFIG = OrderedDict(
             (
                 "Crazy Arms Radio Station",
                 "The name of your radio station.",
-                "required_char",
+                "station_name",
             ),
         ),
         (

@@ -35,6 +35,7 @@ def get_constance_config_type(default, type_hint=None):
         "positive_float": "Decimal (non-negative)",
         "positive_int": "Integer (non-negative)",
         "required_char": "String (required)",
+        "station_name": "String (required, 40 characters max)",
         "zoom_minutes": "Integer (number of minutes)",
     }
 
