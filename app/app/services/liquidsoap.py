@@ -42,7 +42,7 @@ class _Liquidsoap:
             for try_number in range(self.MAX_TRIES):  # Try three times before giving up
                 try:
                     if self._telnet is None:
-                        self._telnet = Telnet(host=self.host, port=self.port)
+                        self._telnet = Telnet(host=self.host, port=self.port, timeout=5)
 
                     self._telnet.write(command)
                     response = self._telnet.read_until(END_PREFIX)

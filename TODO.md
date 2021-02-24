@@ -88,6 +88,7 @@
 - [ ] Configure pre-recorded broadcasts to come with lower priority than live sources
 - [ ] Test stream
 - [ ] Empty playlist counted as enabled with `weight = 1.0`, via feature flag
+- [ ] Harbor watchdog
 
 ## Future Version
 
