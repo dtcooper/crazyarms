@@ -43,7 +43,7 @@ RUN mkdir /app
 WORKDIR /app
 COPY app/requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt \
-    # fix for ipython, broken on jedi 0.18.0
+    # TODO: fix for ipython, broken on jedi 0.18.0, remove for initial release / dev only
     && pip install --no-cache-dir jedi==0.17.2
 
 COPY app /app/

@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-ENV LIQUIDSOAP_VERSION "1.4.3"
+ENV LIQUIDSOAP_VERSION "1.4.4"
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
