@@ -2,6 +2,8 @@
 
 name = {{ upstream.name|liqval }}
 SCRIPT_NAME = 'Upstream "#{name}"'
+HEALTHCHECK_PORT = {{ upstream.healthcheck_port|liqval }}
+
 %include "library.liq"
 
 set('server.telnet', true)

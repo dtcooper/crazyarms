@@ -22,6 +22,6 @@ def play_broadcast(broadcast, task=None):
         logger.info(f"Sent broadcast asset to harbor: {broadcast.asset}")
     except Exception:
         if task is None or task.retries == 0:
-            logger.error(f"Failed to broadcast {broadcast}")
+            logger.exception(f"Failed to broadcast {broadcast}")
             Broadcast.objects.filter(id=broadcast.id).update(status=Broadcast.Status.FAILED)
         raise

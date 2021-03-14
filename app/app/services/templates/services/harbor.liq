@@ -1,6 +1,7 @@
 {% load services %}
 
 SCRIPT_NAME = 'Harbor'
+HEALTHCHECK_PORT = 8001
 %include "library.liq"
 
 set('server.telnet', true)

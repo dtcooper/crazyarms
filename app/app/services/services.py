@@ -226,6 +226,7 @@ if not settings.ZOOM_ENABLED:
 
 
 def init_services(services=None, restart_services=False, subservices=(), render_only=False):
+    # subservices = restart these specific one(s)
     if isinstance(services, str):
         services = (services,)
 

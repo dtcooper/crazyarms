@@ -7,6 +7,8 @@ from common.models import TruncatingCharField, User
 
 
 class UpstreamServer(models.Model):
+    HEALTHCHECK_PORT_OFFSET = 1500
+
     class Encoding(models.TextChoices):
         MP3 = "mp3", "MP3"
         AAC = "fdkaac", "AAC"
@@ -75,6 +77,10 @@ class UpstreamServer(models.Model):
         if self.bitrate:
             s += f" @ {self.bitrate} kbit/s"
         return f"{s})"
+
+    @property
+    def healthcheck_port(self):
+        return self.telnet_port + self.HEALTHCHECK_PORT_OFFSET
 
     def save(self, *args, **kwargs):
         self.mount = self.mount.removeprefix("/")

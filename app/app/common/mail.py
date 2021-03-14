@@ -15,7 +15,7 @@ def send_mail(recipient, subject, body, request=None):
     try:
         django_send_mail(subject=subject, message=body, from_email=from_email, recipient_list=[recipient])
     except Exception as e:
-        logger.error(f'An error occurred while sending mail "{subject}" to {recipient}: {e}')
+        logger.exception(f'An error occurred while sending mail "{subject}" to {recipient}: {e}')
         if request:
             messages.error(
                 request,

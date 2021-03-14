@@ -91,6 +91,12 @@ class UpstreamServerAdmin(admin.ModelAdmin):
 
     is_online.short_description = mark_safe("Currently Online?")
 
+    def has_add_permission(self, request):
+        # Corner case we should never hit, don't allow more than these or ports will allocate badly.
+        if self.model.objects.count() >= self.model.HEALTHCHECK_PORT_OFFSET:
+            return False
+        return super().has_add_permission(request)
+
     def has_change_permission(self, request, obj=None):
         if obj is not None and settings.ICECAST_ENABLED and obj.name == "local-icecast":
             return False

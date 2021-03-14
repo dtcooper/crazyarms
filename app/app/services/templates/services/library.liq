@@ -50,6 +50,11 @@ def log_event(~extras=[], ~type=EVENT_GENERAL, ~async=true, description)
     end
 end
 
+# Register health check ping/pong
+harbor.http.register(port=HEALTHCHECK_PORT, method='GET', '^/ping$', fun(~protocol, ~data, ~headers, uri) -> begin
+   http_response(protocol=protocol, code=200, headers=[('Content-Type', 'text/plain')], data='pong')
+end)
+
 on_shutdown(fun() -> begin
     log_event(async=false, '#{SCRIPT_NAME} is shutting down')
     is_shutting_down := true

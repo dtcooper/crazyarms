@@ -198,7 +198,7 @@ SHELL_PLUS_IMPORTS = [
     "from webui.tasks import stop_zoom_broadcast",
     "from api.tasks import process_sftp_upload",
     "from broadcast.tasks import play_broadcast",
-    "from services.tasks import purge_playout_log_entries",
+    "from services.tasks import purge_playout_log_entries, liquidsoap_services_watchdog",
 ]
 
 CONSTANCE_BACKEND = "constance.backends.redisd.RedisBackend"
