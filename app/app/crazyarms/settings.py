@@ -166,7 +166,7 @@ USE_TZ = True
 SHORT_DATETIME_FORMAT = "m/d/Y g:i:s a"
 DATETIME_FORMAT = "N j, Y, g:i:s a"
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "common.User"
 

@@ -46,6 +46,8 @@ class _Liquidsoap:
 
                     self._telnet.write(command)
                     response = self._telnet.read_until(END_PREFIX)
+                    if response.endswith(b"Connection timed out.. Bye!\r\n"):
+                        raise Exception("Connection timed out error")
                     break
                 except Exception as e:
                     self._telnet = None

@@ -9,15 +9,13 @@
     }
   },
   "sftpd": {
-    "bind_port": 2022,
+    "bindings": [{"port": 2022}],
     "max_auth_tries": 0,
-    "track_quota": 0,
     "banner": "Crazy Arms Radio Backend SFTP Server",
-    "host_keys": [
-      "id_rsa"
-    ]
+    "host_keys": ["id_rsa"]
   },
   "data_provider": {
+    "track_quota": 0,
     "driver": "bolt",
     "name": "sftpgo.bolt",
     "users_base_dir": "/sftp_root",
