@@ -8,7 +8,8 @@ django-extensions
 django-redis
 django-select2
 django-unused-media
-Django>=3.0,<4.0
+#Django>=3.0,<4.0
+Django==3.2b1
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib

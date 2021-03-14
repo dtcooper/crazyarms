@@ -24,7 +24,9 @@
 - [ ] Code cleanup
     - [ ] Clean up Dockerfiles stripping dev stuff
     - [ ] Go over `TODO`s and `XXX`s in codebase
-    - [ ] Pin versions in all Dockerfiles, and Python packages (using [Poetry](https://python-poetry.org/))
+    - [ ] Pin versions in all Dockerfiles
+    - [ ] Pin Python packages (using [Poetry](https://python-poetry.org/)), remove dev dependencies
+    - [ ] Pin nginx module versions
 - [x] Unit tests for at least the Django app - _skeleton done_
     - [ ] major second pass, fix broken tests, aim for high coverage _(or 100%)_
 - [x] Mature `strip_blank` implementation
@@ -89,6 +91,7 @@
 - [ ] Test stream
 - [ ] Empty playlist counted as enabled with `weight = 1.0`, via feature flag
 - [ ] Harbor watchdog
+- [ ] Monitor script (with email + text notifications)
 
 ## Future Version
 

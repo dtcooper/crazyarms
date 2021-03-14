@@ -6,9 +6,9 @@ SCRIPT_NAME = 'Harbor'
 set('server.telnet', true)
 set('server.telnet.port', 1234)
 set('server.telnet.bind_addr', '0.0.0.0')
-set('server.timeout', -1.)
-set('scheduler.fast_queues', 2)
-set('scheduler.generic_queues', 4)
+set('server.timeout', 15.)
+set('scheduler.fast_queues', 3)
+set('scheduler.generic_queues', 6)
 
 API_HEADERS = [('X-Crazyarms-Secret-Key', getenv('SECRET_KEY'))]
 API_PREFIX = 'http://app:8000/api/'
