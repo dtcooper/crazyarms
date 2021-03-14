@@ -44,7 +44,7 @@ nav:
         - Author & Miscellany: about/author-miscellany.md
 plugins:
     - macros:
-        module_name: mkdocs_macros
+        module_name: docs_macros
     - mermaid2:
         arguments:
             theme: default
