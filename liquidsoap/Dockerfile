@@ -11,8 +11,8 @@ RUN apt-get update \
         ffmpeg \
         jq \
         libsox-fmt-all \
-        postgresql-client \
         pulseaudio \
+        redis-tools \
         sox \
         supervisor \
         wget \

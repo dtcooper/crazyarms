@@ -36,8 +36,7 @@
 - [x] Player for local icecast on status page
 - [x] Make track log a more generic playout log, with asset playing on metadata one
     particular type.
-- [x] Convert logging to redis queue (so web server doesn't have to be up to log)
-    (decided to use `psql` to directly insert into the DB)
+- [x] Convert logging to redis list + blocking list pop (so web server doesn't have to be up to log)
 - [x] Kick off DJs outside of calendar times (with a grace period)
 - [x] Add make active/disable quick actions for playlists and stopsets
 - [x] Add scheduled time inline to broadcasts asset creation

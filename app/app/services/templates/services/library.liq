@@ -1,7 +1,7 @@
 {% load services %}
 
 # Things common to harbor.liq and upstream.liq
-PLAYOUT_LOG_ENTRY_TABLE_NAME = {{ playout_log_entry_table_name|liqval }}
+REDIS_KEY_SERVICE_LOGS = {{ REDIS_KEY_SERVICE_LOGS|liqval }}
 CRAZYARMS_VERSION = getenv('CRAZYARMS_VERSION')
 
 {% for var, value in event_types %}
@@ -25,16 +25,10 @@ def log_event(~extras=[], ~type=EVENT_GENERAL, ~async=true, description)
             log('Logging playout event (#{type}): #{description}')
 
             # Add description, active source and default event type
-            values = list.append([('description', description), ('active_source', !current_source_name),
-                                ('event_type', type)], extras)
+            log_entry = json_of(list.append([('description', description), ('active_source', !current_source_name),
+                                             ('event_type', type), ('created', string_of(time()))], extras))
 
-            columns = string.concat(separator=', ', list.map(fst, values))
-            # Quote values (wrap in single quotes and double all single quotes in value)
-            values = list.map(fun(v) -> "'" ^ string.replace(pattern="'", fun(_) -> "''", snd(v)) ^ "'", values)
-            values = string.concat(separator=', ', values)
-            sql = 'INSERT INTO #{PLAYOUT_LOG_ENTRY_TABLE_NAME} (created, #{columns}) VALUES (NOW(), #{values});'
-
-            cmd = 'PGPASSWORD=postgres psql -U postgres -h db -c #{safe_quote(sql)}'
+            cmd = 'redis-cli -h redis LPUSH #{safe_quote(REDIS_KEY_SERVICE_LOGS)} #{safe_quote(log_entry)}'
             if not test_process(cmd) then
                 log("ERROR: couldn't log playout event with command: #{cmd}")
             end

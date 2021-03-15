@@ -103,7 +103,7 @@ class HarborService(ServiceBase):
         self.render_conf_file(
             "library.liq",
             context={
-                "playout_log_entry_table_name": PlayoutLogEntry._meta.db_table,
+                "REDIS_KEY_SERVICE_LOGS": constants.REDIS_KEY_SERVICE_LOGS,
                 "event_types": zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values),
             },
         )
@@ -156,7 +156,7 @@ class UpstreamService(ServiceBase):
             self.render_conf_file(
                 "library.liq",
                 context={
-                    "playout_log_entry_table_name": PlayoutLogEntry._meta.db_table,
+                    "REDIS_KEY_SERVICE_LOGS": constants.REDIS_KEY_SERVICE_LOGS,
                     "event_types": zip(
                         PlayoutLogEntry.EventType.names,
                         PlayoutLogEntry.EventType.values,

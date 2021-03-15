@@ -48,7 +48,7 @@ def liquidsoap_services_watchdog(force=False):
                     logger.exception(f"{service}:{subservice} healthcheck threw exception")
 
                 if response and response.status_code == 200 and response.text == "pong":
-                    logger.info(f'{service}:{subservice} healthcheck passed')
+                    logger.info(f"{service}:{subservice} healthcheck passed")
                 else:
                     logger.info(f"{service}:{subservice} healthcheck failed. Restarting.")
                     init_services(services=service, subservices=subservice)

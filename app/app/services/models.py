@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from autodj.models import AudioAsset, RotatorAsset
@@ -103,14 +104,17 @@ class PlayoutLogEntry(models.Model):
         GENERAL = "general", "General"
         SOURCE_TRANSITION = "source", "Source Transition"
 
-    created = models.DateTimeField("Date", auto_now_add=True, db_index=True)
+    created = models.DateTimeField("Date", default=timezone.now, db_index=True)
     event_type = models.CharField("Type", max_length=10, choices=EventType.choices, default=EventType.GENERAL)
-    description = TruncatingCharField("Entry", max_length=500)
+    description = TruncatingCharField("Entry", max_length=500, blank=False)
     active_source = TruncatingCharField("Active Source", max_length=50, default="N/A")
-    audio_asset = models.ForeignKey(AudioAsset, on_delete=models.SET_NULL, null=True)
-    broadcast_asset = models.ForeignKey(BroadcastAsset, on_delete=models.SET_NULL, null=True)
-    rotator_asset = models.ForeignKey(RotatorAsset, on_delete=models.SET_NULL, null=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    audio_asset = models.ForeignKey(AudioAsset, on_delete=models.SET_NULL, blank=True, null=True)
+    broadcast_asset = models.ForeignKey(BroadcastAsset, on_delete=models.SET_NULL, blank=True, null=True)
+    rotator_asset = models.ForeignKey(RotatorAsset, on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+
+    def __str__(self):
+        return f"[{self.get_event_type_display()}] {timezone.localtime(self.created)} - {self.description}"
 
     class Meta:
         ordering = ("-created",)

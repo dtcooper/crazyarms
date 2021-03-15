@@ -56,6 +56,21 @@ services:
       RUN_HUEY: 1
       TZ: ${TIMEZONE:-US/Pacific}
 
+  log-subscriber:
+    container_name: log-subscriber
+    restart: always
+    build:
+      context: ./app
+    volumes:
+      - ./.env:/.env:ro
+    depends_on:
+      - db
+      - redis
+    command: ./manage.py run_log_subscriber
+    environment:
+      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION:-unknown}
+      TZ: ${TIMEZONE:-US/Pacific}
+
   db:
     container_name: db
     image: library/postgres:13-alpine
