@@ -83,6 +83,7 @@
 - [x] Admin css for input type=file busted
 - [ ] Protect assets via nginx's `internal;` flag
 - [ ] Skips to playout log
+- [ ] Rename playout log
 - [x] Don't use JSON field for show times so we get each show individually for status page and get show names
     - [x] Update user iteration hack in webui/views.py:StatusView.get_upcoming_status_data()
 - [ ] Verify sftp playlist uploads aren't broken when playlists are disabled
