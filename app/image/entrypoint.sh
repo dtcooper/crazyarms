@@ -23,6 +23,9 @@ if [ "$#" = 0 ]; then
         echo "Starting up Crazy Arms Radio Backend version $CRAZYARMS_VERSION"
 
         wait-for-it -t 0 db:5432
+
+        # TODO: detect version change and clear redis
+
         ./manage.py migrate
         ./manage.py init_services
 

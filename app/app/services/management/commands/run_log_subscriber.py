@@ -4,8 +4,8 @@ import traceback
 
 import pytz
 
-from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.core.management.base import BaseCommand
 
 from django_redis import get_redis_connection
 
@@ -34,7 +34,7 @@ class Command(BaseCommand):
 
             else:
                 if settings.DEBUG:
-                    self.stdout.write(f'Got message: {json.dumps(log_entry_kwargs, indent=2, sort_keys=True)}')
+                    self.stdout.write(f"Got message: {json.dumps(log_entry_kwargs, indent=2, sort_keys=True)}")
 
                 if "created" in log_entry_kwargs:
                     try:
