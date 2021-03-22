@@ -18,6 +18,7 @@ take several minutes.
 git clone git@github.com:dtcooper/crazyarms.git
 cd crazyarms
 
+./compose pull  # or to build from source: ./compose.sh build
 ./compose.sh up
 ```
 

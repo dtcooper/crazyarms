@@ -39,19 +39,22 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
     ```
 
 3. Run the thing docker-compose wrapper script `./compose.sh` to configure and
-    build Crazy Arms. This may take a while.
+    pull Crazy Arms.
 
     ```
     cd crazyarms
 
     # This will ask you some basic questions. For local development domain
     # name should be the default of "localhost"
-    ./compose.sh build
+    ./compose.sh pull
     ```
 
     If you want to change any of these settings, edit the `.env` file in the
     project directory. (NOTE: A later release will have these containers built
     and downloadable from [Docker Hub](https://hub.docker.com/).)
+
+    (For development only, to build containers from source, run `./compose.sh build`
+    instead of `pull` above. This may take a while.)
 
 4. Start Crazy Arms
 
@@ -76,13 +79,9 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
 
 It works with the [Docker for Mac Apple M1
 preview](https://docs.docker.com/docker-for-mac/apple-m1/)!
-However, when building, I observe you'll need to run `--pull` when building
-containers for proper multi-arch support. So for step (3) above, run,
-
-```
-./compose.sh build --pull
-```
-
+However, native `aarch64` containers are not provided, so you'll need to build
+them from source (`./compose.sh build` instead of `pull`). The Zoom container
+will need to emulate amd64.
 
 ## Liquidshop 1.0 Slide Deck
 
