@@ -628,7 +628,7 @@ class SkipView(LoginRequiredMixin, View):
                     PlayoutLogEntry.objects.create(
                         event_type=PlayoutLogEntry.EventType.TRACK,
                         user=request.user,
-                        description=f'{request.user.get_full_name()} manually skipped track',
+                        description=f"{request.user.get_full_name()} manually skipped track",
                         active_source=source_name,
                     )
                     response = f"You successfully skipped the current track on {source_name}."

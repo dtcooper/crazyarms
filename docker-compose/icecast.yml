@@ -5,6 +5,7 @@ services:
 
   icecast:
     container_name: icecast
+    image: dtcooper/crazyarms-icecast:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./icecast

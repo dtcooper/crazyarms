@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export CRAZYARMS_VERSION="0.0.1-alpha1"
+
 if ! command -v docker-compose >/dev/null 2>&1; then
     echo "\`docker-compose' command required. Please install."
     exit 1
@@ -251,12 +253,9 @@ fi
 # Make imports/ folder with current user permissions for easy of copying
 mkdir -p imports
 
-export CRAZYARMS_VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo unknown)"
-.env -f .version set "CRAZYARMS_VERSION=$CRAZYARMS_VERSION"
-
-if [ "$1" = 'version' ]; then
-    echo "Crazy Arms Radio Backend version: $CRAZYARMS_VERSION"
-else
-    set -x
+if .env get SET_VERSION_FROM_GIT && [ "$REPLY" = 1 ]; then
+    export CRAZYARMS_VERSION="$(git describe --tags --always --dirty 2>/dev/null)"
 fi
+
+echo "Crazy Arms Radio Backend version: $CRAZYARMS_VERSION"
 docker-compose $COMPOSE_ARGS "$@"

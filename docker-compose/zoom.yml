@@ -9,6 +9,7 @@ services:
 
   zoom:
     container_name: zoom
+    image: dtcooper/crazyarms-zoom:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./zoom

@@ -4,7 +4,6 @@ _docs/
 .coverage
 .env
 .pytest_cache
-.version
 .vscode
 credentials.json
 docker-compose/overrides.yml

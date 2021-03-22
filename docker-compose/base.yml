@@ -3,6 +3,7 @@ version: '3'
 services:
   nginx:
     container_name: nginx
+    image: dtcooper/crazyarms-nginx:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./nginx
@@ -20,6 +21,7 @@ services:
 
   app:
     container_name: app
+    image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./app
@@ -35,11 +37,12 @@ services:
       - redis
       - upstream
     environment:
-      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION:-unknown}
+      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION}
       TZ: ${TIMEZONE:-US/Pacific}
 
   tasks:
     container_name: tasks
+    image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./app
@@ -52,12 +55,13 @@ services:
       - db
       - redis
     environment:
-      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION:-unknown}
+      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION}
       RUN_HUEY: 1
       TZ: ${TIMEZONE:-US/Pacific}
 
   log-subscriber:
     container_name: log-subscriber
+    image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./app
@@ -68,7 +72,7 @@ services:
       - redis
     command: ./manage.py run_log_subscriber
     environment:
-      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION:-unknown}
+      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION}
       TZ: ${TIMEZONE:-US/Pacific}
 
   db:
@@ -92,6 +96,7 @@ services:
 
   harbor:
     container_name: harbor
+    image: dtcooper/crazyarms-liquidsoap:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./liquidsoap
@@ -103,13 +108,14 @@ services:
       - services_config:/config:ro
       - ./media:/media_root:ro
     environment:
-      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION:-unknown}
+      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION}
       CONTAINER_NAME: harbor
       SECRET_KEY: ${SECRET_KEY}
       TZ: ${TIMEZONE:-US/Pacific}
 
   upstream:
     container_name: upstream
+    image: dtcooper/crazyarms-liquidsoap:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./liquidsoap
@@ -119,7 +125,7 @@ services:
       - ./media:/media_root:ro
       - services_config:/config:ro
     environment:
-      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION:-unknown}
+      CRAZYARMS_VERSION: ${CRAZYARMS_VERSION}
       CONTAINER_NAME: upstream
       TZ: ${TIMEZONE:-US/Pacific}
 
@@ -136,6 +142,7 @@ services:
 
   sftp:
     container_name: sftp
+    image: dtcooper/crazyarms-sftp:${CRAZYARMS_VERSION}
     restart: always
     build:
       context: ./sftp
