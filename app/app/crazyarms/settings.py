@@ -307,7 +307,7 @@ CONSTANCE_CONFIG = OrderedDict(
             "HARBOR_SWOOSH_AUDIO_FILE",
             (
                 False,
-                "Audio file for the swoosh (if enabled). Sound be short, ie under 3-4 seconds.",
+                "Audio file for the swoosh (if enabled). Should be short, ie under 3-4 seconds.",
                 "clearable_file",
             ),
         ),

@@ -90,7 +90,7 @@ class User(DirtyFieldsMixin, AbstractUser):
         max_length=200,
         blank=True,
         help_text=(
-            "A DJ name or a first and alst name if you'd prefer. This will be seen in the stream's metadata during live"
+            "A DJ name or a first and last name if you'd prefer. This will be seen in the stream's metadata during live"
             " shows."
         ),
     )

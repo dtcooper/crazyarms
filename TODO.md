@@ -117,6 +117,7 @@
 - [ ] Ban DJs dynamically on the ban page (not just live ones) using select2
 - [ ] Skip button appears when it shouldn't
 - [ ] Downloaded assets
+- [ ] Some workflow for dynamically allowing unlimited time
 
 ## Down the line
 
