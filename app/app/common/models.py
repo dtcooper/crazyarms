@@ -13,7 +13,7 @@ import uuid
 import pytz
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser, Group, UserManager
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
@@ -74,7 +74,15 @@ def filter_inactive_group_queryset(queryset):
 CurrentHarborAuthorization = namedtuple("CurrentHarborAuthorization", ("authorized", "end", "title"))
 
 
+class CaseInsensitiveUserManager(UserManager):
+    def get_by_natural_key(self, username):
+        case_insensitive_username_field = '{}__iexact'.format(self.model.USERNAME_FIELD)
+        return self.get(**{case_insensitive_username_field: username})
+
+
 class User(DirtyFieldsMixin, AbstractUser):
+    objects = CaseInsensitiveUserManager()
+
     STREAM_KEY_LENGTH = 80
 
     class HarborAuth(models.TextChoices):
@@ -164,6 +172,16 @@ class User(DirtyFieldsMixin, AbstractUser):
         if "is_staff" in kwargs:
             del kwargs["is_staff"]
         super().__init__(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+
+        case_insensitive_username_field = '{}__iexact'.format(User.USERNAME_FIELD)
+        queryset = User.objects.filter(**{case_insensitive_username_field: self.username})
+        if self.pk:
+            queryset = queryset.exclude(pk=self.pk)
+        if queryset.exists():
+            raise ValidationError({'username': 'A user with with this username already exists'})
 
     def save(self, *args, **kwargs):
         if self.stream_key is None or "password" in self.get_dirty_fields():
@@ -493,6 +511,8 @@ class AudioAssetBase(DirtyFieldsMixin, TimestampedModel):
             return None
 
     def clean(self, allow_conversion=True):
+        super().clean()
+
         if self.file:
             if not self.metadata:
                 raise ValidationError("Failed to extract audio info from the file you've uploaded. Try another?")

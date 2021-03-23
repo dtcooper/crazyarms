@@ -92,6 +92,10 @@
 - [ ] Empty playlist counted as enabled with `weight = 1.0`, via feature flag
 - [x] Harbor + upstream watchdog task
 - [ ] Email + text notifications on CRITICAL logger?
+- [x] Make sure TZ is working properly on shouting fire server
+    - [x] Remove the "Note: You are 3 hours ahead of server time." helper
+- [ ] Show banner for users who are Zoom broadcasting to go to Zoom page
+- [ ] Clean up many to many relation verbose names `Gcalshow-user relationship: GCalShow_users object (2465)`
 
 ## Future Version
 
@@ -118,6 +122,8 @@
 - [ ] Skip button appears when it shouldn't
 - [ ] Downloaded assets
 - [ ] Some workflow for dynamically allowing unlimited time
+- [ ] Upload progress meter
+- [ ] Queue for AutoDJ's "up next"
 
 ## Down the line
 
