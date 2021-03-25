@@ -236,7 +236,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
                 ("disabled", "Disabled (nobody)"),
                 ("user", "Users"),
                 ("perm", 'Users with "Program the AutoDJ" permissions'),
-                ("superuser", "Superusers"),
+                ("superuser", "Administrators"),
             ),
         },
     ],

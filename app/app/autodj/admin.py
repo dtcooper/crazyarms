@@ -201,7 +201,7 @@ class RotatorAdmin(RemoveFilterHorizontalFromPopupMixin, AutoDJStopsetRelatedAdm
         stopsets = (
             StopsetRotator.objects.filter(rotator=obj).order_by("stopset__name").values_list("stopset__name").distinct()
         )
-        return format_html_join(mark_safe(",<br>"), "{}", stopsets)
+        return format_html_join(mark_safe(",<br>"), "{}", stopsets) or None
 
     stopset_list.short_description = "Stopset(s)"
 
