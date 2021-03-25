@@ -1,6 +1,7 @@
 from functools import wraps
 import os
 import secrets
+import shutil
 
 from django.conf import settings
 from django.contrib import admin, messages
@@ -82,6 +83,13 @@ def asset_conversion_action(from_cls, to_cls):
 
     quick_action.short_description = f"Convert selected {from_name} to {to_name}"
     return quick_action
+
+
+class DiskUsageChangelistAdminMixin:
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["disk_usage"] = shutil.disk_usage(settings.MEDIA_ROOT)
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 class AudioAssetAdminBase(admin.ModelAdmin):

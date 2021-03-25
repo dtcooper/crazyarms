@@ -5,7 +5,7 @@ from django.utils.formats import date_format
 from constance import config
 
 from autodj.models import AudioAsset, RotatorAsset
-from common.admin import AudioAssetAdminBase, asset_conversion_action
+from common.admin import AudioAssetAdminBase, DiskUsageChangelistAdminMixin, asset_conversion_action
 
 from .forms import BroadcastAssetCreateForm
 from .models import Broadcast, BroadcastAsset
@@ -37,7 +37,7 @@ def message_broadcast_added(request, broadcast):
     )
 
 
-class BroadcastAssetAdmin(AudioAssetAdminBase):
+class BroadcastAssetAdmin(DiskUsageChangelistAdminMixin, AudioAssetAdminBase):
     non_popup_inlines = (BroadcastInline,)
     create_form = BroadcastAssetCreateForm
 
@@ -74,7 +74,7 @@ class BroadcastAssetAdmin(AudioAssetAdminBase):
             broadcast.save()
 
 
-class BroadcastAdmin(admin.ModelAdmin):
+class BroadcastAdmin(DiskUsageChangelistAdminMixin, admin.ModelAdmin):
     add_fields = ("scheduled_time", "asset")
     autocomplete_fields = ("asset",)
     date_hierarchy = "scheduled_time"

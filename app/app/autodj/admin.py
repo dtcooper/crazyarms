@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from constance import config
 
 from broadcast.models import BroadcastAsset
-from common.admin import AudioAssetAdminBase, asset_conversion_action
+from common.admin import AudioAssetAdminBase, DiskUsageChangelistAdminMixin, asset_conversion_action
 
 from .forms import AudioAssetCreateForm, PlaylistActionForm, RotatorActionForm, RotatorAssetCreateForm
 from .models import AudioAsset, Playlist, Rotator, RotatorAsset, Stopset, StopsetRotator
@@ -20,7 +20,7 @@ class RemoveFilterHorizontalFromPopupMixin:
         return fields
 
 
-class AutoDJModelAdmin(admin.ModelAdmin):
+class AutoDJModelAdmin(DiskUsageChangelistAdminMixin, admin.ModelAdmin):
     def has_add_permission(self, request):
         return config.AUTODJ_ENABLED and super().has_add_permission(request)
 

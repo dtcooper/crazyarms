@@ -1,0 +1,11 @@
+{% extends 'admin/change_list.html' %}
+
+{% block object-tools %}
+  {{ block.super }}
+
+  <p>
+    Disk usage (on media root):
+    <strong>{{ disk_usage.free|filesizeformat }} free</strong>,
+    {{ disk_usage.used|filesizeformat }} / {{ disk_usage.total|filesizeformat }} used
+  </p>
+{% endblock %}
