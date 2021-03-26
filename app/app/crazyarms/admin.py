@@ -107,8 +107,7 @@ class CrazyArmsAdminSite(admin.AdminSite):
 
     def get_urls(self):
         return (
-            super().get_urls()
-            + [
+            [
                 path(
                     "settings/",
                     view=self.admin_view(self.app_index_extra),
@@ -116,4 +115,5 @@ class CrazyArmsAdminSite(admin.AdminSite):
                 )
             ]
             + [pattern for _, pattern, _ in self.extra_urls]
+            + super().get_urls()
         )
