@@ -87,10 +87,10 @@ class GCalShow(models.Model):
                     else parse(item["end"].get("dateTime"))
                 )
 
-                emails = [attendee["email"] for attendee in item.get("attendees", [])]
+                emails = [attendee["email"].lower() for attendee in item.get("attendees", [])]
                 creator = item.get("creator", {}).get("email")
                 if creator is not None:
-                    emails.append(creator)
+                    emails.append(creator.lower())
 
                 users = []
 
@@ -98,7 +98,7 @@ class GCalShow(models.Model):
                     user = email_to_user.get(email)
                     if not user:
                         try:
-                            user = email_to_user[email] = User.objects.get(email=email)
+                            user = email_to_user[email] = User.objects.get(email__iexact=email)
                         except User.DoesNotExist:
                             pass
 
