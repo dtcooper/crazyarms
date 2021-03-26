@@ -3,7 +3,7 @@ services:
     depends_on:
       - harbor-telnet-web
   harbor-telnet-web:
-    container_name: harbor-telnet-web
+    container_name: crazyarms-harbor-telnet-web
     image: dtcooper/crazyarms-harbor-telnet-web:${CRAZYARMS_VERSION}
     build:
       context: ./liquidsoap

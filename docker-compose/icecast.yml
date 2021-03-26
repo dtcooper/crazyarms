@@ -4,7 +4,7 @@ services:
       - icecast
 
   icecast:
-    container_name: icecast
+    container_name: crazyarms-icecast
     image: dtcooper/crazyarms-icecast:${CRAZYARMS_VERSION}
     restart: always
     build:

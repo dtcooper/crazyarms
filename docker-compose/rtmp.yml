@@ -1,6 +1,6 @@
 services:
   rtmp:
-    container_name: rtmp
+    container_name: crazyarms-rtmp
     image: dtcooper/crazyarms-rtmp:${CRAZYARMS_VERSION}
     restart: always
     depends_on:

@@ -1,6 +1,6 @@
 services:
   test:
-    container_name: app
+    container_name: crazyarms-test
     image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION}
     build:
       context: ./app

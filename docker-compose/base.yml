@@ -2,7 +2,7 @@ version: '3'
 
 services:
   nginx:
-    container_name: nginx
+    container_name: crazyarms-nginx
     image: dtcooper/crazyarms-nginx:${CRAZYARMS_VERSION}
     restart: always
     build:
@@ -20,7 +20,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   app:
-    container_name: app
+    container_name: crazyarms-app
     image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION}
     restart: always
     build:
@@ -41,7 +41,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   tasks:
-    container_name: tasks
+    container_name: crazyarms-tasks
     image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION}
     restart: always
     build:
@@ -60,7 +60,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   log-subscriber:
-    container_name: log-subscriber
+    container_name: crazyarms-log-subscriber
     image: dtcooper/crazyarms-app:${CRAZYARMS_VERSION}
     restart: always
     build:
@@ -76,7 +76,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   db:
-    container_name: db
+    container_name: crazyarms-db
     image: library/postgres:13-alpine
     restart: always
     volumes:
@@ -86,7 +86,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   redis:
-    container_name: redis
+    container_name: crazyarms-redis
     image: library/redis:6-alpine
     restart: always
     volumes:
@@ -95,7 +95,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   harbor:
-    container_name: harbor
+    container_name: crazyarms-harbor
     image: dtcooper/crazyarms-liquidsoap:${CRAZYARMS_VERSION}
     restart: always
     build:
@@ -114,7 +114,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   upstream:
-    container_name: upstream
+    container_name: crazyarms-upstream
     image: dtcooper/crazyarms-liquidsoap:${CRAZYARMS_VERSION}
     restart: always
     build:
@@ -130,7 +130,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   logs:
-    container_name: logs
+    container_name: crazyarms-logs
     image: amir20/dozzle:latest
     restart: always
     volumes:
@@ -141,7 +141,7 @@ services:
       TZ: ${TIMEZONE:-US/Pacific}
 
   sftp:
-    container_name: sftp
+    container_name: crazyarms-sftp
     image: dtcooper/crazyarms-sftp:${CRAZYARMS_VERSION}
     restart: always
     build:
