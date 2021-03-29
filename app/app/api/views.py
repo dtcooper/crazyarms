@@ -47,7 +47,7 @@ class APIView(View):
 class DJAuthAPIView(APIView):
     def post(self, request):
         response = {"authorized": False}
-        user = None
+        user = non_logged_in_user = None
 
         if self.request_json["username"] == "!":
             try:
@@ -71,13 +71,13 @@ class DJAuthAPIView(APIView):
                     break
                 else:
                     try:
-                        user = User.objects.get(username=username)
+                        case_insensitive_username_field = "{}__iexact".format(User.USERNAME_FIELD)
+                        non_logged_in_user = User.objects.get(**{case_insensitive_username_field: username})
                     except User.DoesNotExist:
-                        logger.info(f"dj auth requested by {username}: denied (user does not exist)")
-                    else:
-                        logger.info(f"dj auth requested by {username}: denied (incorrect password / inactive account)")
+                        pass
 
         if user:
+            # Log messages handled by currently_harbor_authorized()
             current_auth = user.currently_harbor_authorized()
             if current_auth.authorized:
                 kickoff_time = None
@@ -94,6 +94,10 @@ class DJAuthAPIView(APIView):
                         "username": user.username,
                     }
                 )
+        elif non_logged_in_user:
+            logger.info(f"dj auth requested by {non_logged_in_user}: denied (incorrect password / inactive account)")
+        else:
+            logger.info(f"dj auth requested by {username}: denied (user does not exist)")
 
         return response
 
@@ -147,7 +151,8 @@ class SFTPAuthView(APIView):
             auth_type = "password"
         else:
             try:
-                non_logged_in_user = User.objects.get(username=username)
+                case_insensitive_username_field = "{}__iexact".format(User.USERNAME_FIELD)
+                non_logged_in_user = User.objects.get(**{case_insensitive_username_field: username})
             except User.DoesNotExist:
                 pass
             else:
@@ -186,7 +191,7 @@ class SFTPAuthView(APIView):
             else:
                 logger.info(f"sftp auth requested by {user}: denied ({auth_type} allowed but no permissions)")
         elif non_logged_in_user:
-            logger.info(f"sftp auth requested by {username}: denied (invalid credentials / inactive account)")
+            logger.info(f"sftp auth requested by {non_logged_in_user}: denied (invalid credentials / inactive account)")
         else:
             logger.info(f"sftp auth requested by {username}: denied (user does not exist)")
 
