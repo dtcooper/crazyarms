@@ -10,6 +10,7 @@ from django.contrib.auth.models import Group
 from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -99,6 +100,7 @@ class AudioAssetAdminBase(admin.ModelAdmin):
         "title",
         "file",
         "duration",
+        "file_size",
         "status",
         "uploader",
         "created",
@@ -106,12 +108,13 @@ class AudioAssetAdminBase(admin.ModelAdmin):
         "task_log_line",
     )
     change_readonly_fields = add_readonly_fields + (
-        "duration",
-        "file",
         "audio_player_html",
-        "status",
         "created",
+        "duration",
+        "file_size",
+        "file",
         "modified",
+        "status",
         "task_log_line",
     )
     create_form = None
@@ -135,6 +138,9 @@ class AudioAssetAdminBase(admin.ModelAdmin):
                 obj.file.url,
             )
         return mark_safe("<em>None</em>")
+
+    def file_size(self, obj):
+        return filesizeformat(os.path.getsize(obj.file.path) if obj.file else 0)
 
     audio_player_html.short_description = "Audio"
 
