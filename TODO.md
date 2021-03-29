@@ -124,6 +124,7 @@
 - [ ] Some workflow for dynamically allowing unlimited time
 - [ ] Upload progress meter
 - [ ] Queue for AutoDJ's "up next"
+- [ ] Show password feature for hidden fields
 
 ## Down the line
 

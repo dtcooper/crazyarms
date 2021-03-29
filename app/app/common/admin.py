@@ -270,6 +270,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "is_active",
         "is_superuser",
     )
+    search_fields = ("username", "name", "email")
     list_filter = (HarborAuthListFilter, "is_superuser", "is_active", "groups")
     readonly_fields = ("last_login", "date_joined", "modified", "stream_key")
 
