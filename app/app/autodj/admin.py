@@ -98,7 +98,7 @@ class AudioAssetAdmin(AudioAssetAdminBase, AutoDJModelAdmin):
     playlist_action_form = PlaylistActionForm
     create_form = AudioAssetCreateForm
     # title gets swapped to include artist and album
-    list_display = ("title", "created", "playlists_list_display", "duration", "status")
+    list_display = ("title", "created", "playlists_list_display", "duration", "file_size", "status")
     list_filter = ("playlists",) + AudioAssetAdminBase.list_filter
 
     convert_to_rotator_assets = asset_conversion_action(AudioAsset, RotatorAsset)
@@ -224,7 +224,7 @@ class RotatorAssetAdmin(AudioAssetAdminBase, AutoDJStopsetRelatedAdmin):
     actions = ("add_rotator_action", "remove_rotator_action")
     create_form = RotatorAssetCreateForm
     search_fields = ("title",)
-    list_display = ("title", "created", "rotators_list_display", "duration", "status")
+    list_display = ("title", "created", "rotators_list_display", "duration", "file_size", "status")
     list_filter = ("rotators",) + AudioAssetAdminBase.list_filter
 
     def get_actions(self, request):

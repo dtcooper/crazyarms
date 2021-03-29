@@ -119,7 +119,7 @@ class AudioAssetAdminBase(admin.ModelAdmin):
     )
     create_form = None
     date_hierarchy = "created"
-    list_display = ("title", "created", "duration", "status")
+    list_display = ("title", "created", "duration", "file_size", "status")
     list_filter = (("uploader", admin.RelatedOnlyFieldListFilter), "status")
     save_as_continue = False
     save_on_top = True
