@@ -12,6 +12,8 @@ logger = logging.getLogger(f"crazyarms.{__name__}")
 @djhuey.db_task(priority=5, context=True, retries=10, retry_delay=2)
 def play_broadcast(broadcast, task=None):
     try:
+        broadcast.refresh_from_db()
+
         uri = broadcast.asset.liquidsoap_uri()
         if uri:
             harbor.prerecord__push(uri)
