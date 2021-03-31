@@ -6,18 +6,14 @@ HEALTHCHECK_PORT = 8001
 
 set('server.telnet', true)
 set('server.telnet.port', 1234)
-set('server.telnet.bind_addr', '0.0.0.0')
-set('server.timeout', 15.)
 set('scheduler.fast_queues', 3)
 set('scheduler.generic_queues', 6)
 
 API_HEADERS = [('X-Crazyarms-Secret-Key', getenv('SECRET_KEY'))]
 API_PREFIX = 'http://app:8000/api/'
-BUFFER = 5.
 FAILSAFE_SOURCE_NAME = 'Failsafe'
 LIVE_DJ_KICKOFF_INTERVAL = 5.
 HARBOR_PORT = 8001
-MAX = 10.
 MAX_SILENCE = float_of_int({{ config.HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE|liqval }})
 {% if config.AUTODJ_ENABLED %}
     REQUEST_QUEUE_LENGTH = 45.

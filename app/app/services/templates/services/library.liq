@@ -1,8 +1,13 @@
 {% load services %}
 
+set('server.telnet.bind_addr', '0.0.0.0')
+set('server.timeout', 15.)
+
 # Things common to harbor.liq and upstream.liq
 REDIS_KEY_SERVICE_LOGS = {{ REDIS_KEY_SERVICE_LOGS|liqval }}
 CRAZYARMS_VERSION = getenv('CRAZYARMS_VERSION')
+BUFFER = 5.
+MAX = 10.
 
 {% for var, value in event_types %}
     EVENT_{{ var }} = {{ value|liqval }}

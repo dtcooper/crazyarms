@@ -8,12 +8,18 @@ HEALTHCHECK_PORT = {{ upstream.healthcheck_port|liqval }}
 
 set('server.telnet', true)
 set('server.telnet.port', {{ upstream.telnet_port|liqval }})
-set('server.telnet.bind_addr', '0.0.0.0')
-set('server.timeout', -1.)
 
 url = 'http://harbor:4000/live'
 
-input = input.http(id='input', max=10., poll_delay=0.5, url)
+input = input.http{% if upstream.protocol == 'https' %}s{% endif %}(
+    id='input',
+    buffer=BUFFER,
+    max=MAX,
+    poll_delay=0.5,
+    on_connect=fun(_) -> log_event('#{SCRIPT_NAME} connected to harbor'),
+    on_disconnect=fun() -> log_event('#{SCRIPT_NAME} disconnected from harbor'),
+    url,
+)
 output.dummy(input, fallible=true)
 
 failsafe = single(id='failsafe',
@@ -33,6 +39,8 @@ mount = {{ '/'|add:upstream.mount|liqval }}
 format = {{ upstream.mime|liqval }}
 {% endif %}
 log('Starting upstream "#{name}"')
+
+connection_str = {{ upstream|liqval }}
 
 UNKNOWN_ERROR_STR = 'Unknown error occurred (see upstream logs)'
 connected = ref false
@@ -63,18 +71,18 @@ output.icecast(
     broadcast,
     on_connect=fun() -> begin
         connected := true
-        log_event('#{SCRIPT_NAME} successfully connected')
+        log_event('#{SCRIPT_NAME} successfully connected to #{connection_str}')
         start_time := time()
         error := UNKNOWN_ERROR_STR
     end,
     on_disconnect=fun() -> begin
         connected := false
-        log_event('#{SCRIPT_NAME} disconnected')
+        log_event('#{SCRIPT_NAME} disconnected from #{connection_str}')
         error := UNKNOWN_ERROR_STR
     end,
     on_error=fun(e) -> begin
         if !error != e then
-            log_event('#{SCRIPT_NAME} connection error: #{e}')
+            log_event('#{SCRIPT_NAME} connection error to #{connection_str}: #{e}')
         end
         error := e
         1.  # Re-try connection every second
