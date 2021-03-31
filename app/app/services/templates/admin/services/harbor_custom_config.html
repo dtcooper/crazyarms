@@ -37,7 +37,11 @@ pre {
       {# There shouldn't be any errors, but just in case #}
       {{ form.errors }}
 
+      <h2>harbor.liq Script</h2>
       <pre>{{ form_with_code }}</pre>
+
+      <h2>library.liq Script</h2>
+      <pre>{{ library }}</pre>
 
       <div class="submit-row">
         <input type="submit" class="default" value="Save and Restart Liquidsoap Harbor"/>

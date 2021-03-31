@@ -107,6 +107,7 @@ class HarborService(ServiceBase):
 
         self.render_conf_file(
             "library.liq",
+            # TODO abstract how context is generated, since this is duplicated a few times (ie. custom harbor ui)
             context={
                 "REDIS_KEY_SERVICE_LOGS": constants.REDIS_KEY_SERVICE_LOGS,
                 "event_types": zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values),

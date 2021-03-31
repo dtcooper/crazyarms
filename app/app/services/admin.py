@@ -67,7 +67,13 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
                 for section_number in range(1, HarborService.CUSTOM_CONFIG_NUM_SECTIONS + 1)
             }
         )
-        context["form_with_code"] = render_to_string("services/harbor.liq", context=harbor_liq_context)
+        context.update({
+            "library": render_to_string('services/library.liq', context={
+                "REDIS_KEY_SERVICE_LOGS": constants.REDIS_KEY_SERVICE_LOGS,
+                "event_types": zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values),
+            }),
+            "form_with_code": render_to_string("services/harbor.liq", context=harbor_liq_context),
+        })
         return context
 
 
