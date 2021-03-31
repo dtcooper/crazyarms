@@ -6,7 +6,14 @@
     <caption>Harbor Live DJ Access (Icecast 2)</caption>
     <tr><th width="30%">Server Address (Hostname):</th><td width="70%"><code>{{ host }}</code></td></tr>
     <tr><th>Type:</th><td>Icecast 2 (<b><u>not</u></b> SHOUTCast, sometimes the "2" is omitted)</td></tr>
-    <tr><th>Port:</th><td><code>{{ settings.HARBOR_PORT }}</code></td></tr>
+    <tr><th>Port:</th>
+      <td>
+        <code>{{ settings.HARBOR_PORT }}</code>
+        {% if config.HARBOR_TEST_ENABLED %}
+          for <strong>live</strong> stream (port <code>{{ settings.HARBOR_TEST_PORT }}</code> for <em>test</em> stream)
+        {% endif %}
+      </td>
+    </tr>
     <tr><th>Mountpoint:</th><td><code>stream</code></td></tr>
     <tr><th>Username:</th><td><code>{{ user.username }}</code></td></tr>
     <tr>

@@ -68,6 +68,11 @@ class UpstreamServer(models.Model):
             " docs here</a> for more info. Leave empty or <code>null</code> for none."
         ),
     )
+    is_test = models.BooleanField(
+        "connect to test harbor (instead of live)",
+        default=False,
+        help_text=mark_safe("<strong>Important:</strong> Leave unchecked for live harbor"),
+    )
 
     class Meta:
         ordering = ("name",)

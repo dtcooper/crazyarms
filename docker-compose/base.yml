@@ -102,6 +102,7 @@ services:
       context: ./liquidsoap
     ports:
       - '${HARBOR_PORT:-8001}:8001'
+      - '${HARBOR_TEST_PORT:-8002}:8002'
     depends_on:
       - db
     volumes:

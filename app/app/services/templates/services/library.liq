@@ -6,6 +6,8 @@ set('server.timeout', 15.)
 # Things common to harbor.liq and upstream.liq
 REDIS_KEY_SERVICE_LOGS = {{ REDIS_KEY_SERVICE_LOGS|liqval }}
 CRAZYARMS_VERSION = getenv('CRAZYARMS_VERSION')
+API_HEADERS = [('X-Crazyarms-Secret-Key', getenv('SECRET_KEY'))]
+API_PREFIX = 'http://app:8000/api/'
 BUFFER = 5.
 MAX = 10.
 

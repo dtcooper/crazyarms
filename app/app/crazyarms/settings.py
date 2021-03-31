@@ -16,6 +16,7 @@ DEBUG = env.bool("DEBUG", default=False)
 DOMAIN_NAME = env("DOMAIN_NAME", default="localhost")
 EMAIL_ENABLED = env.bool("EMAIL_ENABLED", default=False)
 HARBOR_PORT = env.int("HARBOR_PORT", default=8001)
+HARBOR_TEST_PORT = env.int("HARBOR_TEST_PORT", default=8002)
 HARBOR_TELNET_WEB_ENABLED = env.bool("HARBOR_TELNET_WEB_ENABLED", default=False)
 ICECAST_ENABLED = env.bool("ICECAST_ENABLED", default=False)
 ICECAST_PORT = env.int("ICECAST_PORT", default=8000)
@@ -330,6 +331,17 @@ CONSTANCE_CONFIG = OrderedDict(
             ),
         ),
         (
+            "HARBOR_TEST_ENABLED",
+            (
+                False,
+                "Enable test harbor server",
+            ),
+        ),
+        (
+            "HARBOR_TEST_MASTER_PASSWORD",
+            ("default", "Master password to access the test harbor server", "required_char"),
+        ),
+        (
             "UPSTREAM_FAILSAFE_AUDIO_FILE",
             (
                 False,
@@ -468,6 +480,13 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 "HARBOR_MAX_SECONDS_SILENCE_BEFORE_INVACTIVE",
                 "HARBOR_FAILSAFE_AUDIO_FILE",
                 "UPSTREAM_FAILSAFE_AUDIO_FILE",
+            ),
+        ),
+        (
+            "Test Harbor Configuration",
+            (
+                "HARBOR_TEST_ENABLED",
+                "HARBOR_TEST_MASTER_PASSWORD",
             ),
         ),
         (

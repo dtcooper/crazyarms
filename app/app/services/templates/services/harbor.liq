@@ -9,8 +9,6 @@ set('server.telnet.port', 1234)
 set('scheduler.fast_queues', 3)
 set('scheduler.generic_queues', 6)
 
-API_HEADERS = [('X-Crazyarms-Secret-Key', getenv('SECRET_KEY'))]
-API_PREFIX = 'http://app:8000/api/'
 FAILSAFE_SOURCE_NAME = 'Failsafe'
 LIVE_DJ_KICKOFF_INTERVAL = 5.
 HARBOR_PORT = 8001
@@ -490,7 +488,7 @@ end, radio)
 output.harbor(
     %wav(duration=0., stereo=true, channels=2, samplesize=16, header=true),
     id='broadcast',
-    mount='live',
+    mount='internal',
     port=4000,
     radio,
 )

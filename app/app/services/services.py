@@ -135,6 +135,14 @@ class HarborService(ServiceBase):
         else:
             self.render_supervisor_conf_file(command=liq_cmd, **kwargs)
 
+        if config.HARBOR_TEST_ENABLED:
+            self.render_conf_file("harbor-test.liq")
+            self.render_supervisor_conf_file(
+                command="liquidsoap /config/harbor/harbor-test.liq",
+                program_name="harbor-test",
+                user="liquidsoap",
+            )
+
 
 class UpstreamService(ServiceBase):
     service_name = "upstream"
@@ -142,20 +150,25 @@ class UpstreamService(ServiceBase):
     def render_conf(self):
         from .models import PlayoutLogEntry, UpstreamServer
 
-        # Make sure there's a local Icecast upstream
-        local_icecast = UpstreamServer.objects.filter(name="local-icecast")
-        if settings.ICECAST_ENABLED:
-            if not local_icecast.exists():
-                UpstreamServer.objects.create(
-                    name="local-icecast",  # Special read-only name
-                    hostname="icecast",
-                    port=8000,
-                    username="source",
-                    mount="live",
-                )
-            local_icecast.update(password=config.ICECAST_SOURCE_PASSWORD)
-        else:
-            local_icecast.delete()
+        for name, mount, is_test, should_create in (
+            ("local-icecast", "live", False, settings.ICECAST_ENABLED),
+            ("local-icecast-test", "test", True, settings.ICECAST_ENABLED and config.HARBOR_TEST_ENABLED),
+        ):
+            # Make sure there's a local Icecast upstream
+            local_icecast = UpstreamServer.objects.filter(name=name)
+            if should_create:
+                if not local_icecast.exists():
+                    UpstreamServer.objects.create(
+                        name=name,  # Special read-only name
+                        hostname="icecast",
+                        port=8000,
+                        username="source",
+                        mount=mount,
+                        is_test=is_test,
+                    )
+                local_icecast.update(password=config.ICECAST_SOURCE_PASSWORD)
+            else:
+                local_icecast.delete()
 
         if UpstreamServer.objects.exists():
             self.render_conf_file(
@@ -168,6 +181,10 @@ class UpstreamService(ServiceBase):
                     ),
                 },
             )
+
+        queryset = UpstreamServer.objects.all()
+        if not config.HARBOR_TEST_ENABLED:
+            queryset = queryset.filter(is_test=False)
 
         for upstream in UpstreamServer.objects.all():
             self.render_conf_file(

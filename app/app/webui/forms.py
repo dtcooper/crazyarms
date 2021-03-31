@@ -67,6 +67,12 @@ class FirstRunForm(UserCreationForm):
             "</a> to kick start your station or to try out Crazy Arms. (Creative Commons licensed)"
         ),
     )
+    test_harbor = forms.BooleanField(
+        label="Enable test harbor",
+        required=False,
+        widget=forms.Select(choices=((False, "No"), (True, "Yes"))),
+        help_text="Whether to run a test version of the harbor or not",
+    )
     station_name = forms.CharField(label="Station Name", help_text="The name of your radio station.")
 
     def __init__(self, *args, **kwargs):
@@ -79,6 +85,7 @@ class FirstRunForm(UserCreationForm):
                 "email",
                 "password1",
                 "password2",
+                "test_harbor",
                 "icecast_admin_password",
                 "generate_sample_assets",
             )
@@ -135,6 +142,8 @@ class FirstRunForm(UserCreationForm):
         user.save()
 
         config.STATION_NAME = self.cleaned_data["station_name"]
+        config.HARBOR_TEST_ENABLED = self.cleaned_data["test_harbor"]
+        config.HARBOR_TEST_MASTER_PASSWORD = generate_random_string(16)
 
         if settings.ICECAST_ENABLED:
             config.ICECAST_ADMIN_EMAIL = user.email

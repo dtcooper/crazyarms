@@ -9,7 +9,7 @@ HEALTHCHECK_PORT = {{ upstream.healthcheck_port|liqval }}
 set('server.telnet', true)
 set('server.telnet.port', {{ upstream.telnet_port|liqval }})
 
-url = 'http://harbor:4000/live'
+url = 'http://harbor:{% if upstream.is_test %}4001{% else %}4000{% endif %}/internal'
 
 input = input.http{% if upstream.protocol == 'https' %}s{% endif %}(
     id='input',

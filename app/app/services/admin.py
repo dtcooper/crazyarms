@@ -73,7 +73,6 @@ class HarborCustomConfigAdminView(admin.site.AdminBaseContextMixin, PermissionRe
 
 class UpstreamServerAdmin(admin.ModelAdmin):
     list_display = ("name", "__str__", "is_online")
-    exclude = ("telnet_port",)
 
     def is_online(self, obj):
         connected = False
@@ -91,6 +90,18 @@ class UpstreamServerAdmin(admin.ModelAdmin):
 
     is_online.short_description = mark_safe("Currently Online?")
 
+    def get_exclude(self, request, obj=None):
+        if config.HARBOR_TEST_ENABLED:
+            return ("telnet_port",)
+        else:
+            return ("telnet_port", "is_test")
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if not config.HARBOR_TEST_ENABLED:
+            queryset = queryset.filter(is_test=False)
+        return queryset
+
     def has_add_permission(self, request):
         # Corner case we should never hit, don't allow more than these or ports will allocate badly.
         if self.model.objects.count() >= self.model.HEALTHCHECK_PORT_OFFSET:
@@ -98,12 +109,12 @@ class UpstreamServerAdmin(admin.ModelAdmin):
         return super().has_add_permission(request)
 
     def has_change_permission(self, request, obj=None):
-        if obj is not None and settings.ICECAST_ENABLED and obj.name == "local-icecast":
+        if obj is not None and settings.ICECAST_ENABLED and obj.name in ("local-icecast", "local-icecast-test"):
             return False
         return super().has_change_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
-        if obj is not None and settings.ICECAST_ENABLED and obj.name == "local-icecast":
+        if obj is not None and settings.ICECAST_ENABLED and obj.name in ("local-icecast", "local-icecast-test"):
             return False
         return super().has_delete_permission(request, obj)
 
