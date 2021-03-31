@@ -125,6 +125,7 @@
 - [ ] Upload progress meter
 - [ ] Queue for AutoDJ's "up next"
 - [ ] Show password feature for hidden fields
+- [ ] Use same harbor.liq script for test as live
 
 ## Down the line
 
