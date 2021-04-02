@@ -1,5 +1,6 @@
 import logging
 import os
+import shlex
 import shutil
 import subprocess
 
@@ -61,6 +62,10 @@ class ServiceBase:
 
     def render_supervisor_conf_file(self, command, program_name=None, start=True, **extras):
         program_name = self.service_name if program_name is None else program_name
+        # Really, very awful hack to wrap both stdout/error in a string "[program-name]" in supervisor logs
+        command = f'{command} 2> >(sed -ue "s/^/[{program_name}:stderr] /" >&2) | sed -ue "s/^/[{program_name}] /"'
+        command = f"bash -c {shlex.quote(command)}"
+
         self.render_conf_file(
             "service.conf",
             conf_filename=f"supervisor/{program_name}.conf",
