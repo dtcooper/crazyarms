@@ -126,7 +126,7 @@ class UpstreamServerAdmin(admin.ModelAdmin):
 class PlayoutLogEntryAdmin(admin.ModelAdmin):
     list_display = ("created", "event_type", "description", "active_source")
     search_fields = ("description", "active_source")
-    list_filter = ("event_type",)
+    list_filter = ("event_type", "active_source")
     date_hierarchy = "created"
 
     def has_add_permission(self, request):
