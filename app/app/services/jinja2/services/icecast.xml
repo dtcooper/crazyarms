@@ -1,7 +1,7 @@
 <icecast>
-    <location>{{ config.ICECAST_LOCATION }}</location>
-    <admin>{{ config.ICECAST_ADMIN_EMAIL }}</admin>
-    <hostname>{{ settings.DOMAIN_NAME }}</hostname>
+    <location>{{ config.ICECAST_LOCATION|default('The World') }}</location>
+    <admin>{{ config.ICECAST_ADMIN_EMAIL|default('root@localhost') }}</admin>
+    <hostname>{{ settings.DOMAIN_NAME|default('localhost') }}</hostname>
 
     <limits>
         {% if config.ICECAST_MAX_CLIENTS > 0 %}
@@ -18,11 +18,11 @@
     </limits>
 
     <authentication>
-        <source-password>{{ config.ICECAST_SOURCE_PASSWORD }}</source-password>
-        <relay-password>{{ config.ICECAST_RELAY_PASSWORD }}</relay-password>
+        <source-password>{{ config.ICECAST_SOURCE_PASSWORD|default('hackme') }}</source-password>
+        <relay-password>{{ config.ICECAST_RELAY_PASSWORD|default('hackme') }}</relay-password>
 
         <admin-user>admin</admin-user>
-        <admin-password>{{ config.ICECAST_ADMIN_PASSWORD }}</admin-password>
+        <admin-password>{{ config.ICECAST_ADMIN_PASSWORD|default('hackme') }}</admin-password>
     </authentication>
 
     <hostname>localhost</hostname>

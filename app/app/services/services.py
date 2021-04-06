@@ -18,6 +18,14 @@ logger = logging.getLogger(f"crazyarms.{__name__}")
 SUPERVISOR_RUNNING_STATES = {"STARTING", "RUNNING", "BACKOFF"}
 
 
+def get_service_context_data():
+    return {
+        "constants": constants,
+        "config": config,
+        "settings": settings,
+    }
+
+
 class ServiceBase:
     supervisor_enabled = True
 
@@ -44,12 +52,20 @@ class ServiceBase:
         return stdout
 
     def render_conf_file(self, filename, context=None, conf_filename=None):
-        default_context = {"settings": settings, "config": config}
+        default_context = get_service_context_data()
         if context is not None:
             default_context.update(context)
 
-        template = get_template(f"services/{filename}")
-        conf = template.template.render(make_context(default_context, autoescape=False))
+        template_name = f"services/{filename}"
+        template = get_template(template_name)
+
+        if template.backend.name == 'jinja2':
+            import pprint; pprint.pprint(default_context)
+            conf = template.render(default_context)
+        else:
+            # Hack to disable autoescaping for Django (jinja is smart enough based on file extension)
+            # https://stackoverflow.com/a/56457134
+            conf = template.template.render(make_context(default_context, autoescape=False))
 
         conf_filename = f"/config/{self.service_name}/{filename if conf_filename is None else conf_filename}"
         os.makedirs(os.path.dirname(conf_filename), exist_ok=True)
@@ -112,6 +128,7 @@ class HarborService(ServiceBase):
                 "event_types": zip(PlayoutLogEntry.EventType.names, PlayoutLogEntry.EventType.values),
             },
         )
+
         self.render_conf_file("harbor.liq", context=cache.get(constants.CACHE_KEY_HARBOR_CONFIG_CONTEXT))
         kwargs = {"environment": 'HOME="/tmp/pulse"', "user": "liquidsoap"}
 

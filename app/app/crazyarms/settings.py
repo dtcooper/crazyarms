@@ -84,7 +84,20 @@ TEMPLATES = [
             ],
         },
     },
+    {
+        "BACKEND": "django.template.backends.jinja2.Jinja2",
+        "APP_DIRS": True,
+        "OPTIONS": {
+            'autoescape': lambda filename: any(filename.endswith(ext) for ext in ('.xml', '.html')),
+            "context_processors": [
+                "crazyarms.context_processors.crazyarms_extra_context",
+            ],
+            'keep_trailing_newline': True,
+            "environment": "crazyarms.jinja2.environment",
+        },
+    },
 ]
+
 
 LOGGING = {
     "version": 1,

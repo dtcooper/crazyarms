@@ -1,4 +1,4 @@
-FROM nginx:alpine AS builder
+FROM nginx:stable-alpine AS builder
 
 # TODO: Pin version of nginx-rtmp
 
@@ -23,13 +23,13 @@ RUN curl -sL "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar xzf
     && curl -sL "https://github.com/arut/nginx-rtmp-module/archive/master.tar.gz" | tar xzf -
 
 RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
-    CONFARGS=${CONFARGS/-Os -fomit-frame-pointer -g/-Os} \
+    CONFARGS=${CONFARGS/-Os -fomit-frame-pointer/-Os} \
     && cd "nginx-${NGINX_VERSION}" \
     && ./configure --with-compat $CONFARGS "--add-dynamic-module=../nginx-rtmp-module-master" \
     && make && make install
 
 
-FROM nginx:alpine
+FROM nginx:stable-alpine
 
 COPY --from=builder /usr/lib/nginx/modules/ngx_rtmp_module.so /usr/local/nginx/modules/ngx_rtmp_module.so
 

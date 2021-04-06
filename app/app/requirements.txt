@@ -15,6 +15,7 @@ google-auth-httplib2
 google-auth-oauthlib
 gunicorn
 huey
+jinja2
 psycopg2
 python-dotenv
 pyyaml

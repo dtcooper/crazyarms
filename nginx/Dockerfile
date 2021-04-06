@@ -1,4 +1,4 @@
-FROM nginx:alpine AS builder
+FROM nginx:stable-alpine AS builder
 
 # TODO: Pin version of nchan
 
@@ -23,13 +23,13 @@ RUN curl -sL "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar xzf
     && curl -sL "https://github.com/slact/nchan/archive/master.tar.gz" | tar xzf -
 
 RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') \
-    CONFARGS=${CONFARGS/-Os -fomit-frame-pointer -g/-Os} \
+    CONFARGS=${CONFARGS/-Os -fomit-frame-pointer/-Os} \
     && cd "nginx-${NGINX_VERSION}" \
     && ./configure --with-compat $CONFARGS "--add-dynamic-module=../nchan-master" \
     && make && make install
 
 
-FROM nginx:alpine
+FROM nginx:stable-alpine
 
 COPY --from=builder /usr/lib/nginx/modules/ngx_nchan_module.so /usr/local/nginx/modules/ngx_nchan_module.so
 
@@ -41,7 +41,7 @@ RUN apk add --no-cache \
         openssl \
         py3-pip
 
-RUN pip install --no-cache-dir j2cli
+RUN pip3 install --no-cache-dir j2cli
 
 RUN curl -sLo /usr/local/bin/wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for \
     curl -sL curl "https://github.com/novnc/noVNC/archive/v${NOVNC_VERSION}.tar.gz" | tar xz -C /tmp \

@@ -1,5 +1,3 @@
-{% load services %}
-
 SCRIPT_NAME = 'Harbor'
 HEALTHCHECK_PORT = 8001
 %include "library.liq"
@@ -41,7 +39,7 @@ def json_of_mixed_types(~strs=[], ~bools=[], ~ints=[], ~floats=[], ~nulls=[])
                                          string.extract(pattern='^\\{(.+?)\\}', j)), json)
     json = list.append(json, list.map(fun(s) -> '#{json_of(s)}:null', nulls))
     json = string.concat(separator=',', json)
-    '{#{json}}'
+    {% raw %}'{#{json}}'{% endraw %}
 end
 
 # A complete hack
@@ -148,7 +146,7 @@ reset_status = ("", "", "", "", "", "", "")
 last_status_without_timed_sources = ref ("", "", "", "", "", "", "")
 
 ### BEGIN SECTION 1 OF CUSTOM USER SOURCE CODE ###
-{{ section1 }}
+{{ section1|default }}
 #### END SECTION 1 OF CUSTOM USER SOURCE CODE ####
 
 # DJ harbor
@@ -253,7 +251,7 @@ add_skip_command_crazyarms(prerecord)
 # Our failsafe audio, right now some silly hold music.
 failsafe = audio_to_stereo(id='failsafe_stereo', single(id='failsafe',
 {% if config.HARBOR_FAILSAFE_AUDIO_FILE %}
-    {{ settings.MEDIA_ROOT|add:'/'|add:config.HARBOR_FAILSAFE_AUDIO_FILE|liqval }}
+    {{ '{}/{}'.format(settings.MEDIA_ROOT, config.HARBOR_FAILSAFE_AUDIO_FILE)|liqval }}
 {% else %}
     '/assets/hold-music.mp3'
 {% endif %}
@@ -295,7 +293,7 @@ source_hierarchy = [
 #
 
 ### BEGIN SECTION 2 OF CUSTOM USER SOURCE CODE ###
-{{ section2 }}
+{{ section2|default }}
 #### END SECTION 2 OF CUSTOM USER SOURCE CODE ####
 
 source_hierarchy_lookups = list.map(fun(s) -> (source.id(fst(s)), snd(s)), source_hierarchy)
@@ -405,7 +403,7 @@ end)
 {% if config.HARBOR_TRANSITION_WITH_SWOOSH %}
     swoosh = single(
     {% if config.HARBOR_SWOOSH_AUDIO_FILE %}
-        {{ settings.MEDIA_ROOT|add:'/'|add:config.HARBOR_SWOOSH_AUDIO_FILE|liqval }}
+        {{ '{}/{}'.format(settings.MEDIA_ROOT, config.HARBOR_SWOOSH_AUDIO_FILE)|liqval }}
     {% else %}
         '/assets/transition.mp3'
     {% endif %}
@@ -454,7 +452,7 @@ radio = fallback(
 )
 
 ### BEGIN SECTION 3 OF CUSTOM USER SOURCE CODE ###
-{{ section3 }}
+{{ section3|default }}
 #### END SECTION 3 OF CUSTOM USER SOURCE CODE ####
 
 # Metadata change function, used for SSE pushes and logging
