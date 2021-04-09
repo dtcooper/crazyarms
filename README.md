@@ -18,12 +18,12 @@ Read the [documentation for Crazy Arms here](https://crazyarms.xyz).
     On Debian/Ubuntu do the following:
 
     ```
-    # Install Docker
+    # Install Docker (Linux instructions only)
     curl -fsSL https://get.docker.com | sh
 
     # and docker-compose
     sudo curl \
-        -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" \
+        -L "https://github.com/docker/compose/releases/download/1.29.0/docker-compose-$(uname -s)-$(uname -m)" \
         -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
 
