@@ -54,7 +54,7 @@ output.icecast(
 {% endif %}
 {% if upstream.encoding_args %}
 {% for arg, value in upstream.encoding_args.items %}
-        {{ arg }}="{{ value }}"{% if not forloop.last %},{% endif %}
+        {{ arg }}={{ value|liqval:False }}{% if not forloop.last %},{% endif %}
 {% endfor %}
 {% endif %}
     ),
