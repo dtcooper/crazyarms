@@ -11,7 +11,7 @@ set('server.telnet.port', {{ upstream.telnet_port|liqval }})
 
 url = 'http://harbor:4000/live'
 
-input = input.http{% if upstream.protocol == 'https' %}s{% endif %}(
+input = input.http(
     id='input',
     buffer=BUFFER,
     max=MAX,
@@ -60,6 +60,7 @@ output.icecast(
     ),
     id='broadcast',
     icy_metadata='true',
+    protocol='http{% if upstream.protocol == 'https' %}s{% endif %}',
 {% if upstream.mime %}
     format=format,
 {% endif %}

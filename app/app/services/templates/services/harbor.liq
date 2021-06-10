@@ -492,5 +492,8 @@ output.harbor(
     id='broadcast',
     mount='live',
     port=4000,
+    # Since we're encoding WAV it's much larger. This may prevent upstreams reverting to failsafe intermittently.
+    burst=65534 * 16,
+    buffer=327675 * 16,
     radio,
 )
