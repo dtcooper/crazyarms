@@ -274,7 +274,7 @@ class PlaylistStopsetBase(models.Model):
     name = models.CharField("name", max_length=100, unique=True)
     weight = models.FloatField(
         "random weight",
-        validators=[MinValueValidator(0.0)],
+        validators=[MinValueValidator(0.00001)],
         default=1.0,
         help_text=(
             "The weight "
