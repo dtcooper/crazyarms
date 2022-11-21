@@ -53,7 +53,7 @@ repo_name: dtcooper/crazyarms
 repo_url: https://github.com/dtcooper/crazyarms
 site_dir: _docs
 site_name: Crazy Arms Radio Backend Documentation
-site_url: https://crazyarms.xyz
+site_url: https://dtcooper.github.com/crazyarms
 theme:
     favicon: img/favicon.svg
     name: material
